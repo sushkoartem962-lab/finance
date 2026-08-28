@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Finance Tracker</title>
+    <title>Finance Tracker PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -31,7 +31,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: var(--spacing);
-            padding-bottom: 100px; /* Для мобильного меню */
+            padding-bottom: 100px;
         }
 
         /* Навигация */
@@ -74,6 +74,7 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .bento-card.span-2 { grid-column: span 2; }
@@ -96,71 +97,57 @@
             .nav-btn { font-size: 14px; padding: 10px 15px; }
         }
 
-        /* Типографика и элементы */
-        h2 { font-size: 20px; margin-bottom: 15px; font-weight: 600; }
-        .amount { font-size: 32px; font-weight: 700; margin-bottom: 5px; }
+        /* Элементы */
+        h2 { font-size: 20px; margin-bottom: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;}
+        .amount { font-size: 32px; font-weight: 700; margin-bottom: 5px; transition: color 0.3s;}
         .amount.income { color: var(--success); }
         .amount.expense { color: var(--text-main); }
         .subtitle { color: var(--text-muted); font-size: 14px; }
+        
+        .live-badge {
+            font-size: 12px;
+            background: rgba(52, 199, 89, 0.1);
+            color: var(--success);
+            padding: 4px 10px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+        .live-badge::before {
+            content: ''; display: block; width: 6px; height: 6px; background: var(--success); border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
 
-        /* Формы и списки */
         input, select, button {
-            width: 100%;
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid #e5e5ea;
-            margin-bottom: 10px;
-            font-size: 16px;
-            background: #fafafa;
-            outline: none;
+            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none;
         }
         input:focus, select:focus { border-color: var(--primary); }
         
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+        .btn-primary { background: var(--primary); color: #fff; border: none; font-weight: 600; cursor: pointer; margin-top: 10px; }
         .btn-primary:hover { background: var(--primary-hover); }
 
-        .list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f2f2f7;
-        }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
         .list-item:last-child { border-bottom: none; }
         .list-item-title { font-weight: 500; }
         .crypto-sub { font-size: 12px; color: var(--text-muted); }
 
-        .category-tag {
-            display: inline-block;
-            background: var(--bg-color);
-            padding: 6px 12px;
-            border-radius: 100px;
-            font-size: 14px;
-            margin: 4px;
-            cursor: pointer;
-        }
-        .delete-cat { color: var(--danger); margin-left: 8px; font-weight: bold; }
+        .category-tag { display: inline-block; background: var(--bg-color); padding: 6px 12px; border-radius: 100px; font-size: 14px; margin: 4px; }
+        .delete-cat { color: var(--danger); margin-left: 8px; font-weight: bold; cursor: pointer; }
 
-        /* Табы */
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .chart-container { position: relative; height: 250px; width: 100%; }
+        .loader { color: var(--text-muted); font-size: 14px; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Навигация -->
     <div class="nav">
         <button class="nav-btn active" onclick="switchTab('month')">Текущий месяц</button>
         <button class="nav-btn" onclick="switchTab('accounts')">Мои счета</button>
@@ -185,21 +172,17 @@
                     <option value="income">Доход</option>
                 </select>
                 <input type="number" placeholder="Сумма (₽)" id="op-amount">
-                <select id="op-category">
-                    <!-- Заполняется JS -->
-                </select>
+                <select id="op-category"></select>
                 <button class="btn-primary" onclick="addTransaction()">Добавить</button>
             </div>
 
             <div class="bento-card span-2">
-                <h2>Категории расходов (настройка)</h2>
+                <h2>Категории расходов</h2>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <input type="text" id="new-category" placeholder="Новая категория" style="margin:0;">
                     <button class="btn-primary" style="margin:0; width: 120px;" onclick="addCategory()">Добавить</button>
                 </div>
-                <div id="categories-list">
-                    <!-- Категории рендерятся здесь -->
-                </div>
+                <div id="categories-list"></div>
             </div>
         </div>
     </div>
@@ -208,9 +191,9 @@
     <div id="accounts" class="tab-content">
         <div class="bento-grid">
             <div class="bento-card">
-                <h2>Общий капитал</h2>
-                <div class="amount" id="total-capital">0 ₽</div>
-                <div class="subtitle">По актуальному курсу (1$ = 95₽)</div>
+                <h2>Общий капитал <span class="live-badge">Live API</span></h2>
+                <div class="amount" id="total-capital">Загрузка...</div>
+                <div class="subtitle">1$ = <span id="usd-rate">...</span> ₽ (Real-time)</div>
                 <div class="chart-container" style="margin-top: 20px;">
                     <canvas id="accountsChart"></canvas>
                 </div>
@@ -222,11 +205,8 @@
             </div>
 
             <div class="bento-card">
-                <h2>Крипта (Bybit & Trust Wallet)</h2>
-                <div id="crypto-accounts"></div>
-                <div class="subtitle" style="margin-top: 15px;">
-                    Курсы (mock): BTC = $60,000 | ETH = $3,000 | USDT = $1
-                </div>
+                <h2>Крипта (Real-time)</h2>
+                <div id="crypto-accounts"><div class="loader">Получение рыночных данных...</div></div>
             </div>
         </div>
     </div>
@@ -234,16 +214,29 @@
     <!-- Вкладка 3: Аналитика -->
     <div id="analytics" class="tab-content">
         <div class="bento-grid">
-            <div class="bento-card span-2">
-                <h2>Структура расходов (Август)</h2>
-                <div class="chart-container" style="height: 300px;">
-                    <canvas id="expensesChart"></canvas>
+            
+            <!-- Новая карточка: Статистика по отдельным категориям -->
+            <div class="bento-card">
+                <h2>Динамика категории</h2>
+                <select id="analytics-category-select" onchange="updateCategoryChart()">
+                    <!-- Заполняется JS -->
+                </select>
+                <div class="chart-container" style="height: 200px;">
+                    <canvas id="categoryHistoryChart"></canvas>
                 </div>
             </div>
+
             <div class="bento-card">
-                <h2>Динамика (Доходы vs Расходы)</h2>
-                <div class="chart-container">
+                <h2>Доходы vs Расходы</h2>
+                <div class="chart-container" style="height: 250px;">
                     <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bento-card span-2">
+                <h2>Структура расходов (Текущий месяц)</h2>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="expensesChart"></canvas>
                 </div>
             </div>
         </div>
@@ -251,10 +244,11 @@
 </div>
 
 <script>
-    // --- Состояние приложения (State) ---
+    // --- Состояние (State) ---
     const state = {
-        rates: { USD: 95, BTC: 60000, ETH: 3000 },
+        rates: { USD: 90, BTC: 60000, ETH: 3000, USDT: 1 }, // Fallback значения
         categories: ['Еда', 'Авто', 'Подписки', 'Развлечения', 'Дом'],
+        months: ['Май', 'Июн', 'Июл', 'Авг'],
         accounts: [
             { name: 'Т-Банк карта', type: 'fiat', balance: 120000 },
             { name: 'Инвестиции', type: 'fiat', balance: 450000 },
@@ -266,21 +260,53 @@
             Bybit: [ { coin: 'USDT', amount: 1500 }, { coin: 'BTC', amount: 0.05 } ],
             TrustWallet: [ { coin: 'ETH', amount: 1.2 } ]
         },
-        expenses: {
-            'Еда': 45000,
-            'Авто': 15000,
-            'Дом': 30000,
-            'Развлечения': 20000,
-            'Подписки': 5000
+        expenses: { 'Еда': 45000, 'Авто': 15000, 'Дом': 30000, 'Развлечения': 20000, 'Подписки': 5000 },
+        // Исторические данные для аналитики по категориям
+        historyExpenses: {
+            'Еда': [38000, 42000, 41000, 45000],
+            'Авто': [12000, 18000, 15000, 15000],
+            'Подписки': [5000, 5000, 5000, 5000],
+            'Развлечения': [25000, 22000, 30000, 20000],
+            'Дом': [28000, 31000, 29000, 30000]
         }
     };
 
-    let charts = {}; // Для хранения инстансов Chart.js
+    let charts = {};
 
-    // --- Инициализация ---
-    function init() {
+    // --- Инициализация и API ---
+    async function init() {
         renderCategories();
-        renderAccounts();
+        renderAccounts(); // Рендерим с fallback-данными
+        populateAnalyticsSelect();
+        
+        // Запускаем асинхронный сбор реальных курсов
+        await fetchLiveRates();
+    }
+
+    async function fetchLiveRates() {
+        try {
+            // 1. Курс Доллара к Рублю (бесплатный API ExchangeRate)
+            const fiatRes = await fetch('https://open.er-api.com/v6/latest/USD');
+            const fiatData = await fiatRes.json();
+            state.rates.USD = fiatData.rates.RUB;
+
+            // 2. Курс Крипты (Binance API)
+            const btcRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+            const btcData = await btcRes.json();
+            state.rates.BTC = parseFloat(btcData.price);
+
+            const ethRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
+            const ethData = await ethRes.json();
+            state.rates.ETH = parseFloat(ethData.price);
+
+            // Перерисовываем UI с новыми данными
+            renderAccounts();
+            if(document.getElementById('accounts').classList.contains('active')) {
+                initAccountsChart();
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки live-курсов. Используются старые данные.', error);
+        }
     }
 
     // --- Логика вкладок ---
@@ -291,12 +317,11 @@
         document.getElementById(tabId).classList.add('active');
         event.currentTarget.classList.add('active');
 
-        // Рендерим графики при открытии вкладок (чтобы canvas не баговал при display:none)
         if(tabId === 'accounts') initAccountsChart();
         if(tabId === 'analytics') initAnalyticsCharts();
     }
 
-    // --- Вкладка 1: Категории ---
+    // --- Категории ---
     function renderCategories() {
         const select = document.getElementById('op-category');
         const list = document.getElementById('categories-list');
@@ -304,37 +329,38 @@
 
         state.categories.forEach((cat, index) => {
             select.innerHTML += `<option value="${cat}">${cat}</option>`;
-            list.innerHTML += `
-                <div class="category-tag">
-                    ${cat} <span class="delete-cat" onclick="deleteCategory(${index})">×</span>
-                </div>
-            `;
+            list.innerHTML += `<div class="category-tag">${cat} <span class="delete-cat" onclick="deleteCategory(${index})">×</span></div>`;
         });
     }
 
     function addCategory() {
         const input = document.getElementById('new-category');
-        if(input.value.trim() !== '') {
-            state.categories.push(input.value.trim());
+        const val = input.value.trim();
+        if(val !== '') {
+            state.categories.push(val);
+            state.expenses[val] = 0; // Инициализируем нулем
             input.value = '';
             renderCategories();
+            populateAnalyticsSelect(); // Обновляем дропдаун в аналитике
         }
     }
 
     function deleteCategory(index) {
         state.categories.splice(index, 1);
         renderCategories();
+        populateAnalyticsSelect();
     }
 
     function addTransaction() {
         const amount = document.getElementById('op-amount').value;
         if(!amount) return alert('Введите сумму');
-        alert('Операция добавлена! (в прототипе данные очищаются)');
+        alert('Операция учтена! (UI обновится при подключении БД)');
         document.getElementById('op-amount').value = '';
     }
 
-    // --- Вкладка 2: Счета и Капитал ---
+    // --- Счета и Live Капитал ---
     function renderAccounts() {
+        document.getElementById('usd-rate').innerText = state.rates.USD.toFixed(2);
         let totalRub = 0;
         
         // Фиат
@@ -345,7 +371,7 @@
             fiatDiv.innerHTML += `
                 <div class="list-item">
                     <span class="list-item-title">${acc.name}</span>
-                    <span>${acc.balance.toLocaleString()} ₽</span>
+                    <span>${acc.balance.toLocaleString('ru-RU')} ₽</span>
                 </div>
             `;
         });
@@ -354,14 +380,14 @@
         const cryptoDiv = document.getElementById('crypto-accounts');
         cryptoDiv.innerHTML = '';
         
-        const renderCryptoWallet = (name, assets) => {
+        const renderWallet = (name, assets) => {
             let walletUsd = 0;
             let assetHTML = '';
             assets.forEach(asset => {
-                const rate = asset.coin === 'USDT' ? 1 : state.rates[asset.coin];
+                const rate = state.rates[asset.coin];
                 const usdValue = asset.amount * rate;
                 walletUsd += usdValue;
-                assetHTML += `<span class="crypto-sub">${asset.amount} ${asset.coin} ($${usdValue.toLocaleString()})</span><br>`;
+                assetHTML += `<span class="crypto-sub">${asset.amount} ${asset.coin} ($${usdValue.toLocaleString('en-US', {maximumFractionDigits:2})})</span><br>`;
             });
             const walletRub = walletUsd * state.rates.USD;
             totalRub += walletRub;
@@ -373,17 +399,21 @@
                         ${assetHTML}
                     </div>
                     <div style="text-align: right;">
-                        <div>$${walletUsd.toLocaleString()}</div>
-                        <div class="crypto-sub">~ ${Math.round(walletRub).toLocaleString()} ₽</div>
+                        <div>$${walletUsd.toLocaleString('en-US', {maximumFractionDigits:0})}</div>
+                        <div class="crypto-sub">~ ${Math.round(walletRub).toLocaleString('ru-RU')} ₽</div>
                     </div>
                 </div>
             `;
         };
 
-        renderCryptoWallet('Bybit', state.crypto.Bybit);
-        renderCryptoWallet('Trust Wallet', state.crypto.TrustWallet);
+        renderWallet('Bybit', state.crypto.Bybit);
+        renderWallet('Trust Wallet', state.crypto.TrustWallet);
 
-        document.getElementById('total-capital').innerText = Math.round(totalRub).toLocaleString() + ' ₽';
+        // Анимация обновления суммы
+        const totalEl = document.getElementById('total-capital');
+        totalEl.style.color = 'var(--primary)';
+        totalEl.innerText = Math.round(totalRub).toLocaleString('ru-RU') + ' ₽';
+        setTimeout(() => totalEl.style.color = '', 500); // Возвращаем цвет
     }
 
     // --- Графики (Chart.js) ---
@@ -393,61 +423,86 @@
         if(charts.accounts) charts.accounts.destroy();
         const ctx = document.getElementById('accountsChart').getContext('2d');
         
-        // Подготовка данных для графика счетов
-        const labels = state.accounts.map(a => a.name).concat(['Крипта (Bybit + Trust)']);
+        const labels = state.accounts.map(a => a.name).concat(['Крипта']);
         let cryptoRub = 0;
         Object.values(state.crypto).flat().forEach(asset => {
-            const rate = asset.coin === 'USDT' ? 1 : state.rates[asset.coin];
-            cryptoRub += (asset.amount * rate * state.rates.USD);
+            cryptoRub += (asset.amount * state.rates[asset.coin] * state.rates.USD);
         });
         const data = state.accounts.map(a => a.balance).concat([cryptoRub]);
 
         charts.accounts = new Chart(ctx, {
             type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{ data: data, backgroundColor: blueColors, borderWidth: 0 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: {font: {family: '-apple-system'}} } } }
+            data: { labels: labels, datasets: [{ data: data, backgroundColor: blueColors, borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
+    }
+
+    // --- Логика Аналитики ---
+    function populateAnalyticsSelect() {
+        const select = document.getElementById('analytics-category-select');
+        select.innerHTML = '';
+        state.categories.forEach(cat => {
+            select.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+        if(charts.categoryHistory) updateCategoryChart();
+    }
+
+    function updateCategoryChart() {
+        const cat = document.getElementById('analytics-category-select').value;
+        // Если история есть берем ее, если категория новая - ставим нули
+        const data = state.historyExpenses[cat] || [0, 0, 0, 0]; 
+
+        if(charts.categoryHistory) {
+            charts.categoryHistory.data.datasets[0].data = data;
+            charts.categoryHistory.data.datasets[0].label = `Траты на "${cat}"`;
+            charts.categoryHistory.update();
+        } else {
+            const ctx = document.getElementById('categoryHistoryChart').getContext('2d');
+            charts.categoryHistory = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: state.months,
+                    datasets: [{ label: `Траты на "${cat}"`, data: data, backgroundColor: '#af52de', borderRadius: 6 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
     }
 
     function initAnalyticsCharts() {
-        if(charts.expenses) charts.expenses.destroy();
-        if(charts.trend) charts.trend.destroy();
+        // Тренд категории (новый)
+        updateCategoryChart();
 
-        // 1. График расходов по категориям
-        const ctxExp = document.getElementById('expensesChart').getContext('2d');
-        charts.expenses = new Chart(ctxExp, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(state.expenses),
-                datasets: [{
-                    label: 'Траты (₽)',
-                    data: Object.values(state.expenses),
-                    backgroundColor: '#007aff',
-                    borderRadius: 8
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
+        // Круговая/Бар структура
+        if(!charts.expenses) {
+            const ctxExp = document.getElementById('expensesChart').getContext('2d');
+            charts.expenses = new Chart(ctxExp, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(state.expenses),
+                    datasets: [{ label: 'Сумма (₽)', data: Object.values(state.expenses), backgroundColor: '#007aff', borderRadius: 8 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
 
-        // 2. Тренд доходов и расходов (Mock data)
-        const ctxTrend = document.getElementById('trendChart').getContext('2d');
-        charts.trend = new Chart(ctxTrend, {
-            type: 'line',
-            data: {
-                labels: ['Май', 'Июн', 'Июл', 'Авг'],
-                datasets: [
-                    { label: 'Доходы', data: [320000, 310000, 340000, 350000], borderColor: '#34c759', tension: 0.4 },
-                    { label: 'Расходы', data: [150000, 180000, 140000, 124500], borderColor: '#1c1c1e', tension: 0.4 }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
+        // Тренд (Доходы/Расходы)
+        if(!charts.trend) {
+            const ctxTrend = document.getElementById('trendChart').getContext('2d');
+            charts.trend = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: state.months,
+                    datasets: [
+                        { label: 'Доходы', data: [320000, 310000, 340000, 350000], borderColor: '#34c759', tension: 0.4 },
+                        { label: 'Расходы', data: [150000, 180000, 140000, 124500], borderColor: '#ff3b30', tension: 0.4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
     }
 
-    // Запуск
     window.onload = init;
 </script>
 </body>
