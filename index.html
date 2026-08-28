@@ -47,21 +47,29 @@
         .amount.income { color: var(--success); }
         .amount.expense { color: var(--text-main); }
         .subtitle { color: var(--text-muted); font-size: 14px; }
+        .date-badge { font-size: 12px; color: var(--text-muted); background: var(--bg-color); padding: 4px 8px; border-radius: 8px; margin-right: 10px; }
         
         .live-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--primary); background: rgba(0, 122, 255, 0.1); padding: 4px 10px; border-radius: 100px; margin-top: 10px; font-weight: 500; }
         .live-status.loading { color: #ff9500; background: rgba(255, 149, 0, 0.1); }
 
         /* Формы и элементы */
         input, select, button { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none; }
+        input[type="date"] { font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
         input:focus, select:focus { border-color: var(--primary); }
         .btn-primary { background: var(--primary); color: #fff; border: none; font-weight: 600; cursor: pointer; margin-top: 5px; }
         .btn-primary:hover { background: var(--primary-hover); }
 
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
         .list-item:last-child { border-bottom: none; }
-        .list-item-title { font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .list-item-title { font-weight: 500; display: flex; align-items: center; }
         .category-tag { display: inline-block; background: var(--bg-color); padding: 6px 12px; border-radius: 100px; font-size: 14px; margin: 4px; }
+        
         .action-btn { color: var(--danger); font-weight: bold; cursor: pointer; font-size: 18px; line-height: 1; margin-left: 10px; border: none; background: none; padding: 0; width: auto; }
+        .edit-btn { color: var(--primary); font-size: 16px; margin-left: 10px; }
+
+        .scrollable-list { max-height: 250px; overflow-y: auto; padding-right: 5px; }
+        .scrollable-list::-webkit-scrollbar { width: 4px; }
+        .scrollable-list::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 4px; }
 
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
@@ -85,6 +93,7 @@
     <!-- Вкладка 1: Текущий месяц -->
     <div id="month" class="tab-content active">
         <div class="bento-grid">
+            
             <div class="bento-card">
                 <h2>Баланс августа</h2>
                 <div class="amount income" id="month-income-total">+ 0 ₽</div>
@@ -94,7 +103,33 @@
             </div>
 
             <div class="bento-card">
-                <h2>Траты текущего месяца</h2>
+                <h2>Операция</h2>
+                <input type="date" id="op-date">
+                <div class="flex-row">
+                    <select id="op-type" onchange="updateOpCategories()">
+                        <option value="expense">Расход</option>
+                        <option value="income">Доход</option>
+                    </select>
+                    <select id="op-category"></select>
+                </div>
+                <input type="number" placeholder="Сумма (₽)" id="op-amount">
+                <button class="btn-primary" onclick="addTransaction()">Добавить</button>
+            </div>
+
+            <!-- Новый блок: Траты по дням -->
+            <div class="bento-card span-2">
+                <h2>Траты по дням</h2>
+                <div class="chart-container"><canvas id="dailyExpensesChart"></canvas></div>
+            </div>
+
+            <!-- Новый блок: Список операций -->
+            <div class="bento-card span-2">
+                <h2>История операций</h2>
+                <div class="scrollable-list" id="daily-transactions-list"></div>
+            </div>
+
+            <div class="bento-card">
+                <h2>Структура трат (Месяц)</h2>
                 <div class="chart-container" style="height: 180px;">
                     <canvas id="currentMonthChart"></canvas>
                 </div>
@@ -102,33 +137,23 @@
             </div>
 
             <div class="bento-card">
-                <h2>Операция</h2>
-                <select id="op-type" onchange="updateOpCategories()">
-                    <option value="expense">Расход</option>
-                    <option value="income">Доход</option>
-                </select>
-                <input type="number" placeholder="Сумма (₽)" id="op-amount">
-                <select id="op-category"></select>
-                <button class="btn-primary" onclick="addTransaction()">Добавить</button>
-            </div>
-
-            <div class="bento-card">
-                <h2>Настройка расходов</h2>
+                <h2>Настройка категорий</h2>
                 <div class="flex-row">
-                    <input type="text" id="new-exp-category" placeholder="Новая категория" style="margin:0;">
-                    <button class="btn-primary" style="margin:0; width: 80px;" onclick="addCategory('expense')">+</button>
+                    <input type="text" id="new-cat-name" placeholder="Новая категория" style="margin:0;">
+                    <select id="new-cat-type" style="margin:0; width: 120px;">
+                        <option value="expense">Расход</option>
+                        <option value="income">Доход</option>
+                    </select>
+                    <button class="btn-primary" style="margin:0; width: 60px;" onclick="addCategory()">+</button>
                 </div>
-                <div id="exp-categories-list" style="margin-top: 15px;"></div>
-            </div>
-
-            <div class="bento-card">
-                <h2>Настройка доходов</h2>
-                <div class="flex-row">
-                    <input type="text" id="new-inc-category" placeholder="Новый источник" style="margin:0;">
-                    <button class="btn-primary" style="margin:0; width: 80px;" onclick="addCategory('income')">+</button>
+                <div style="margin-top: 15px;">
+                    <div class="subtitle" style="margin-bottom: 5px;">Расходы:</div>
+                    <div id="exp-categories-list"></div>
+                    <div class="subtitle" style="margin: top 10px; margin-bottom: 5px;">Доходы:</div>
+                    <div id="inc-categories-list"></div>
                 </div>
-                <div id="inc-categories-list" style="margin-top: 15px;"></div>
             </div>
+            
         </div>
     </div>
 
@@ -194,12 +219,12 @@
     // --- Архитектура Firebase RTDB (Обертка) ---
     const DB = {
         async load() {
-            const local = localStorage.getItem('financeState');
+            const local = localStorage.getItem('financeState_v2');
             if (local) return JSON.parse(local);
             return null;
         },
         async save(state) {
-            localStorage.setItem('financeState', JSON.stringify(state));
+            localStorage.setItem('financeState_v2', JSON.stringify(state));
         }
     };
 
@@ -210,7 +235,7 @@
         
         categories: {
             expense: ['Еда', 'Авто', 'Дом', 'Развлечения', 'Подписки'],
-            income: ['Зарплата', 'Проекты', 'Инвестиции', 'Крипта (PnL)'] // Крипта теперь здесь
+            income: ['Зарплата', 'Проекты', 'Инвестиции', 'Крипта (PnL)']
         },
         
         accounts: [
@@ -221,6 +246,14 @@
             { id: 5, name: 'Trust Wallet', type: 'crypto', coin: 'ETH', balance: 1.2 }
         ],
         
+        // Добавлен массив транзакций для точечного учета (история операций)
+        transactions: [
+            { id: 101, date: '2026-08-25', type: 'expense', category: 'Еда', amount: 1500 },
+            { id: 102, date: '2026-08-26', type: 'expense', category: 'Авто', amount: 3000 },
+            { id: 103, date: '2026-08-27', type: 'expense', category: 'Развлечения', amount: 2000 },
+            { id: 104, date: '2026-08-28', type: 'income', category: 'Проекты', amount: 15000 }
+        ],
+
         history: {
             expense: {
                 'Еда': [38000, 42000, 39500, 45000],
@@ -233,13 +266,13 @@
                 'Зарплата': [200000, 200000, 200000, 200000],
                 'Проекты': [100000, 50000, 120000, 150000],
                 'Инвестиции': [20000, 10000, 15000, 0],
-                'Крипта (PnL)': [12000, -5000, 24000, 18000] // Данные по крипте перенесены сюда
+                'Крипта (PnL)': [12000, -5000, 24000, 18000]
             }
         }
     };
 
     let charts = {}; 
-    const currentMonthIndex = 3; 
+    const currentMonthIndex = 3; // Индекс текущего месяца (Август)
 
     Chart.defaults.scale.grid.display = false;
     Chart.defaults.scale.border.display = false;
@@ -248,6 +281,9 @@
     async function init() {
         const loaded = await DB.load();
         if(loaded) state = { ...state, ...loaded };
+        
+        // Установка сегодняшней даты в инпут
+        document.getElementById('op-date').value = new Date().toISOString().split('T')[0];
 
         renderAll();
         await fetchLiveRates();
@@ -295,20 +331,22 @@
         renderAccounts();
     }
 
+    // --- Вкладка 1: Текущий месяц (Обновленная логика) ---
     function renderMonthTab() {
+        // 1. Считаем тоталы (Берем из истории + новые транзакции текущего месяца)
         let tInc = 0, tExp = 0;
         state.categories.income.forEach(cat => tInc += (state.history.income[cat]?.[currentMonthIndex] || 0));
+        state.categories.expense.forEach(cat => tExp += (state.history.expense[cat]?.[currentMonthIndex] || 0));
+        
         document.getElementById('month-income-total').innerText = `+ ${tInc.toLocaleString('ru-RU')} ₽`;
+        document.getElementById('month-expense-total').innerText = `- ${tExp.toLocaleString('ru-RU')} ₽`;
 
+        // 2. Структура трат (Круговая диаграмма)
         let expensesArr = state.categories.expense.map(cat => ({
             name: cat, val: state.history.expense[cat]?.[currentMonthIndex] || 0
         })).filter(e => e.val > 0).sort((a, b) => b.val - a.val);
 
-        expensesArr.forEach(e => tExp += e.val);
-        document.getElementById('month-expense-total').innerText = `- ${tExp.toLocaleString('ru-RU')} ₽`;
-
-        const listEl = document.getElementById('current-month-expenses-list');
-        listEl.innerHTML = expensesArr.map(e => `
+        document.getElementById('current-month-expenses-list').innerHTML = expensesArr.map(e => `
             <div class="list-item" style="padding: 8px 0;">
                 <span class="list-item-title">${e.name}</span>
                 <span>${e.val.toLocaleString('ru-RU')} ₽</span>
@@ -316,15 +354,97 @@
         `).join('');
 
         if(charts.currentMonth) charts.currentMonth.destroy();
-        const ctx = document.getElementById('currentMonthChart').getContext('2d');
-        charts.currentMonth = new Chart(ctx, {
+        charts.currentMonth = new Chart(document.getElementById('currentMonthChart').getContext('2d'), {
             type: 'doughnut',
-            data: {
-                labels: expensesArr.map(e => e.name),
-                datasets: [{ data: expensesArr.map(e => e.val), backgroundColor: blueColors, borderWidth: 0 }]
-            },
+            data: { labels: expensesArr.map(e => e.name), datasets: [{ data: expensesArr.map(e => e.val), backgroundColor: blueColors, borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
+
+        // 3. Рендер списка операций по дням
+        const dailyListEl = document.getElementById('daily-transactions-list');
+        const sortedTrans = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date)); // Свежие сверху
+        
+        dailyListEl.innerHTML = sortedTrans.map(t => {
+            const dateObj = new Date(t.date);
+            const dateStr = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+            const sign = t.type === 'income' ? '+' : '-';
+            const colorClass = t.type === 'income' ? 'income' : '';
+            return `
+                <div class="list-item">
+                    <div class="list-item-title">
+                        <span class="date-badge">${dateStr}</span> ${t.category}
+                    </div>
+                    <div style="display:flex; align-items:center;">
+                        <span class="amount ${colorClass}" style="font-size:16px; margin:0;">${sign} ${t.amount.toLocaleString('ru-RU')} ₽</span>
+                        <button class="action-btn" onclick="deleteTransaction(${t.id})" title="Удалить">×</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // 4. График трат по дням (Столбцы)
+        if(charts.dailyExpenses) charts.dailyExpenses.destroy();
+        
+        const dailyAgg = {};
+        state.transactions.filter(t => t.type === 'expense').forEach(t => {
+            const dStr = new Date(t.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+            dailyAgg[dStr] = (dailyAgg[dStr] || 0) + t.amount;
+        });
+        
+        // Сортируем ключи по хронологии
+        const sortedDailyLabels = Object.keys(dailyAgg).sort((a, b) => {
+            // Упрощенная сортировка: работает корректно внутри одного месяца
+            return parseInt(a) - parseInt(b);
+        });
+        const dailyData = sortedDailyLabels.map(label => dailyAgg[label]);
+
+        charts.dailyExpenses = new Chart(document.getElementById('dailyExpensesChart').getContext('2d'), {
+            type: 'bar',
+            data: { 
+                labels: sortedDailyLabels, 
+                datasets: [{ 
+                    label: 'Траты (₽)',
+                    data: dailyData, 
+                    backgroundColor: '#007aff', 
+                    borderRadius: 6 
+                }] 
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    }
+
+    function addTransaction() {
+        const type = document.getElementById('op-type').value;
+        const amount = Number(document.getElementById('op-amount').value);
+        const cat = document.getElementById('op-category').value;
+        const date = document.getElementById('op-date').value || new Date().toISOString().split('T')[0];
+        
+        if(!amount) return alert('Укажите сумму');
+        
+        // Добавляем в лог транзакций
+        const transId = Date.now();
+        state.transactions.push({ id: transId, type, category: cat, amount, date });
+
+        // Добавляем в агрегированную историю аналитики
+        state.history[type][cat][currentMonthIndex] += amount;
+        
+        document.getElementById('op-amount').value = '';
+        renderMonthTab();
+        DB.save(state);
+    }
+
+    function deleteTransaction(id) {
+        const trans = state.transactions.find(t => t.id === id);
+        if(!trans) return;
+
+        // Откатываем сумму в аналитике
+        state.history[trans.type][trans.category][currentMonthIndex] -= trans.amount;
+        
+        // Удаляем из массива
+        state.transactions = state.transactions.filter(t => t.id !== id);
+        
+        renderMonthTab();
+        DB.save(state);
     }
 
     function renderCategories() {
@@ -337,9 +457,7 @@
             `).join('');
             
             const select = document.getElementById(`analytics-${type === 'expense' ? 'exp' : 'inc'}-select`);
-            if(select) {
-                select.innerHTML = state.categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
-            }
+            if(select) select.innerHTML = state.categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
         };
         renderList('expense', 'exp-categories-list');
         renderList('income', 'inc-categories-list');
@@ -351,9 +469,9 @@
         select.innerHTML = state.categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
-    function addCategory(type) {
-        const inputId = type === 'expense' ? 'new-exp-category' : 'new-inc-category';
-        const input = document.getElementById(inputId);
+    function addCategory() {
+        const type = document.getElementById('new-cat-type').value;
+        const input = document.getElementById('new-cat-name');
         const val = input.value.trim();
         if(val && !state.categories[type].includes(val)) {
             state.categories[type].push(val);
@@ -375,18 +493,7 @@
         DB.save(state);
     }
 
-    function addTransaction() {
-        const type = document.getElementById('op-type').value;
-        const amount = Number(document.getElementById('op-amount').value);
-        const cat = document.getElementById('op-category').value;
-        if(!amount) return;
-        
-        state.history[type][cat][currentMonthIndex] += amount;
-        document.getElementById('op-amount').value = '';
-        renderMonthTab();
-        DB.save(state);
-    }
-
+    // --- Вкладка 2: Счета ---
     function toggleCoinInput() {
         const isCrypto = document.getElementById('new-acc-type').value === 'crypto';
         document.getElementById('new-acc-coin').style.display = isCrypto ? 'block' : 'none';
@@ -418,7 +525,10 @@
                         <div class="list-item-title">${acc.name} <span style="font-size:12px; color:var(--text-muted)">${acc.type.toUpperCase()}</span></div>
                         <div class="subtitle">${displayVal} ${acc.type === 'crypto' ? `(~${Math.round(rubValue).toLocaleString('ru-RU')} ₽)` : ''}</div>
                     </div>
-                    <button class="action-btn" onclick="deleteAccount(${acc.id})">×</button>
+                    <div>
+                        <button class="action-btn edit-btn" onclick="editAccountBalance(${acc.id})" title="Изменить баланс">✏️</button>
+                        <button class="action-btn" onclick="deleteAccount(${acc.id})" title="Удалить счет">×</button>
+                    </div>
                 </div>
             `;
         });
@@ -450,6 +560,21 @@
         DB.save(state);
     }
 
+    function editAccountBalance(id) {
+        const acc = state.accounts.find(a => a.id === id);
+        if(!acc) return;
+        
+        const typeLabel = acc.type === 'fiat' ? '₽' : acc.coin;
+        const newBalance = prompt(`Введите новый баланс для "${acc.name}" в ${typeLabel}:`, acc.balance);
+        
+        if(newBalance !== null && !isNaN(Number(newBalance))) {
+            acc.balance = Number(newBalance);
+            renderAccounts();
+            if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
+            DB.save(state);
+        }
+    }
+
     function initAccountsChart() {
         if(charts.accounts) charts.accounts.destroy();
         const ctx = document.getElementById('accountsChart').getContext('2d');
@@ -466,6 +591,7 @@
         });
     }
 
+    // --- Вкладка 3: Аналитика ---
     function updateAnalyticsCharts() {
         const expCat = document.getElementById('analytics-exp-select').value;
         const incCat = document.getElementById('analytics-inc-select').value;
@@ -487,7 +613,6 @@
             elements: { line: { tension: 0.4 }, point: { radius: 4 } }
         };
 
-        // 1. Расходы
         if(charts.expHistory) charts.expHistory.destroy();
         const catExp = document.getElementById('analytics-exp-select').value || state.categories.expense[0];
         charts.expHistory = new Chart(document.getElementById('chartExpHistory'), {
@@ -496,7 +621,6 @@
             options: commonLineOptions
         });
 
-        // 2. Доходы (включая Крипту)
         if(charts.incHistory) charts.incHistory.destroy();
         const catInc = document.getElementById('analytics-inc-select').value || state.categories.income[0];
         charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
@@ -505,9 +629,7 @@
             options: commonLineOptions
         });
 
-        // 3. Тренд (Суммарно Доходы vs Расходы)
         if(charts.trend) charts.trend.destroy();
-        
         let totalIncArr = [0,0,0,0], totalExpArr = [0,0,0,0];
         state.monthsLabels.forEach((_, i) => {
             state.categories.income.forEach(c => totalIncArr[i] += (state.history.income[c]?.[i] || 0));
