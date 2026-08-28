@@ -29,7 +29,7 @@
         .nav-btn { background: var(--card-bg); border: none; padding: 12px 20px; border-radius: 100px; font-size: 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
         .nav-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
         .icon-btn { padding: 12px; display: flex; align-items: center; justify-content: center; }
-        .nav-spacer { margin-left: auto; } /* Ставим шестеренку справа */
+        .nav-spacer { margin-left: auto; } 
 
         /* Бенто-сетка */
         .bento-grid { display: grid; gap: var(--spacing); grid-template-columns: 1fr; }
@@ -62,7 +62,7 @@
         .live-status.loading .status-dot { background-color: #ff9500; }
         .live-status.error .status-dot { background-color: var(--danger); }
 
-        /* Формы (добавлен inputmode=decimal для правильной клавиатуры) */
+        /* Формы */
         input, select, button { width: 100%; max-width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none; box-sizing: border-box; }
         input[type="date"] { font-family: -apple-system, sans-serif; -webkit-appearance: none; appearance: none; display: block; }
         input:focus, select:focus { border-color: var(--primary); }
@@ -84,7 +84,7 @@
 
         .category-tag { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 8px 16px; border-radius: 100px; font-size: 14px; margin: 4px; transition: all 0.2s ease; cursor: pointer; user-select: none; -webkit-user-select: none; }
         
-        /* Универсальное скрытие иконок (Desktop Hover) */
+        /* Скрытие иконок (Desktop Hover) */
         @media (hover: hover) and (pointer: fine) {
             .list-item .actions, .token-item .actions { opacity: 0; transition: opacity 0.2s ease; display: flex; align-items: center; gap: 4px; }
             .list-item:hover .actions, .token-item:hover .actions { opacity: 1; }
@@ -92,7 +92,7 @@
             .category-tag:hover .actions { max-width: 20px; opacity: 1; margin-left: 6px; }
         }
 
-        /* Универсальное скрытие иконок (Mobile Long Press) */
+        /* Скрытие иконок (Mobile Long Press) */
         @media (hover: none) {
             .list-item .actions, .token-item .actions { opacity: 0; pointer-events: none; transition: opacity 0.2s; display: flex; align-items: center; gap: 4px; }
             .list-item.show-actions .actions, .token-item.show-actions .actions { opacity: 1; pointer-events: auto; }
@@ -234,7 +234,7 @@
         </div>
     </div>
 
-    <!-- Вкладка 4: Настройки (Новая) -->
+    <!-- Вкладка 4: Настройки -->
     <div id="settings" class="tab-content">
         <div class="bento-grid">
             <div class="bento-card span-full">
@@ -365,7 +365,7 @@
             inputs.forEach(inp => {
                 const el = document.createElement('input');
                 el.type = inp.type || 'text';
-                if (inp.inputmode) el.inputMode = inp.inputmode; // Добавлена поддержка inputmode для модалки
+                if (inp.inputmode) el.inputMode = inp.inputmode; 
                 el.placeholder = inp.placeholder || '';
                 el.value = inp.value || '';
                 el.id = `modal-inp-${inp.id}`;
@@ -465,7 +465,6 @@
         document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         
-        // Обработка клика по самой кнопке, чтобы сделать её активной
         const clickedBtn = event.currentTarget;
         if(clickedBtn) clickedBtn.classList.add('active');
 
@@ -691,18 +690,20 @@
                 totalRub += walletRub;
 
                 list.innerHTML += `
-                    <div class="list-item" style="flex-direction: column; align-items: stretch; border-bottom: none; background: #fafafa; padding: 12px; border-radius: 16px; margin-bottom: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="background: #fafafa; padding: 12px; border-radius: 16px; margin-bottom: 10px;">
+                        <div class="list-item" style="border-bottom: none; padding: 0 0 4px 0;">
                             <div>
                                 <div class="list-item-title">${acc.name} <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px; margin-left:6px;">WALLET</span></div>
                                 <div class="subtitle">~ ${Math.round(walletRub).toLocaleString('ru-RU')} ₽ ($${walletUsd.toLocaleString('en-US',{maximumFractionDigits:2})})</div>
                             </div>
-                            <div style="display:flex; gap: 6px;">
+                            <div style="display:flex; gap: 6px; align-items: center;">
                                 <button class="add-token-btn" onclick="addTokenToWallet(${acc.id})">+ Токен</button>
-                                <button class="action-btn" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button>
+                                <div class="actions">
+                                    <button class="action-btn" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button>
+                                </div>
                             </div>
                         </div>
-                        <div style="margin-top: 10px;">${tokensHTML}</div>
+                        <div style="margin-top: 8px;">${tokensHTML}</div>
                     </div>
                 `;
             }
