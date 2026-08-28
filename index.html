@@ -3,325 +3,452 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Учет расходов</title>
+    <title>Finance Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #f5f5f7;
-            --card-bg: rgba(255, 255, 255, 0.7);
-            --text-main: #1d1d1f;
-            --text-secondary: #86868b;
-            --accent: #007aff;
-            --radius-lg: 24px;
-            --radius-md: 14px;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
-            --border: 1px solid rgba(255, 255, 255, 0.4);
+            --bg-color: #f2f2f7;
+            --card-bg: #ffffff;
+            --primary: #007aff;
+            --primary-hover: #0056b3;
+            --text-main: #1c1c1e;
+            --text-muted: #8e8e93;
+            --danger: #ff3b30;
+            --success: #34c759;
+            --radius: 24px;
+            --spacing: 20px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            padding: 20px;
-            /* Легкий градиентный фон */
-            background-image: radial-gradient(circle at 0% 0%, #ffffff 0%, transparent 50%),
-                              radial-gradient(circle at 100% 100%, #e2e2e8 0%, transparent 50%);
-            background-attachment: fixed;
-            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .header {
-            max-width: 1000px;
-            margin: 0 auto 24px auto;
-            padding: 0 10px;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing);
+            padding-bottom: 100px; /* Для мобильного меню */
         }
 
-        h1 {
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
+        /* Навигация */
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: var(--spacing);
         }
 
-        /* Bento Grid */
+        .nav-btn {
+            background: var(--card-bg);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 100px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        /* Бенто-сетка */
         .bento-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
+            gap: var(--spacing);
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         }
 
-        /* Десктопная компоновка */
-        @media (min-width: 768px) {
-            .bento-grid {
-                grid-template-columns: repeat(3, 1fr);
-                grid-auto-rows: minmax(180px, auto);
-            }
-            .card-balance { grid-column: span 2; grid-row: span 1; }
-            .card-add { grid-column: span 1; grid-row: span 2; }
-            .card-history { grid-column: span 2; grid-row: span 1; }
-        }
-
-        .card {
+        .bento-card {
             background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: var(--border);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+            padding: var(--spacing);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
         }
 
-        .card-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .bento-card.span-2 { grid-column: span 2; }
+        
+        @media (max-width: 768px) {
+            .bento-card.span-2 { grid-column: span 1; }
+            .nav {
+                position: fixed;
+                bottom: 0; left: 0; right: 0;
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(10px);
+                margin: 0;
+                padding: 15px 10px;
+                padding-bottom: env(safe-area-inset-bottom, 15px);
+                border-radius: 24px 24px 0 0;
+                justify-content: space-around;
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+                z-index: 1000;
+            }
+            .nav-btn { font-size: 14px; padding: 10px 15px; }
         }
 
-        /* Карточка баланса */
-        .balance-amount {
-            font-size: 48px;
-            font-weight: 700;
-            letter-spacing: -1.5px;
-            margin-top: auto;
-            margin-bottom: auto;
-        }
+        /* Типографика и элементы */
+        h2 { font-size: 20px; margin-bottom: 15px; font-weight: 600; }
+        .amount { font-size: 32px; font-weight: 700; margin-bottom: 5px; }
+        .amount.income { color: var(--success); }
+        .amount.expense { color: var(--text-main); }
+        .subtitle { color: var(--text-muted); font-size: 14px; }
 
-        /* Форма добавления */
-        .input-group {
-            margin-bottom: 16px;
-        }
-
-        input, select {
+        /* Формы и списки */
+        input, select, button {
             width: 100%;
-            background: rgba(0,0,0,0.04);
-            border: none;
-            padding: 14px 16px;
-            border-radius: var(--radius-md);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #e5e5ea;
+            margin-bottom: 10px;
             font-size: 16px;
-            color: var(--text-main);
+            background: #fafafa;
             outline: none;
-            transition: background 0.2s;
         }
-
-        input:focus, select:focus {
-            background: rgba(0,0,0,0.08);
-        }
-
-        button {
-            width: 100%;
-            background: var(--accent);
-            color: white;
+        input:focus, select:focus { border-color: var(--primary); }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
             border: none;
-            padding: 16px;
-            border-radius: var(--radius-md);
-            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
-            margin-top: auto;
+            margin-top: 10px;
         }
+        .btn-primary:hover { background: var(--primary-hover); }
 
-        button:active {
-            opacity: 0.8;
-            transform: scale(0.98);
-        }
-
-        /* История транзакций */
-        .history-list {
-            list-style: none;
-            overflow-y: auto;
-            max-height: 250px;
-        }
-
-        /* Скрываем скроллбар для эстетики */
-        .history-list::-webkit-scrollbar { display: none; }
-        .history-list { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .history-item {
+        .list-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid #f2f2f7;
         }
+        .list-item:last-child { border-bottom: none; }
+        .list-item-title { font-weight: 500; }
+        .crypto-sub { font-size: 12px; color: var(--text-muted); }
 
-        .history-item:last-child {
-            border-bottom: none;
+        .category-tag {
+            display: inline-block;
+            background: var(--bg-color);
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 14px;
+            margin: 4px;
+            cursor: pointer;
         }
+        .delete-cat { color: var(--danger); margin-left: 8px; font-weight: bold; }
 
-        .item-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        /* Табы */
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .item-name {
-            font-weight: 500;
-            font-size: 16px;
-        }
-
-        .item-category {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .item-amount {
-            font-weight: 600;
-            font-size: 16px;
-        }
+        .chart-container { position: relative; height: 250px; width: 100%; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Сводка</h1>
+<div class="container">
+    <!-- Навигация -->
+    <div class="nav">
+        <button class="nav-btn active" onclick="switchTab('month')">Текущий месяц</button>
+        <button class="nav-btn" onclick="switchTab('accounts')">Мои счета</button>
+        <button class="nav-btn" onclick="switchTab('analytics')">Аналитика</button>
     </div>
 
-    <div class="bento-grid">
-        <!-- Карточка итоговой суммы -->
-        <div class="card card-balance">
-            <div class="card-title">Потрачено за месяц</div>
-            <div class="balance-amount" id="totalExpense">0 ₽</div>
-        </div>
+    <!-- Вкладка 1: Текущий месяц -->
+    <div id="month" class="tab-content active">
+        <div class="bento-grid">
+            <div class="bento-card">
+                <h2>Баланс месяца</h2>
+                <div class="amount income">+ 350 000 ₽</div>
+                <div class="subtitle">Доходы</div>
+                <div class="amount expense" style="margin-top: 15px;">- 124 500 ₽</div>
+                <div class="subtitle">Расходы</div>
+            </div>
 
-        <!-- Форма новой записи -->
-        <div class="card card-add">
-            <div class="card-title">Новый расход</div>
-            
-            <div class="input-group">
-                <input type="text" id="nameInput" placeholder="Название (например, Кофе)" required>
-            </div>
-            
-            <div class="input-group">
-                <input type="number" id="amountInput" placeholder="Сумма (₽)" required>
-            </div>
-            
-            <div class="input-group">
-                <select id="categoryInput">
-                    <option value="Питание">Питание</option>
-                    <option value="Транспорт">Транспорт</option>
-                    <option value="Подписки">Подписки</option>
-                    <option value="Развлечения">Развлечения</option>
-                    <option value="Быт">Быт</option>
+            <div class="bento-card">
+                <h2>Добавить операцию</h2>
+                <select id="op-type">
+                    <option value="expense">Расход</option>
+                    <option value="income">Доход</option>
                 </select>
+                <input type="number" placeholder="Сумма (₽)" id="op-amount">
+                <select id="op-category">
+                    <!-- Заполняется JS -->
+                </select>
+                <button class="btn-primary" onclick="addTransaction()">Добавить</button>
             </div>
 
-            <button onclick="addTransaction()">Добавить</button>
-        </div>
-
-        <!-- История -->
-        <div class="card card-history">
-            <div class="card-title">Последние операции</div>
-            <ul class="history-list" id="historyList">
-                <!-- Сюда добавляются записи через JS -->
-            </ul>
+            <div class="bento-card span-2">
+                <h2>Категории расходов (настройка)</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="new-category" placeholder="Новая категория" style="margin:0;">
+                    <button class="btn-primary" style="margin:0; width: 120px;" onclick="addCategory()">Добавить</button>
+                </div>
+                <div id="categories-list">
+                    <!-- Категории рендерятся здесь -->
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        // Имитация локального хранилища/БД
-        let transactions = [];
+    <!-- Вкладка 2: Мои счета -->
+    <div id="accounts" class="tab-content">
+        <div class="bento-grid">
+            <div class="bento-card">
+                <h2>Общий капитал</h2>
+                <div class="amount" id="total-capital">0 ₽</div>
+                <div class="subtitle">По актуальному курсу (1$ = 95₽)</div>
+                <div class="chart-container" style="margin-top: 20px;">
+                    <canvas id="accountsChart"></canvas>
+                </div>
+            </div>
 
-        const totalExpenseEl = document.getElementById('totalExpense');
-        const historyListEl = document.getElementById('historyList');
-        const nameInput = document.getElementById('nameInput');
-        const amountInput = document.getElementById('amountInput');
-        const categoryInput = document.getElementById('categoryInput');
+            <div class="bento-card">
+                <h2>Счета и Карты</h2>
+                <div id="fiat-accounts"></div>
+            </div>
 
-        // Стартовые данные для визуализации
-        function initDummyData() {
-            addRecord('Такси', 850, 'Транспорт');
-            addRecord('Яндекс Музыка', 299, 'Подписки');
-            addRecord('Супермаркет', 3200, 'Питание');
+            <div class="bento-card">
+                <h2>Крипта (Bybit & Trust Wallet)</h2>
+                <div id="crypto-accounts"></div>
+                <div class="subtitle" style="margin-top: 15px;">
+                    Курсы (mock): BTC = $60,000 | ETH = $3,000 | USDT = $1
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Вкладка 3: Аналитика -->
+    <div id="analytics" class="tab-content">
+        <div class="bento-grid">
+            <div class="bento-card span-2">
+                <h2>Структура расходов (Август)</h2>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="expensesChart"></canvas>
+                </div>
+            </div>
+            <div class="bento-card">
+                <h2>Динамика (Доходы vs Расходы)</h2>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Состояние приложения (State) ---
+    const state = {
+        rates: { USD: 95, BTC: 60000, ETH: 3000 },
+        categories: ['Еда', 'Авто', 'Подписки', 'Развлечения', 'Дом'],
+        accounts: [
+            { name: 'Т-Банк карта', type: 'fiat', balance: 120000 },
+            { name: 'Инвестиции', type: 'fiat', balance: 450000 },
+            { name: 'Денежный рынок', type: 'fiat', balance: 300000 },
+            { name: 'Antarctic', type: 'fiat', balance: 50000 },
+            { name: 'Наличка', type: 'fiat', balance: 15000 },
+        ],
+        crypto: {
+            Bybit: [ { coin: 'USDT', amount: 1500 }, { coin: 'BTC', amount: 0.05 } ],
+            TrustWallet: [ { coin: 'ETH', amount: 1.2 } ]
+        },
+        expenses: {
+            'Еда': 45000,
+            'Авто': 15000,
+            'Дом': 30000,
+            'Развлечения': 20000,
+            'Подписки': 5000
         }
+    };
 
-        function addRecord(name, amount, category) {
-            const transaction = {
-                id: Date.now().toString(),
-                name,
-                amount: parseFloat(amount),
-                category,
-                date: new Date()
-            };
-            transactions.unshift(transaction); // Добавляем в начало массива
-            updateUI();
+    let charts = {}; // Для хранения инстансов Chart.js
+
+    // --- Инициализация ---
+    function init() {
+        renderCategories();
+        renderAccounts();
+    }
+
+    // --- Логика вкладок ---
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+
+        // Рендерим графики при открытии вкладок (чтобы canvas не баговал при display:none)
+        if(tabId === 'accounts') initAccountsChart();
+        if(tabId === 'analytics') initAnalyticsCharts();
+    }
+
+    // --- Вкладка 1: Категории ---
+    function renderCategories() {
+        const select = document.getElementById('op-category');
+        const list = document.getElementById('categories-list');
+        select.innerHTML = ''; list.innerHTML = '';
+
+        state.categories.forEach((cat, index) => {
+            select.innerHTML += `<option value="${cat}">${cat}</option>`;
+            list.innerHTML += `
+                <div class="category-tag">
+                    ${cat} <span class="delete-cat" onclick="deleteCategory(${index})">×</span>
+                </div>
+            `;
+        });
+    }
+
+    function addCategory() {
+        const input = document.getElementById('new-category');
+        if(input.value.trim() !== '') {
+            state.categories.push(input.value.trim());
+            input.value = '';
+            renderCategories();
         }
+    }
 
-        // Обработка кнопки
-        function addTransaction() {
-            const name = nameInput.value.trim();
-            const amount = amountInput.value.trim();
-            const category = categoryInput.value;
+    function deleteCategory(index) {
+        state.categories.splice(index, 1);
+        renderCategories();
+    }
 
-            if (!name || !amount) {
-                alert('Заполните название и сумму');
-                return;
-            }
+    function addTransaction() {
+        const amount = document.getElementById('op-amount').value;
+        if(!amount) return alert('Введите сумму');
+        alert('Операция добавлена! (в прототипе данные очищаются)');
+        document.getElementById('op-amount').value = '';
+    }
 
-            addRecord(name, amount, category);
-            
-            // Очистка полей
-            nameInput.value = '';
-            amountInput.value = '';
-            nameInput.focus();
-        }
-
-        // Форматирование чисел в рубли
-        function formatMoney(amount) {
-            return new Intl.NumberFormat('ru-RU', {
-                style: 'currency',
-                currency: 'RUB',
-                maximumFractionDigits: 0
-            }).format(amount);
-        }
-
-        // Обновление DOM
-        function updateUI() {
-            const total = transactions.reduce((acc, curr) => acc + curr.amount, 0);
-            totalExpenseEl.textContent = formatMoney(total);
-
-            historyListEl.innerHTML = '';
-            
-            if(transactions.length === 0) {
-                historyListEl.innerHTML = '<div style="color: var(--text-secondary); text-align: center; margin-top: 20px;">Нет транзакций</div>';
-                return;
-            }
-
-            transactions.forEach(t => {
-                const li = document.createElement('li');
-                li.className = 'history-item';
-                
-                li.innerHTML = `
-                    <div class="item-info">
-                        <span class="item-name">${t.name}</span>
-                        <span class="item-category">${t.category}</span>
-                    </div>
-                    <div class="item-amount">
-                        -${formatMoney(t.amount)}
-                    </div>
-                `;
-                historyListEl.appendChild(li);
-            });
-        }
-
-        // Сабмит по клавише Enter в поле суммы
-        amountInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') addTransaction();
+    // --- Вкладка 2: Счета и Капитал ---
+    function renderAccounts() {
+        let totalRub = 0;
+        
+        // Фиат
+        const fiatDiv = document.getElementById('fiat-accounts');
+        fiatDiv.innerHTML = '';
+        state.accounts.forEach(acc => {
+            totalRub += acc.balance;
+            fiatDiv.innerHTML += `
+                <div class="list-item">
+                    <span class="list-item-title">${acc.name}</span>
+                    <span>${acc.balance.toLocaleString()} ₽</span>
+                </div>
+            `;
         });
 
-        initDummyData();
-    </script>
+        // Крипта
+        const cryptoDiv = document.getElementById('crypto-accounts');
+        cryptoDiv.innerHTML = '';
+        
+        const renderCryptoWallet = (name, assets) => {
+            let walletUsd = 0;
+            let assetHTML = '';
+            assets.forEach(asset => {
+                const rate = asset.coin === 'USDT' ? 1 : state.rates[asset.coin];
+                const usdValue = asset.amount * rate;
+                walletUsd += usdValue;
+                assetHTML += `<span class="crypto-sub">${asset.amount} ${asset.coin} ($${usdValue.toLocaleString()})</span><br>`;
+            });
+            const walletRub = walletUsd * state.rates.USD;
+            totalRub += walletRub;
+
+            cryptoDiv.innerHTML += `
+                <div class="list-item" style="align-items: flex-start;">
+                    <div>
+                        <div class="list-item-title">${name}</div>
+                        ${assetHTML}
+                    </div>
+                    <div style="text-align: right;">
+                        <div>$${walletUsd.toLocaleString()}</div>
+                        <div class="crypto-sub">~ ${Math.round(walletRub).toLocaleString()} ₽</div>
+                    </div>
+                </div>
+            `;
+        };
+
+        renderCryptoWallet('Bybit', state.crypto.Bybit);
+        renderCryptoWallet('Trust Wallet', state.crypto.TrustWallet);
+
+        document.getElementById('total-capital').innerText = Math.round(totalRub).toLocaleString() + ' ₽';
+    }
+
+    // --- Графики (Chart.js) ---
+    const blueColors = ['#007aff', '#34c759', '#ff9500', '#af52de', '#ff3b30', '#5ac8fa', '#5856d6'];
+
+    function initAccountsChart() {
+        if(charts.accounts) charts.accounts.destroy();
+        const ctx = document.getElementById('accountsChart').getContext('2d');
+        
+        // Подготовка данных для графика счетов
+        const labels = state.accounts.map(a => a.name).concat(['Крипта (Bybit + Trust)']);
+        let cryptoRub = 0;
+        Object.values(state.crypto).flat().forEach(asset => {
+            const rate = asset.coin === 'USDT' ? 1 : state.rates[asset.coin];
+            cryptoRub += (asset.amount * rate * state.rates.USD);
+        });
+        const data = state.accounts.map(a => a.balance).concat([cryptoRub]);
+
+        charts.accounts = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: data, backgroundColor: blueColors, borderWidth: 0 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: {font: {family: '-apple-system'}} } } }
+        });
+    }
+
+    function initAnalyticsCharts() {
+        if(charts.expenses) charts.expenses.destroy();
+        if(charts.trend) charts.trend.destroy();
+
+        // 1. График расходов по категориям
+        const ctxExp = document.getElementById('expensesChart').getContext('2d');
+        charts.expenses = new Chart(ctxExp, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(state.expenses),
+                datasets: [{
+                    label: 'Траты (₽)',
+                    data: Object.values(state.expenses),
+                    backgroundColor: '#007aff',
+                    borderRadius: 8
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // 2. Тренд доходов и расходов (Mock data)
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        charts.trend = new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: ['Май', 'Июн', 'Июл', 'Авг'],
+                datasets: [
+                    { label: 'Доходы', data: [320000, 310000, 340000, 350000], borderColor: '#34c759', tension: 0.4 },
+                    { label: 'Расходы', data: [150000, 180000, 140000, 124500], borderColor: '#1c1c1e', tension: 0.4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    // Запуск
+    window.onload = init;
+</script>
 </body>
 </html>
