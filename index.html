@@ -24,10 +24,12 @@
         .container { max-width: 1200px; margin: 0 auto; padding: var(--spacing); padding-bottom: 120px; }
 
         /* Навигация */
-        .nav { display: flex; gap: 10px; margin-bottom: var(--spacing); overflow-x: auto; scrollbar-width: none; }
+        .nav { display: flex; gap: 10px; margin-bottom: var(--spacing); overflow-x: auto; scrollbar-width: none; align-items: center; }
         .nav::-webkit-scrollbar { display: none; }
         .nav-btn { background: var(--card-bg); border: none; padding: 12px 20px; border-radius: 100px; font-size: 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
         .nav-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .icon-btn { padding: 12px; display: flex; align-items: center; justify-content: center; }
+        .nav-spacer { margin-left: auto; } /* Ставим шестеренку справа */
 
         /* Бенто-сетка */
         .bento-grid { display: grid; gap: var(--spacing); grid-template-columns: 1fr; }
@@ -40,8 +42,10 @@
         
         @media (max-width: 767px) {
             .container { padding-bottom: 140px; } 
-            .nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin: 0; padding: 15px 10px; padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px); border-radius: 24px 24px 0 0; justify-content: space-around; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1000; }
+            .nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin: 0; padding: 15px 10px; padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 15px); border-radius: 24px 24px 0 0; justify-content: space-between; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1000; }
             .nav-btn { font-size: 14px; padding: 10px 15px; }
+            .icon-btn { padding: 10px; }
+            .nav-spacer { margin-left: 0; }
         }
 
         /* Типографика */
@@ -52,13 +56,13 @@
         .subtitle { color: var(--text-muted); font-size: 14px; }
         .date-badge { font-size: 12px; color: var(--text-muted); background: var(--bg-color); padding: 4px 8px; border-radius: 8px; margin-right: 10px; }
         
-        /* Статус (Минималистичный дизайн) */
+        /* Статус API */
         .live-status { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-top: 10px; font-weight: 500; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); }
         .live-status.loading .status-dot { background-color: #ff9500; }
         .live-status.error .status-dot { background-color: var(--danger); }
 
-        /* Формы */
+        /* Формы (добавлен inputmode=decimal для правильной клавиатуры) */
         input, select, button { width: 100%; max-width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none; box-sizing: border-box; }
         input[type="date"] { font-family: -apple-system, sans-serif; -webkit-appearance: none; appearance: none; display: block; }
         input:focus, select:focus { border-color: var(--primary); }
@@ -70,13 +74,17 @@
         .flex-row > button { flex: 0 0 auto; width: 60px; }
 
         /* Элементы списков */
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; user-select: none; -webkit-user-select: none; }
+        .list-item, .token-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; user-select: none; -webkit-user-select: none; }
         .list-item:last-child { border-bottom: none; }
         .list-item-title { font-weight: 500; display: flex; align-items: center; }
         
+        .token-item { padding: 8px 0; margin-left: 12px; border-bottom: 1px dashed #e5e5ea; }
+        .token-item:last-child { border-bottom: none; }
+        .add-token-btn { font-size: 13px; color: var(--primary); background: rgba(0,122,255,0.1); padding: 4px 10px; border-radius: 100px; border: none; cursor: pointer; font-weight: 500; margin-bottom: 0; width: auto; }
+
         .category-tag { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 8px 16px; border-radius: 100px; font-size: 14px; margin: 4px; transition: all 0.2s ease; cursor: pointer; user-select: none; -webkit-user-select: none; }
         
-        /* Скрытие иконок (Desktop Hover) */
+        /* Универсальное скрытие иконок (Desktop Hover) */
         @media (hover: hover) and (pointer: fine) {
             .list-item .actions, .token-item .actions { opacity: 0; transition: opacity 0.2s ease; display: flex; align-items: center; gap: 4px; }
             .list-item:hover .actions, .token-item:hover .actions { opacity: 1; }
@@ -84,7 +92,7 @@
             .category-tag:hover .actions { max-width: 20px; opacity: 1; margin-left: 6px; }
         }
 
-        /* Скрытие иконок (Mobile Long Press) */
+        /* Универсальное скрытие иконок (Mobile Long Press) */
         @media (hover: none) {
             .list-item .actions, .token-item .actions { opacity: 0; pointer-events: none; transition: opacity 0.2s; display: flex; align-items: center; gap: 4px; }
             .list-item.show-actions .actions, .token-item.show-actions .actions { opacity: 1; pointer-events: auto; }
@@ -108,12 +116,7 @@
         .analytics-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .analytics-controls select { margin-bottom: 0; width: auto; flex-grow: 1; max-width: 300px; }
         
-        /* Стили для токенов */
-        .token-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; margin-left: 12px; border-bottom: 1px dashed #e5e5ea; user-select: none; -webkit-user-select: none; }
-        .token-item:last-child { border-bottom: none; }
-        .add-token-btn { font-size: 13px; color: var(--primary); background: rgba(0,122,255,0.1); padding: 4px 10px; border-radius: 100px; border: none; cursor: pointer; font-weight: 500; }
-
-        /* Встроенная модалка Apple-style */
+        /* Встроенная модалка */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.25s ease; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-box { background: var(--card-bg); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transform: scale(0.95); transition: transform 0.25s ease; }
@@ -124,6 +127,8 @@
         .modal-buttons { display: flex; gap: 10px; margin-top: 5px; }
         .btn-cancel { background: var(--bg-color); color: var(--text-main); }
         .btn-cancel:hover { background: #e5e5ea; }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #d32f2f; }
     </style>
 </head>
 <body>
@@ -133,6 +138,10 @@
         <button class="nav-btn active" onclick="switchTab('month')" id="tab-month-btn">Месяц</button>
         <button class="nav-btn" onclick="switchTab('accounts')">Счета</button>
         <button class="nav-btn" onclick="switchTab('analytics')">Аналитика</button>
+        <div class="nav-spacer"></div>
+        <button class="nav-btn icon-btn" onclick="switchTab('settings')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
     </div>
 
     <!-- Вкладка 1: Текущий месяц -->
@@ -156,7 +165,7 @@
                     </select>
                     <select id="op-category"></select>
                 </div>
-                <input type="number" placeholder="Сумма (₽)" id="op-amount" style="margin-bottom: 10px;">
+                <input type="number" inputmode="decimal" placeholder="Сумма (₽)" id="op-amount" style="margin-bottom: 10px;">
                 <button class="btn-primary" onclick="addTransaction()">Добавить</button>
             </div>
 
@@ -170,30 +179,12 @@
                 <div class="scrollable-list" id="daily-transactions-list"></div>
             </div>
 
-            <div class="bento-card">
+            <div class="bento-card span-full">
                 <h2>Структура трат (Месяц)</h2>
                 <div class="chart-container" style="height: 180px;">
                     <canvas id="currentMonthChart"></canvas>
                 </div>
                 <div id="current-month-expenses-list" style="margin-top: 15px;"></div>
-            </div>
-
-            <div class="bento-card">
-                <h2>Настройка категорий</h2>
-                <div class="flex-row">
-                    <input type="text" id="new-cat-name" placeholder="Новая категория" style="margin:0;">
-                    <select id="new-cat-type" style="margin:0;">
-                        <option value="expense">Расход</option>
-                        <option value="income">Доход</option>
-                    </select>
-                    <button class="btn-primary" style="margin:0;" onclick="addCategory()">+</button>
-                </div>
-                <div style="margin-top: 15px;">
-                    <div class="subtitle" style="margin-bottom: 5px;">Расходы:</div>
-                    <div id="exp-categories-list"></div>
-                    <div class="subtitle" style="margin-top: 15px; margin-bottom: 5px;">Доходы:</div>
-                    <div id="inc-categories-list"></div>
-                </div>
             </div>
         </div>
     </div>
@@ -201,24 +192,13 @@
     <!-- Вкладка 2: Мои счета -->
     <div id="accounts" class="tab-content">
         <div class="bento-grid">
-            <div class="bento-card">
+            <div class="bento-card span-full">
                 <h2>Общий капитал</h2>
                 <div class="amount" id="total-capital">Загрузка...</div>
                 <div class="live-status loading" id="rates-status"><div class="status-dot"></div> Загрузка...</div>
                 <div class="chart-container" style="margin-top: 20px;">
                     <canvas id="accountsChart"></canvas>
                 </div>
-            </div>
-
-            <div class="bento-card">
-                <h2>Создать счет / кошелек</h2>
-                <input type="text" id="new-acc-name" placeholder="Название (напр. Bybit или Т-Банк)">
-                <select id="new-acc-type" onchange="toggleAccountInput()">
-                    <option value="fiat">Фиат (Рубли)</option>
-                    <option value="crypto_wallet">Крипто-кошелек</option>
-                </select>
-                <input type="number" id="new-acc-balance" placeholder="Баланс (₽)">
-                <button class="btn-primary" onclick="addAccount()">Создать</button>
             </div>
 
             <div class="bento-card span-full">
@@ -253,6 +233,40 @@
             </div>
         </div>
     </div>
+
+    <!-- Вкладка 4: Настройки (Новая) -->
+    <div id="settings" class="tab-content">
+        <div class="bento-grid">
+            <div class="bento-card span-full">
+                <h2>Создать счет / кошелек</h2>
+                <input type="text" id="new-acc-name" placeholder="Название (напр. Bybit или Т-Банк)">
+                <select id="new-acc-type" onchange="toggleAccountInput()">
+                    <option value="fiat">Фиат (Рубли)</option>
+                    <option value="crypto_wallet">Крипто-кошелек</option>
+                </select>
+                <input type="number" inputmode="decimal" id="new-acc-balance" placeholder="Баланс (₽)">
+                <button class="btn-primary" onclick="addAccount()">Создать</button>
+            </div>
+
+            <div class="bento-card span-full">
+                <h2>Настройка категорий</h2>
+                <div class="flex-row">
+                    <input type="text" id="new-cat-name" placeholder="Новая категория" style="margin:0;">
+                    <select id="new-cat-type" style="margin:0;">
+                        <option value="expense">Расход</option>
+                        <option value="income">Доход</option>
+                    </select>
+                    <button class="btn-primary" style="margin:0;" onclick="addCategory()">+</button>
+                </div>
+                <div style="margin-top: 15px;">
+                    <div class="subtitle" style="margin-bottom: 5px;">Расходы:</div>
+                    <div id="exp-categories-list"></div>
+                    <div class="subtitle" style="margin-top: 15px; margin-bottom: 5px;">Доходы:</div>
+                    <div id="inc-categories-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Встроенная Модалка -->
@@ -276,8 +290,8 @@
     };
 
     const DB = {
-        async load() { const local = localStorage.getItem('financeState_v6'); return local ? JSON.parse(local) : null; },
-        async save(state) { localStorage.setItem('financeState_v6', JSON.stringify(state)); }
+        async load() { const local = localStorage.getItem('financeState_v7'); return local ? JSON.parse(local) : null; },
+        async save(state) { localStorage.setItem('financeState_v7', JSON.stringify(state)); }
     };
 
     let state = {
@@ -339,7 +353,7 @@
     }
 
     // --- Кастомная Модалка ---
-    function showModal({ title, message, inputs, submitText, cancelText, onSubmit }) {
+    function showModal({ title, message, inputs, submitText, cancelText, isDanger, onSubmit }) {
         document.getElementById('modal-title').innerText = title || '';
         const msgEl = document.getElementById('modal-message');
         msgEl.innerText = message || '';
@@ -351,6 +365,7 @@
             inputs.forEach(inp => {
                 const el = document.createElement('input');
                 el.type = inp.type || 'text';
+                if (inp.inputmode) el.inputMode = inp.inputmode; // Добавлена поддержка inputmode для модалки
                 el.placeholder = inp.placeholder || '';
                 el.value = inp.value || '';
                 el.id = `modal-inp-${inp.id}`;
@@ -361,6 +376,12 @@
         const submitBtn = document.getElementById('modal-submit');
         submitBtn.innerText = submitText || 'ОК';
         submitBtn.style.display = onSubmit ? 'block' : 'none';
+        
+        if(isDanger) {
+            submitBtn.classList.add('btn-danger');
+        } else {
+            submitBtn.classList.remove('btn-danger');
+        }
         
         const cancelBtn = document.getElementById('modal-cancel');
         cancelBtn.innerText = cancelText || 'Отмена';
@@ -394,7 +415,7 @@
                 pressTimer = setTimeout(() => {
                     document.querySelectorAll('.show-actions').forEach(el => el.classList.remove('show-actions'));
                     target.classList.add('show-actions');
-                    if(navigator.vibrate) navigator.vibrate(50); // Работает на Android, игнорируется на iOS
+                    if(navigator.vibrate) navigator.vibrate(50);
                 }, 400); 
             }
         };
@@ -429,7 +450,7 @@
             state.rates.SOL = cryptoData.solana?.usd || 0;
 
             statusEl.className = 'live-status';
-            statusEl.innerHTML = `<div class="status-dot"></div> Онлайн: 1$=${state.rates.USD.toFixed(1)}₽`;
+            statusEl.innerHTML = `<div class="status-dot"></div> Онлайн: 1$ = ${state.rates.USD.toFixed(1)} ₽`;
             
             renderAccounts();
             if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
@@ -443,7 +464,10 @@
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
+        
+        // Обработка клика по самой кнопке, чтобы сделать её активной
+        const clickedBtn = event.currentTarget;
+        if(clickedBtn) clickedBtn.classList.add('active');
 
         if(tabId === 'month') renderMonthTab();
         if(tabId === 'accounts') initAccountsChart();
@@ -500,7 +524,7 @@
                     <div style="display:flex; align-items:center; gap: 8px;">
                         <span class="amount ${colorClass}" style="font-size:16px; margin:0;">${sign} ${t.amount.toLocaleString('ru-RU')} ₽</span>
                         <div class="actions">
-                            <button class="action-btn" onclick="deleteTransaction(${t.id})">${icons.delete}</button>
+                            <button class="action-btn" onclick="confirmDeleteTransaction(${t.id})">${icons.delete}</button>
                         </div>
                     </div>
                 </div>
@@ -540,16 +564,24 @@
         DB.save(state);
     }
 
-    function deleteTransaction(id) {
-        const trans = state.transactions.find(t => t.id === id);
-        if(!trans) return;
-        state.history[trans.type][trans.category][currentMonthIndex] -= trans.amount;
-        state.transactions = state.transactions.filter(t => t.id !== id);
-        renderMonthTab();
-        DB.save(state);
+    function confirmDeleteTransaction(id) {
+        showModal({
+            title: 'Удаление операции',
+            message: 'Вы уверены, что хотите удалить эту операцию из истории?',
+            submitText: 'Удалить',
+            isDanger: true,
+            onSubmit: () => {
+                const trans = state.transactions.find(t => t.id === id);
+                if(!trans) return;
+                state.history[trans.type][trans.category][currentMonthIndex] -= trans.amount;
+                state.transactions = state.transactions.filter(t => t.id !== id);
+                renderMonthTab();
+                DB.save(state);
+            }
+        });
     }
 
-    // --- Категории ---
+    // --- Категории (Настройки) ---
     function renderCategories() {
         const renderList = (type, listId) => {
             const list = document.getElementById(listId);
@@ -557,7 +589,7 @@
                 <div class="category-tag">
                     <span>${cat}</span>
                     <div class="actions">
-                        <button class="action-btn" onclick="deleteCategory('${type}', ${idx})">${icons.delete}</button>
+                        <button class="action-btn" onclick="confirmDeleteCategory('${type}', ${idx})">${icons.delete}</button>
                     </div>
                 </div>
             `).join('');
@@ -589,14 +621,22 @@
         }
     }
 
-    function deleteCategory(type, index) {
+    function confirmDeleteCategory(type, index) {
         const cat = state.categories[type][index];
-        state.categories[type].splice(index, 1);
-        delete state.history[type][cat];
-        renderCategories();
-        updateOpCategories();
-        renderMonthTab();
-        DB.save(state);
+        showModal({
+            title: 'Удаление категории',
+            message: `Удалить категорию "${cat}"? Это повлияет на аналитику.`,
+            submitText: 'Удалить',
+            isDanger: true,
+            onSubmit: () => {
+                state.categories[type].splice(index, 1);
+                delete state.history[type][cat];
+                renderCategories();
+                updateOpCategories();
+                renderMonthTab();
+                DB.save(state);
+            }
+        });
     }
 
     // --- Логика Счетов и Кошельков ---
@@ -621,7 +661,7 @@
                         </div>
                         <div class="actions">
                             <button class="action-btn edit-btn" onclick="editFiatBalance(${acc.id})">${icons.edit}</button>
-                            <button class="action-btn" onclick="deleteAccount(${acc.id})">${icons.delete}</button>
+                            <button class="action-btn" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button>
                         </div>
                     </div>
                 `;
@@ -640,7 +680,7 @@
                                 <span style="font-size: 13px; color: var(--text-muted);">$${usdVal.toLocaleString('en-US',{maximumFractionDigits:2})}</span>
                                 <div class="actions">
                                     <button class="action-btn edit-btn" onclick="editTokenBalance(${acc.id}, ${t.id})">${icons.edit}</button>
-                                    <button class="action-btn" onclick="deleteToken(${acc.id}, ${t.id})">${icons.minus}</button>
+                                    <button class="action-btn" onclick="confirmDeleteToken(${acc.id}, ${t.id})">${icons.minus}</button>
                                 </div>
                             </div>
                         </div>
@@ -659,7 +699,7 @@
                             </div>
                             <div style="display:flex; gap: 6px;">
                                 <button class="add-token-btn" onclick="addTokenToWallet(${acc.id})">+ Токен</button>
-                                <button class="action-btn" onclick="deleteAccount(${acc.id})">${icons.delete}</button>
+                                <button class="action-btn" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button>
                             </div>
                         </div>
                         <div style="margin-top: 10px;">${tokensHTML}</div>
@@ -692,11 +732,19 @@
         document.getElementById('new-acc-balance').value = '';
     }
 
-    function deleteAccount(id) {
-        state.accounts = state.accounts.filter(a => a.id !== id);
-        renderAccounts();
-        initAccountsChart();
-        DB.save(state);
+    function confirmDeleteAccount(id) {
+        showModal({
+            title: 'Удаление счета',
+            message: 'Вы точно хотите удалить этот счет/кошелек?',
+            submitText: 'Удалить',
+            isDanger: true,
+            onSubmit: () => {
+                state.accounts = state.accounts.filter(a => a.id !== id);
+                renderAccounts();
+                initAccountsChart();
+                DB.save(state);
+            }
+        });
     }
 
     function editFiatBalance(id) {
@@ -706,7 +754,7 @@
         showModal({
             title: 'Изменить баланс',
             message: `Счет: ${acc.name}`,
-            inputs: [{ id: 'new_bal', type: 'number', placeholder: 'Новый баланс (₽)', value: acc.balance }],
+            inputs: [{ id: 'new_bal', type: 'text', inputmode: 'decimal', placeholder: 'Новый баланс (₽)', value: acc.balance }],
             submitText: 'Сохранить',
             onSubmit: (data) => {
                 const nb = Number(data.new_bal);
@@ -731,7 +779,7 @@
             message: `Кошелек: ${wallet.name}`,
             inputs: [
                 { id: 'coin_name', type: 'text', placeholder: 'Тикер (USDT, BTC, SOL...)' },
-                { id: 'coin_bal', type: 'number', placeholder: 'Количество' }
+                { id: 'coin_bal', type: 'text', inputmode: 'decimal', placeholder: 'Количество' }
             ],
             submitText: 'Добавить',
             onSubmit: (data) => {
@@ -742,7 +790,7 @@
                     renderAccounts();
                     if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
                     DB.save(state);
-                    fetchLiveRates(); // Запрос курса для новой монеты
+                    fetchLiveRates();
                 } else {
                     showAlert('Заполните данные корректно');
                 }
@@ -759,7 +807,7 @@
         showModal({
             title: 'Изменить баланс',
             message: `Монета: ${token.coin}`,
-            inputs: [{ id: 'new_bal', type: 'number', placeholder: 'Количество', value: token.balance }],
+            inputs: [{ id: 'new_bal', type: 'text', inputmode: 'decimal', placeholder: 'Количество', value: token.balance }],
             submitText: 'Сохранить',
             onSubmit: (data) => {
                 const nb = Number(data.new_bal);
@@ -768,18 +816,28 @@
                     renderAccounts();
                     if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
                     DB.save(state);
+                } else {
+                    showAlert('Введено некорректное число');
                 }
             }
         });
     }
 
-    function deleteToken(walletId, tokenId) {
-        const wallet = state.accounts.find(a => a.id === walletId);
-        if(!wallet) return;
-        wallet.tokens = wallet.tokens.filter(t => t.id !== tokenId);
-        renderAccounts();
-        initAccountsChart();
-        DB.save(state);
+    function confirmDeleteToken(walletId, tokenId) {
+        showModal({
+            title: 'Удалить монету',
+            message: 'Удалить эту монету из кошелька?',
+            submitText: 'Удалить',
+            isDanger: true,
+            onSubmit: () => {
+                const wallet = state.accounts.find(a => a.id === walletId);
+                if(!wallet) return;
+                wallet.tokens = wallet.tokens.filter(t => t.id !== tokenId);
+                renderAccounts();
+                initAccountsChart();
+                DB.save(state);
+            }
+        });
     }
 
     function initAccountsChart() {
@@ -832,16 +890,23 @@
             options: commonLineOptions
         });
 
+        // График Доходов (Умная окраска в зависимости от нуля)
         if(charts.incHistory) charts.incHistory.destroy();
         const catInc = document.getElementById('analytics-inc-select').value || state.categories.income[0];
+        const incomeData = state.history.income[catInc] || [0,0,0,0];
+        
         charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
             type: 'line',
             data: { 
                 labels: state.monthsLabels, 
                 datasets: [{ 
-                    data: state.history.income[catInc] || [0,0,0,0], 
-                    borderColor: '#34c759', 
-                    pointBackgroundColor: '#34c759', 
+                    data: incomeData,
+                    // Линия становится красной, если одна из точек отрезка меньше нуля
+                    segment: {
+                        borderColor: ctx => (ctx.p0.parsed.y < 0 || ctx.p1.parsed.y < 0) ? '#ff3b30' : '#34c759'
+                    },
+                    // Точка становится красной, если её значение меньше нуля
+                    pointBackgroundColor: ctx => ctx.raw < 0 ? '#ff3b30' : '#34c759',
                     pointBorderColor: '#ffffff', 
                     pointBorderWidth: 2, 
                     pointRadius: 4,
