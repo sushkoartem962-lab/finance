@@ -38,18 +38,9 @@
             .span-full { grid-column: 1 / -1; }
         }
         
-        /* Мобильные отступы и меню */
         @media (max-width: 767px) {
-            .container { padding-bottom: 140px; } /* Увеличен отступ чтобы не перекрывало карточки */
-            .nav { 
-                position: fixed; bottom: 0; left: 0; right: 0; 
-                background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 0; 
-                padding: 15px 10px; 
-                /* Увеличен отступ снизу для мобилок */
-                padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px); 
-                border-radius: 24px 24px 0 0; justify-content: space-around; 
-                box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1000; 
-            }
+            .container { padding-bottom: 140px; } 
+            .nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 0; padding: 15px 10px; padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px); border-radius: 24px 24px 0 0; justify-content: space-around; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1000; }
             .nav-btn { font-size: 14px; padding: 10px 15px; }
         }
 
@@ -61,20 +52,18 @@
         .subtitle { color: var(--text-muted); font-size: 14px; }
         .date-badge { font-size: 12px; color: var(--text-muted); background: var(--bg-color); padding: 4px 8px; border-radius: 8px; margin-right: 10px; }
         
-        .live-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--primary); background: rgba(0, 122, 255, 0.1); padding: 4px 10px; border-radius: 100px; margin-top: 10px; font-weight: 500; }
+        /* Стилизованный статус (как на скрине) */
+        .live-status { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; color: #007aff; background: #eaf2ff; padding: 6px 14px; border-radius: 100px; margin-top: 10px; font-weight: 500; align-self: flex-start; }
         .live-status.loading { color: #ff9500; background: rgba(255, 149, 0, 0.1); }
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #4cd964, #148323); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
 
         /* Формы */
         input, select, button { width: 100%; max-width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none; box-sizing: border-box; }
-        
-        /* Исправление календаря на iOS/Android */
         input[type="date"] { font-family: -apple-system, sans-serif; -webkit-appearance: none; appearance: none; display: block; }
-        
         input:focus, select:focus { border-color: var(--primary); }
         .btn-primary { background: var(--primary); color: #fff; border: none; font-weight: 600; cursor: pointer; margin-top: 5px; transition: background 0.2s; margin-bottom: 0; }
         .btn-primary:hover { background: var(--primary-hover); }
 
-        /* Flex Row исправление (чтобы элементы не вылезали за границы) */
         .flex-row { display: flex; gap: 10px; width: 100%; align-items: stretch; margin-bottom: 10px; }
         .flex-row > * { flex: 1; min-width: 0; margin-bottom: 0; }
         .flex-row > button { flex: 0 0 auto; width: 60px; }
@@ -86,7 +75,6 @@
         
         .category-tag { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 8px 16px; border-radius: 100px; font-size: 14px; margin: 4px; transition: all 0.2s ease; cursor: pointer; user-select: none; -webkit-user-select: none; }
         
-        /* Иконки в списках (Десктоп Hover) */
         @media (hover: hover) and (pointer: fine) {
             .list-item .actions { opacity: 0; transition: opacity 0.2s ease; display: flex; align-items: center; gap: 4px; }
             .list-item:hover .actions { opacity: 1; }
@@ -94,11 +82,9 @@
             .category-tag:hover .actions { max-width: 20px; opacity: 1; margin-left: 6px; }
         }
 
-        /* Иконки в списках (Мобилка - Long Press) */
         @media (hover: none) {
             .list-item .actions { opacity: 0; pointer-events: none; transition: opacity 0.2s; display: flex; align-items: center; gap: 4px; }
             .list-item.show-actions .actions { opacity: 1; pointer-events: auto; }
-            
             .category-tag .actions { max-width: 0; opacity: 0; overflow: hidden; transition: all 0.2s ease; display: flex; align-items: center; pointer-events: none; }
             .category-tag.show-actions .actions { max-width: 20px; opacity: 1; margin-left: 6px; pointer-events: auto; }
         }
@@ -118,14 +104,18 @@
         .chart-container { position: relative; height: 250px; width: 100%; }
         .analytics-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .analytics-controls select { margin-bottom: 0; width: auto; flex-grow: 1; max-width: 300px; }
+        
+        /* Стили для криптокошельков */
+        .token-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; margin-left: 12px; border-bottom: 1px dashed #e5e5ea; }
+        .token-item:last-child { border-bottom: none; }
+        .add-token-btn { font-size: 13px; color: var(--primary); background: rgba(0,122,255,0.1); padding: 4px 10px; border-radius: 100px; border: none; cursor: pointer; font-weight: 500; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Навигация -->
     <div class="nav">
-        <button class="nav-btn active" onclick="switchTab('month')" id="tab-month-btn">Текущий месяц</button>
+        <button class="nav-btn active" onclick="switchTab('month')" id="tab-month-btn">Месяц</button>
         <button class="nav-btn" onclick="switchTab('accounts')">Счета</button>
         <button class="nav-btn" onclick="switchTab('analytics')">Аналитика</button>
     </div>
@@ -133,9 +123,8 @@
     <!-- Вкладка 1: Текущий месяц -->
     <div id="month" class="tab-content active">
         <div class="bento-grid">
-            
             <div class="bento-card">
-                <h2 id="month-title-text">Баланс месяца</h2>
+                <h2 id="month-title-text">Баланс</h2>
                 <div class="amount income" id="month-income-total">+ 0 ₽</div>
                 <div class="subtitle">Доходы</div>
                 <div class="amount expense" id="month-expense-total" style="margin-top: 15px;">- 0 ₽</div>
@@ -163,7 +152,6 @@
 
             <div class="bento-card span-full">
                 <h2>История операций</h2>
-                <div class="subtitle" style="margin-bottom:10px; display:none;" id="mobile-hint">Удерживайте строку для редактирования</div>
                 <div class="scrollable-list" id="daily-transactions-list"></div>
             </div>
 
@@ -192,7 +180,6 @@
                     <div id="inc-categories-list"></div>
                 </div>
             </div>
-            
         </div>
     </div>
 
@@ -202,26 +189,25 @@
             <div class="bento-card">
                 <h2>Общий капитал</h2>
                 <div class="amount" id="total-capital">Загрузка...</div>
-                <div class="live-status loading" id="rates-status">⏳ Обновление курсов...</div>
+                <div class="live-status loading" id="rates-status">⏳ Загрузка...</div>
                 <div class="chart-container" style="margin-top: 20px;">
                     <canvas id="accountsChart"></canvas>
                 </div>
             </div>
 
             <div class="bento-card">
-                <h2>Добавить счет</h2>
-                <input type="text" id="new-acc-name" placeholder="Название (напр. Bybit)">
-                <select id="new-acc-type" onchange="toggleCoinInput()">
+                <h2>Создать счет / кошелек</h2>
+                <input type="text" id="new-acc-name" placeholder="Название (напр. Bybit или Т-Банк)">
+                <select id="new-acc-type" onchange="toggleAccountInput()">
                     <option value="fiat">Фиат (Рубли)</option>
-                    <option value="crypto">Крипта</option>
+                    <option value="crypto_wallet">Крипто-кошелек</option>
                 </select>
-                <input type="text" id="new-acc-coin" placeholder="Тикер (USDT, BTC, ETH)" style="display:none;">
-                <input type="number" id="new-acc-balance" placeholder="Баланс">
-                <button class="btn-primary" onclick="addAccount()">Создать счет</button>
+                <input type="number" id="new-acc-balance" placeholder="Баланс (₽)">
+                <button class="btn-primary" onclick="addAccount()">Создать</button>
             </div>
 
             <div class="bento-card span-full">
-                <h2>Список счетов</h2>
+                <h2>Счета и Кошельки</h2>
                 <div id="accounts-list"></div>
             </div>
         </div>
@@ -255,19 +241,19 @@
 </div>
 
 <script>
-    // SVG Иконки
     const icons = {
         delete: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
-        edit: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`
+        edit: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+        minus: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`
     };
 
     const DB = {
-        async load() { const local = localStorage.getItem('financeState_v4'); return local ? JSON.parse(local) : null; },
-        async save(state) { localStorage.setItem('financeState_v4', JSON.stringify(state)); }
+        async load() { const local = localStorage.getItem('financeState_v5'); return local ? JSON.parse(local) : null; },
+        async save(state) { localStorage.setItem('financeState_v5', JSON.stringify(state)); }
     };
 
     let state = {
-        rates: { USD: 95, BTC: 60000, ETH: 3000, USDT: 1 },
+        rates: { USD: 95, BTC: 60000, ETH: 3000, USDT: 1, SOL: 150 },
         monthsLabels: ['Май', 'Июнь', 'Июль', 'Август'],
         categories: {
             expense: ['Еда', 'Авто', 'Дом', 'Развлечения', 'Подписки'],
@@ -275,13 +261,18 @@
         },
         accounts: [
             { id: 1, name: 'Т-Банк', type: 'fiat', balance: 120000 },
-            { id: 2, name: 'Инвестиции', type: 'fiat', balance: 450000 },
-            { id: 3, name: 'Bybit', type: 'crypto', coin: 'USDT', balance: 1500 }
+            { id: 2, name: 'Bybit', type: 'crypto_wallet', tokens: [
+                { id: 21, coin: 'USDT', balance: 1500 },
+                { id: 22, coin: 'BTC', balance: 0.05 }
+            ]},
+            { id: 3, name: 'Trust Wallet', type: 'crypto_wallet', tokens: [
+                { id: 31, coin: 'ETH', balance: 1.2 },
+                { id: 32, coin: 'SOL', balance: 25 }
+            ]}
         ],
         transactions: [
             { id: 101, date: '2026-08-25', type: 'expense', category: 'Еда', amount: 1500 },
-            { id: 102, date: '2026-08-26', type: 'expense', category: 'Авто', amount: 3000 },
-            { id: 103, date: '2026-08-28', type: 'income', category: 'Проекты', amount: 15000 }
+            { id: 102, date: '2026-08-26', type: 'expense', category: 'Авто', amount: 3000 }
         ],
         history: {
             expense: {
@@ -290,7 +281,7 @@
             },
             income: {
                 'Зарплата': [200000, 200000, 200000, 200000], 'Проекты': [100000, 50000, 120000, 150000],
-                'Инвестиции': [20000, 10000, 15000, 0], 'Крипта (PnL)': [12000, -5000, 24000, -2000] // Добавлен минус для теста красной зоны
+                'Инвестиции': [20000, 10000, 15000, 0], 'Крипта (PnL)': [12000, -5000, 24000, -2000] 
             }
         }
     };
@@ -306,7 +297,6 @@
         const loaded = await DB.load();
         if(loaded) state = { ...state, ...loaded };
         
-        // Динамическое имя текущего месяца
         const date = new Date();
         const monthName = date.toLocaleString('ru-RU', { month: 'long' });
         const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
@@ -315,27 +305,21 @@
         document.getElementById('month-title-text').innerText = `Баланс (${capitalizedMonth})`;
         document.getElementById('op-date').value = date.toISOString().split('T')[0];
 
-        // Подсказка на мобилках
-        if (window.matchMedia("(hover: none)").matches) {
-            document.getElementById('mobile-hint').style.display = 'block';
-        }
-
         renderAll();
-        initLongPress(); // Активация удержания (long press)
+        initLongPress();
         await fetchLiveRates();
     }
 
-    // --- Обработка Long Press на мобилках ---
     function initLongPress() {
         let pressTimer;
         const startPress = (e) => {
-            const target = e.target.closest('.list-item, .category-tag');
+            const target = e.target.closest('.list-item, .category-tag, .token-item');
             if(target) {
                 pressTimer = setTimeout(() => {
                     document.querySelectorAll('.show-actions').forEach(el => el.classList.remove('show-actions'));
                     target.classList.add('show-actions');
                     if(navigator.vibrate) navigator.vibrate(50);
-                }, 600); // 600мс удержание
+                }, 500); 
             }
         };
         const cancelPress = () => clearTimeout(pressTimer);
@@ -352,7 +336,6 @@
         });
     }
 
-    // --- API и Навигация ---
     async function fetchLiveRates() {
         const statusEl = document.getElementById('rates-status');
         try {
@@ -360,15 +343,17 @@
             const fiatData = await fiatRes.json();
             state.rates.USD = fiatData.rates.RUB;
 
-            const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd');
+            const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,solana&vs_currencies=usd');
             const cryptoData = await cryptoRes.json();
             
-            state.rates.BTC = cryptoData.bitcoin.usd;
-            state.rates.ETH = cryptoData.ethereum.usd;
+            state.rates.BTC = cryptoData.bitcoin?.usd || 0;
+            state.rates.ETH = cryptoData.ethereum?.usd || 0;
             state.rates.USDT = cryptoData.tether?.usd || 1;
+            state.rates.SOL = cryptoData.solana?.usd || 0;
 
             statusEl.className = 'live-status';
-            statusEl.innerText = `🟢 Онлайн: 1$=${state.rates.USD.toFixed(1)}₽`;
+            statusEl.innerHTML = `<div class="status-dot"></div> Онлайн: 1$=${state.rates.USD.toFixed(1)}₽`;
+            
             renderAccounts();
             if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
         } catch (e) {
@@ -395,7 +380,6 @@
         renderAccounts();
     }
 
-    // --- Текущий месяц ---
     function renderMonthTab() {
         let tInc = 0, tExp = 0;
         state.categories.income.forEach(cat => tInc += (state.history.income[cat]?.[currentMonthIndex] || 0));
@@ -438,7 +422,7 @@
                     <div style="display:flex; align-items:center; gap: 8px;">
                         <span class="amount ${colorClass}" style="font-size:16px; margin:0;">${sign} ${t.amount.toLocaleString('ru-RU')} ₽</span>
                         <div class="actions">
-                            <button class="action-btn" onclick="deleteTransaction(${t.id})" title="Удалить">${icons.delete}</button>
+                            <button class="action-btn" onclick="deleteTransaction(${t.id})">${icons.delete}</button>
                         </div>
                     </div>
                 </div>
@@ -470,8 +454,7 @@
         
         if(!amount) return alert('Укажите сумму');
         
-        const transId = Date.now();
-        state.transactions.push({ id: transId, type, category: cat, amount, date });
+        state.transactions.push({ id: Date.now(), type, category: cat, amount, date });
         state.history[type][cat][currentMonthIndex] += amount;
         
         document.getElementById('op-amount').value = '';
@@ -488,7 +471,6 @@
         DB.save(state);
     }
 
-    // --- Категории ---
     function renderCategories() {
         const renderList = (type, listId) => {
             const list = document.getElementById(listId);
@@ -538,10 +520,10 @@
         DB.save(state);
     }
 
-    // --- Счета ---
-    function toggleCoinInput() {
-        const isCrypto = document.getElementById('new-acc-type').value === 'crypto';
-        document.getElementById('new-acc-coin').style.display = isCrypto ? 'block' : 'none';
+    // --- Логика Счетов и Кошельков ---
+    function toggleAccountInput() {
+        const isCrypto = document.getElementById('new-acc-type').value === 'crypto_wallet';
+        document.getElementById('new-acc-balance').style.display = isCrypto ? 'none' : 'block';
     }
 
     function renderAccounts() {
@@ -550,31 +532,60 @@
         list.innerHTML = '';
 
         state.accounts.forEach(acc => {
-            let rubValue = 0, displayVal = '';
+            if (acc.type === 'fiat') {
+                totalRub += acc.balance;
+                list.innerHTML += `
+                    <div class="list-item">
+                        <div>
+                            <div class="list-item-title">${acc.name}</div>
+                            <div class="subtitle">${acc.balance.toLocaleString('ru-RU')} ₽</div>
+                        </div>
+                        <div class="actions">
+                            <button class="action-btn edit-btn" onclick="editFiatBalance(${acc.id})">${icons.edit}</button>
+                            <button class="action-btn" onclick="deleteAccount(${acc.id})">${icons.delete}</button>
+                        </div>
+                    </div>
+                `;
+            } else if (acc.type === 'crypto_wallet') {
+                let walletRub = 0, walletUsd = 0;
+                
+                const tokensHTML = acc.tokens.map(t => {
+                    const rate = state.rates[t.coin] || 0;
+                    const usdVal = t.balance * rate;
+                    walletUsd += usdVal;
+                    
+                    return `
+                        <div class="token-item">
+                            <span style="font-size: 14px; font-weight: 500;">${t.balance} ${t.coin}</span>
+                            <div style="display:flex; align-items:center; gap: 8px;">
+                                <span style="font-size: 13px; color: var(--text-muted);">$${usdVal.toLocaleString('en-US',{maximumFractionDigits:2})}</span>
+                                <div class="actions">
+                                    <button class="action-btn" onclick="deleteToken(${acc.id}, ${t.id})">${icons.minus}</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
 
-            if(acc.type === 'fiat') {
-                rubValue = acc.balance;
-                displayVal = `${acc.balance.toLocaleString('ru-RU')} ₽`;
-            } else {
-                const coinRate = state.rates[acc.coin?.toUpperCase()] || 0;
-                const usdValue = acc.balance * coinRate;
-                rubValue = usdValue * state.rates.USD;
-                displayVal = `${acc.balance} ${acc.coin} ($${usdValue.toLocaleString('en-US',{maximumFractionDigits:2})})`;
+                walletRub = walletUsd * state.rates.USD;
+                totalRub += walletRub;
+
+                list.innerHTML += `
+                    <div class="list-item" style="flex-direction: column; align-items: stretch; border-bottom: none; background: #fafafa; padding: 12px; border-radius: 16px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div class="list-item-title">${acc.name} <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px; margin-left:6px;">WALLET</span></div>
+                                <div class="subtitle">~ ${Math.round(walletRub).toLocaleString('ru-RU')} ₽ ($${walletUsd.toLocaleString('en-US',{maximumFractionDigits:2})})</div>
+                            </div>
+                            <div style="display:flex; gap: 6px;">
+                                <button class="add-token-btn" onclick="addTokenToWallet(${acc.id})">+ Токен</button>
+                                <button class="action-btn" onclick="deleteAccount(${acc.id})">${icons.delete}</button>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">${tokensHTML}</div>
+                    </div>
+                `;
             }
-            
-            totalRub += rubValue;
-            list.innerHTML += `
-                <div class="list-item">
-                    <div>
-                        <div class="list-item-title">${acc.name} <span style="font-size:12px; color:var(--text-muted); margin-left:6px;">${acc.type.toUpperCase()}</span></div>
-                        <div class="subtitle">${displayVal} ${acc.type === 'crypto' ? `(~${Math.round(rubValue).toLocaleString('ru-RU')} ₽)` : ''}</div>
-                    </div>
-                    <div class="actions">
-                        <button class="action-btn edit-btn" onclick="editAccountBalance(${acc.id})" title="Изменить баланс">${icons.edit}</button>
-                        <button class="action-btn" onclick="deleteAccount(${acc.id})" title="Удалить счет">${icons.delete}</button>
-                    </div>
-                </div>
-            `;
         });
 
         document.getElementById('total-capital').innerText = Math.round(totalRub).toLocaleString('ru-RU') + ' ₽';
@@ -583,16 +594,20 @@
     function addAccount() {
         const name = document.getElementById('new-acc-name').value;
         const type = document.getElementById('new-acc-type').value;
-        const balance = Number(document.getElementById('new-acc-balance').value);
-        const coin = document.getElementById('new-acc-coin').value.toUpperCase();
+        
+        if(!name) return alert('Введите название');
 
-        if(!name || !balance || (type === 'crypto' && !coin)) return alert('Заполните поля');
-
-        state.accounts.push({ id: Date.now(), name, type, balance, coin });
+        if (type === 'fiat') {
+            const balance = Number(document.getElementById('new-acc-balance').value);
+            if(isNaN(balance)) return alert('Введите баланс');
+            state.accounts.push({ id: Date.now(), name, type, balance });
+        } else {
+            state.accounts.push({ id: Date.now(), name, type, tokens: [] });
+        }
+        
         renderAccounts();
         if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
         DB.save(state);
-        
         document.getElementById('new-acc-name').value = '';
         document.getElementById('new-acc-balance').value = '';
     }
@@ -604,12 +619,10 @@
         DB.save(state);
     }
 
-    function editAccountBalance(id) {
+    function editFiatBalance(id) {
         const acc = state.accounts.find(a => a.id === id);
-        if(!acc) return;
-        const typeLabel = acc.type === 'fiat' ? '₽' : acc.coin;
-        const newBalance = prompt(`Введите новый баланс для "${acc.name}" в ${typeLabel}:`, acc.balance);
-        
+        if(!acc || acc.type !== 'fiat') return;
+        const newBalance = prompt(`Новый баланс для "${acc.name}" в ₽:`, acc.balance);
         if(newBalance !== null && !isNaN(Number(newBalance))) {
             acc.balance = Number(newBalance);
             renderAccounts();
@@ -618,12 +631,42 @@
         }
     }
 
+    function addTokenToWallet(walletId) {
+        const wallet = state.accounts.find(a => a.id === walletId);
+        if(!wallet) return;
+        
+        const coin = prompt('Введите тикер монеты (USDT, BTC, SOL, ETH и тд):');
+        if(!coin) return;
+        const balance = prompt(`Количество ${coin.toUpperCase()}:`);
+        if(balance === null || isNaN(Number(balance))) return;
+
+        wallet.tokens.push({ id: Date.now(), coin: coin.toUpperCase(), balance: Number(balance) });
+        renderAccounts();
+        if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
+        DB.save(state);
+        
+        // Перезапросим курсы на случай если монета новая (в реальном проекте тут нужен динамический API запрос)
+        fetchLiveRates(); 
+    }
+
+    function deleteToken(walletId, tokenId) {
+        const wallet = state.accounts.find(a => a.id === walletId);
+        if(!wallet) return;
+        wallet.tokens = wallet.tokens.filter(t => t.id !== tokenId);
+        renderAccounts();
+        initAccountsChart();
+        DB.save(state);
+    }
+
     function initAccountsChart() {
         if(charts.accounts) charts.accounts.destroy();
         const ctx = document.getElementById('accountsChart').getContext('2d');
+        
         const data = state.accounts.map(acc => {
             if(acc.type === 'fiat') return acc.balance;
-            return acc.balance * (state.rates[acc.coin] || 0) * state.rates.USD;
+            let walletRub = 0;
+            acc.tokens.forEach(t => walletRub += (t.balance * (state.rates[t.coin] || 0) * state.rates.USD));
+            return walletRub;
         });
 
         charts.accounts = new Chart(ctx, {
@@ -633,7 +676,6 @@
         });
     }
 
-    // --- Аналитика ---
     function updateAnalyticsCharts() {
         const expCat = document.getElementById('analytics-exp-select').value;
         const incCat = document.getElementById('analytics-inc-select').value;
@@ -649,17 +691,24 @@
     }
 
     function initAnalyticsCharts() {
-        const commonLineOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, elements: { line: { tension: 0.4 }, point: { radius: 4 } } };
+        const commonLineOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, elements: { line: { tension: 0.4 } } };
 
         if(charts.expHistory) charts.expHistory.destroy();
         const catExp = document.getElementById('analytics-exp-select').value || state.categories.expense[0];
         charts.expHistory = new Chart(document.getElementById('chartExpHistory'), {
             type: 'line',
-            data: { labels: state.monthsLabels, datasets: [{ data: state.history.expense[catExp] || [0,0,0,0], borderColor: '#1c1c1e', backgroundColor: 'rgba(28, 28, 30, 0.1)', fill: true }] },
+            data: { 
+                labels: state.monthsLabels, 
+                datasets: [{ 
+                    data: state.history.expense[catExp] || [0,0,0,0], 
+                    borderColor: '#1c1c1e', pointBackgroundColor: '#1c1c1e', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 4, 
+                    backgroundColor: 'rgba(28, 28, 30, 0.1)', fill: true 
+                }] 
+            },
             options: commonLineOptions
         });
 
-        // График Доходов (с красной зоной для отрицательных значений)
+        // График Доходов (Только зеленая линия с зелеными точками, заливка зависит от нуля)
         if(charts.incHistory) charts.incHistory.destroy();
         const catInc = document.getElementById('analytics-inc-select').value || state.categories.income[0];
         charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
@@ -668,14 +717,15 @@
                 labels: state.monthsLabels, 
                 datasets: [{ 
                     data: state.history.income[catInc] || [0,0,0,0], 
+                    borderColor: '#34c759', // Всегда зеленая линия
+                    pointBackgroundColor: '#34c759', // Зеленые точки
+                    pointBorderColor: '#ffffff', 
+                    pointBorderWidth: 2, 
+                    pointRadius: 4,
                     fill: {
                         target: 'origin',
-                        above: 'rgba(52, 199, 89, 0.15)', // Зеленый фон выше нуля
-                        below: 'rgba(255, 59, 48, 0.15)'  // Красный фон ниже нуля
-                    },
-                    segment: {
-                        // Если точка уходит ниже нуля, линия становится красной
-                        borderColor: ctx => ctx.p1.parsed.y < 0 || ctx.p0.parsed.y < 0 ? '#ff3b30' : '#34c759'
+                        above: 'rgba(52, 199, 89, 0.2)', // Зеленая заливка выше нуля
+                        below: 'rgba(255, 59, 48, 0.2)'  // Красная заливка ниже нуля
                     }
                 }] 
             },
