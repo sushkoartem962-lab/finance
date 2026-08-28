@@ -290,8 +290,8 @@
     };
 
     const DB = {
-        async load() { const local = localStorage.getItem('financeState_v7'); return local ? JSON.parse(local) : null; },
-        async save(state) { localStorage.setItem('financeState_v7', JSON.stringify(state)); }
+        async load() { const local = localStorage.getItem('financeState_v8'); return local ? JSON.parse(local) : null; },
+        async save(state) { localStorage.setItem('financeState_v8', JSON.stringify(state)); }
     };
 
     let state = {
@@ -323,7 +323,7 @@
             },
             income: {
                 'Зарплата': [200000, 200000, 200000, 200000], 'Проекты': [100000, 50000, 120000, 150000],
-                'Инвестиции': [20000, 10000, 15000, 0], 'Крипта (PnL)': [12000, -5000, 24000, 18000] 
+                'Инвестиции': [20000, 10000, 15000, 0], 'Крипта (PnL)': [12000, -5000, 24000, -3000] 
             }
         }
     };
@@ -333,7 +333,8 @@
 
     Chart.defaults.scale.grid.display = false;
     Chart.defaults.scale.border.display = false;
-    const blueColors = ['#007aff', '#34c759', '#ff9500', '#af52de', '#ff3b30', '#5ac8fa'];
+    // Новая цветовая палитра для графиков (без синего, строгие Apple-цвета)
+    const chartColors = ['#1c1c1e', '#34c759', '#ff9500', '#af52de', '#ff3b30', '#ffcc00', '#ff2d55', '#8e8e93'];
 
     async function init() {
         const loaded = await DB.load();
@@ -503,7 +504,7 @@
         if(charts.currentMonth) charts.currentMonth.destroy();
         charts.currentMonth = new Chart(document.getElementById('currentMonthChart').getContext('2d'), {
             type: 'doughnut',
-            data: { labels: expensesArr.map(e => e.name), datasets: [{ data: expensesArr.map(e => e.val), backgroundColor: blueColors, borderWidth: 0 }] },
+            data: { labels: expensesArr.map(e => e.name), datasets: [{ data: expensesArr.map(e => e.val), backgroundColor: chartColors, borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
 
@@ -542,7 +543,7 @@
 
         charts.dailyExpenses = new Chart(document.getElementById('dailyExpensesChart').getContext('2d'), {
             type: 'bar',
-            data: { labels: sortedDailyLabels, datasets: [{ label: 'Траты (₽)', data: dailyData, backgroundColor: '#007aff', borderRadius: 6 }] },
+            data: { labels: sortedDailyLabels, datasets: [{ label: 'Траты (₽)', data: dailyData, backgroundColor: '#1c1c1e', borderRadius: 6 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
     }
@@ -736,7 +737,7 @@
     function confirmDeleteAccount(id) {
         showModal({
             title: 'Удаление счета',
-            message: 'Вы точно хотите удалить этот счет/кошелек?',
+            message: 'Вы точно хотите удалить этот счет/кошелек со всеми данными?',
             submitText: 'Удалить',
             isDanger: true,
             onSubmit: () => {
@@ -854,7 +855,7 @@
 
         charts.accounts = new Chart(ctx, {
             type: 'doughnut',
-            data: { labels: state.accounts.map(a => a.name), datasets: [{ data, backgroundColor: blueColors, borderWidth: 0 }] },
+            data: { labels: state.accounts.map(a => a.name), datasets: [{ data, backgroundColor: chartColors, borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
     }
@@ -891,7 +892,7 @@
             options: commonLineOptions
         });
 
-        // График Доходов (Умная окраска в зависимости от нуля)
+        // График Доходов (Умная окраска линии и заливки через градиент, плюс точки)
         if(charts.incHistory) charts.incHistory.destroy();
         const catInc = document.getElementById('analytics-inc-select').value || state.categories.income[0];
         const incomeData = state.history.income[catInc] || [0,0,0,0];
@@ -902,11 +903,30 @@
                 labels: state.monthsLabels, 
                 datasets: [{ 
                     data: incomeData,
-                    // Линия становится красной, если одна из точек отрезка меньше нуля
-                    segment: {
-                        borderColor: ctx => (ctx.p0.parsed.y < 0 || ctx.p1.parsed.y < 0) ? '#ff3b30' : '#34c759'
+                    
+                    // Функция создает градиент, который делит график на зеленый и красный ровно по оси X=0
+                    borderColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea, scales} = chart;
+                        if (!chartArea) return null;
+                        
+                        const yZero = scales.y.getPixelForValue(0);
+                        const top = chartArea.top;
+                        const bottom = chartArea.bottom;
+                        
+                        let stop = (yZero - top) / (bottom - top);
+                        stop = Math.max(0, Math.min(1, stop));
+                        
+                        const gradient = ctx.createLinearGradient(0, top, 0, bottom);
+                        gradient.addColorStop(0, '#34c759');
+                        gradient.addColorStop(stop, '#34c759'); // Зеленый до 0
+                        gradient.addColorStop(stop, '#ff3b30'); // Красный после 0
+                        gradient.addColorStop(1, '#ff3b30');
+                        
+                        return gradient;
                     },
-                    // Точка становится красной, если её значение меньше нуля
+                    
+                    // Умная окраска точек: ниже нуля - красные
                     pointBackgroundColor: ctx => ctx.raw < 0 ? '#ff3b30' : '#34c759',
                     pointBorderColor: '#ffffff', 
                     pointBorderWidth: 2, 
