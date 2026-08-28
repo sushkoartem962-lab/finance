@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Finance Tracker - Bento</title>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -61,7 +63,6 @@
         .amount.expense { color: var(--text-main); }
         .subtitle { color: var(--text-muted); font-size: 14px; }
         
-        /* Жесткие правила для бейджа с датой, чтобы не переносился текст */
         .date-badge { font-size: 12px; color: var(--text-muted); background: var(--bg-color); padding: 4px 8px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
         
         .live-status { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-top: 10px; font-weight: 500; }
@@ -79,14 +80,15 @@
         .flex-row > * { flex: 1; min-width: 0; margin-bottom: 0; }
         .flex-row > button { flex: 0 0 auto; width: 60px; }
 
-        /* Обновленные стили для правильного отображения списков на мобилках */
-        .list-item, .token-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; user-select: none; -webkit-user-select: none; gap: 10px; }
+        .list-item, .token-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; user-select: none; -webkit-user-select: none; gap: 10px; overflow: hidden; }
         .list-item:last-child { border-bottom: none; }
         
-        .list-item-title { font-weight: 500; display: flex; align-items: center; flex: 1; min-width: 0; gap: 8px; flex-wrap: wrap; }
-        .list-item-category { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; }
+        .list-item-title { font-weight: 500; display: flex; align-items: center; flex: 1; min-width: 0; gap: 8px; }
+        .list-item-category { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; min-width: 0; }
         .list-item-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; justify-content: flex-end; }
         
+        .account-badge { font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0; }
+
         .token-item { padding: 8px 0; margin-left: 12px; border-bottom: 1px dashed #e5e5ea; }
         .token-item:last-child { border-bottom: none; }
         .add-token-btn { font-size: 13px; color: var(--primary); background: rgba(0,122,255,0.1); padding: 4px 10px; border-radius: 100px; border: none; cursor: pointer; font-weight: 500; margin-bottom: 0; width: auto; }
@@ -162,6 +164,7 @@
         </button>
     </div>
 
+    <!-- Вкладка 1: Текущий месяц -->
     <div id="month" class="tab-content active">
         <div class="bento-grid">
             <div class="bento-card">
@@ -208,6 +211,7 @@
         </div>
     </div>
 
+    <!-- Вкладка 2: Мои счета -->
     <div id="accounts" class="tab-content">
         <div class="bento-grid">
             <div class="bento-card span-full">
@@ -226,6 +230,7 @@
         </div>
     </div>
 
+    <!-- Вкладка 3: Аналитика -->
     <div id="analytics" class="tab-content">
         <div class="bento-grid">
             <div class="bento-card span-full">
@@ -251,6 +256,7 @@
         </div>
     </div>
 
+    <!-- Вкладка 4: Настройки -->
     <div id="settings" class="tab-content">
         <div class="bento-grid">
             <div class="bento-card span-full" id="profile-card" style="display: none; border: 1px solid #e5e5ea; background: #fafafa;">
@@ -311,6 +317,7 @@
         return Number(String(val).replace(',', '.').replace(/\s/g, ''));
     }
 
+    // === FIREBASE ИНИЦИАЛИЗАЦИЯ ===
 const firebaseConfig = {
   apiKey: "AIzaSyDjK2zlz5tF9EFS53aLhG4uTJlZKAEDXaM",
   authDomain: "finance-tracker-44e2a.firebaseapp.com",
@@ -343,7 +350,7 @@ const firebaseConfig = {
     const DB = {
         listen(callback) { 
             if (!db || !currentUser) {
-                const local = localStorage.getItem('financeState_v11'); 
+                const local = localStorage.getItem('financeState_v12'); 
                 if (local) callback(JSON.parse(local));
                 return;
             }
@@ -356,7 +363,7 @@ const firebaseConfig = {
         },
         async save(stateToSave) { 
             if (!db || !currentUser) {
-                localStorage.setItem('financeState_v11', JSON.stringify(stateToSave));
+                localStorage.setItem('financeState_v12', JSON.stringify(stateToSave));
                 return;
             }
             try { await db.ref(`users/${currentUser.uid}/financeState`).set(stateToSave); } 
@@ -365,16 +372,14 @@ const firebaseConfig = {
     };
 
     let state = {
-        rates: { USD: 95, BTC: 60000, ETH: 3000, USDT: 1, SOL: 150 },
-        monthsLabels: ['Май', 'Июнь', 'Июль', 'Август'], 
+        rates: { USD: 95 },
+        monthsLabels: [], 
         categories: { expense: [], income: [] },
         accounts: [],       
-        transactions: [],   
-        history: { expense: {}, income: {} }
+        transactions: []
     };
 
     let charts = {}; 
-    const currentMonthIndex = 3; 
 
     Chart.defaults.scale.grid.display = false;
     Chart.defaults.scale.border.display = false;
@@ -394,6 +399,7 @@ const firebaseConfig = {
             return;
         }
 
+        let isLoggingIn = false;
         auth.onAuthStateChanged(user => {
             if (user) {
                 if (user.email !== 'sushkoartem962@gmail.com') {
@@ -442,6 +448,16 @@ const firebaseConfig = {
         if (auth) auth.signOut().then(() => window.location.reload());
     }
 
+    function getHistoryLabels() {
+        const labels = [];
+        const d = new Date();
+        for(let i=3; i>=0; i--) {
+            const targetDate = new Date(d.getFullYear(), d.getMonth() - i, 1);
+            labels.push(targetDate.toLocaleString('ru-RU', { month: 'short' }));
+        }
+        return labels;
+    }
+
     function initApp() {
         const date = new Date();
         const monthName = date.toLocaleString('ru-RU', { month: 'long' });
@@ -451,14 +467,14 @@ const firebaseConfig = {
         document.getElementById('month-title-text').innerText = `Баланс (${capitalizedMonth})`;
         document.getElementById('op-date').value = date.toISOString().split('T')[0];
 
+        state.monthsLabels = getHistoryLabels();
+
         DB.listen((loaded) => {
             if(loaded) {
                 state.rates = loaded.rates || state.rates;
-                state.monthsLabels = loaded.monthsLabels || state.monthsLabels;
-                state.categories = loaded.categories || state.categories;
+                state.categories = loaded.categories || { expense: [], income: [] };
                 state.accounts = loaded.accounts || []; 
                 state.transactions = loaded.transactions || [];
-                state.history = loaded.history || state.history;
             }
             
             renderAll();
@@ -546,14 +562,16 @@ const firebaseConfig = {
             const fiatData = await fiatRes.json();
             state.rates.USD = fiatData.rates.RUB;
 
-            const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,solana,tron&vs_currencies=usd');
+            const cryptoRes = await fetch('https://api.binance.com/api/v3/ticker/price');
             const cryptoData = await cryptoRes.json();
             
-            state.rates.BTC = cryptoData.bitcoin?.usd || 0;
-            state.rates.TRX = cryptoData.tron?.usd || 0;
-            state.rates.ETH = cryptoData.ethereum?.usd || 0;
-            state.rates.USDT = cryptoData.tether?.usd || 1;
-            state.rates.SOL = cryptoData.solana?.usd || 0;
+            state.rates.USDT = 1;
+            cryptoData.forEach(item => {
+                if (item.symbol.endsWith('USDT')) {
+                    const coin = item.symbol.replace('USDT', '');
+                    state.rates[coin] = parseFloat(item.price);
+                }
+            });
 
             statusEl.className = 'live-status';
             statusEl.innerHTML = `<div class="status-dot"></div> Онлайн: 1$ = ${state.rates.USD.toFixed(1)} ₽`;
@@ -596,7 +614,7 @@ const firebaseConfig = {
         } else {
             state.accounts.forEach(acc => {
                 if (acc.type === 'fiat') {
-                    select.innerHTML += `<option value="fiat_${acc.id}">${acc.name} (${acc.balance.toLocaleString('ru-RU')} ₽)</option>`;
+                    select.innerHTML += `<option value="fiat_${acc.id}">${acc.name} • ${acc.balance.toLocaleString('ru-RU')} ₽</option>`;
                 } else if (acc.type === 'crypto_wallet' && acc.tokens) {
                     acc.tokens.forEach(t => {
                         select.innerHTML += `<option value="crypto_${acc.id}_${t.id}" data-coin="${t.coin}">${acc.name} • ${t.coin} (${t.balance})</option>`;
@@ -620,17 +638,25 @@ const firebaseConfig = {
     }
 
     function renderMonthTab() {
+        const currentMonthPrefix = document.getElementById('op-date').value.slice(0, 7) || new Date().toISOString().slice(0, 7);
+        const monthTransactions = state.transactions.filter(t => t.date.startsWith(currentMonthPrefix));
+
         let tInc = 0, tExp = 0;
-        
-        state.categories.income.forEach(cat => tInc += (state.history.income[cat]?.[currentMonthIndex] || 0));
-        state.categories.expense.forEach(cat => tExp += (state.history.expense[cat]?.[currentMonthIndex] || 0));
+        const expMap = {};
+
+        monthTransactions.forEach(t => {
+            if (t.type === 'income') {
+                tInc += t.amount;
+            } else {
+                tExp += t.amount;
+                expMap[t.category] = (expMap[t.category] || 0) + t.amount;
+            }
+        });
         
         document.getElementById('month-income-total').innerText = `+ ${tInc.toLocaleString('ru-RU')} ₽`;
         document.getElementById('month-expense-total').innerText = `- ${tExp.toLocaleString('ru-RU')} ₽`;
 
-        let expensesArr = state.categories.expense.map(cat => ({
-            name: cat, val: state.history.expense[cat]?.[currentMonthIndex] || 0
-        })).filter(e => e.val > 0).sort((a, b) => b.val - a.val);
+        let expensesArr = Object.keys(expMap).map(k => ({name: k, val: expMap[k]})).sort((a,b) => b.val - a.val);
 
         document.getElementById('current-month-expenses-list').innerHTML = expensesArr.map(e => `
             <div class="list-item" style="padding: 8px 0;">
@@ -647,7 +673,7 @@ const firebaseConfig = {
         });
 
         const dailyListEl = document.getElementById('daily-transactions-list');
-        const sortedTrans = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date)); 
+        const sortedTrans = [...monthTransactions].sort((a, b) => new Date(b.date) - new Date(a.date)); 
         
         if (sortedTrans.length === 0) {
              dailyListEl.innerHTML = '<div class="subtitle" style="text-align:center; padding: 20px;">Нет операций</div>';
@@ -661,13 +687,13 @@ const firebaseConfig = {
                 let accInfo = '';
                 if(t.accountDetails) {
                     const icon = t.accountDetails.type === 'fiat' ? icons.card : icons.crypto;
-                    accInfo = `<span style="font-size:12px; color:var(--text-muted); display:inline-flex; align-items:center; gap:4px; white-space: nowrap; flex-shrink: 0;">${icon} ${t.accountDetails.coin || 'RUB'}</span>`;
+                    accInfo = `<span class="account-badge">${icon} ${t.accountDetails.coin || 'RUB'}</span>`;
                 }
 
                 return `
                     <div class="list-item">
                         <div class="list-item-title">
-                            <div class="date-badge">${dateStr}</div> 
+                            <span class="date-badge">${dateStr}</span> 
                             <span class="list-item-category">${t.category}</span>
                             ${accInfo}
                         </div>
@@ -684,17 +710,20 @@ const firebaseConfig = {
 
         if(charts.dailyExpenses) charts.dailyExpenses.destroy();
         const dailyAgg = {};
-        state.transactions.filter(t => t.type === 'expense').forEach(t => {
-            const dStr = new Date(t.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-            dailyAgg[dStr] = (dailyAgg[dStr] || 0) + t.amount;
+        monthTransactions.filter(t => t.type === 'expense').forEach(t => {
+            dailyAgg[t.date] = (dailyAgg[t.date] || 0) + t.amount;
         });
         
-        const sortedDailyLabels = Object.keys(dailyAgg).sort((a, b) => parseInt(a) - parseInt(b));
-        const dailyData = sortedDailyLabels.map(label => dailyAgg[label]);
+        const sortedDailyKeys = Object.keys(dailyAgg).sort();
+        const dailyData = sortedDailyKeys.map(k => dailyAgg[k]);
+        const dailyLabels = sortedDailyKeys.map(k => {
+            const dateObj = new Date(k);
+            return dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+        });
 
         charts.dailyExpenses = new Chart(document.getElementById('dailyExpensesChart').getContext('2d'), {
             type: 'bar',
-            data: { labels: sortedDailyLabels, datasets: [{ label: 'Траты (₽)', data: dailyData, backgroundColor: '#1c1c1e', borderRadius: 6 }] },
+            data: { labels: dailyLabels, datasets: [{ label: 'Траты (₽)', data: dailyData, backgroundColor: '#1c1c1e', borderRadius: 6 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
     }
@@ -731,8 +760,11 @@ const firebaseConfig = {
                 const token = wallet.tokens.find(t => t.id === tokenId);
                 if(token) {
                     coin = token.coin;
-                    const rate = state.rates[coin] || 0;
-                    rubAmount = inputAmount * rate * state.rates.USD;
+                    const rate = state.rates[coin];
+                    if (!rate && coin !== 'USDT') {
+                        return showAlert(`Не удалось найти курс для ${coin}. Операция отменена.`);
+                    }
+                    rubAmount = inputAmount * (rate || 1) * state.rates.USD;
                     token.balance += (type === 'income' ? accountAmount : -accountAmount); 
                 }
             }
@@ -742,8 +774,6 @@ const firebaseConfig = {
             id: Date.now(), type, category: cat, amount: rubAmount, date,
             accountDetails: { type: accType, accId, tokenId, amount: accountAmount, coin: coin || 'RUB' }
         });
-        
-        state.history[type][cat][currentMonthIndex] += rubAmount;
         
         document.getElementById('op-amount').value = '';
         DB.save(state); 
@@ -773,7 +803,6 @@ const firebaseConfig = {
                     }
                 }
                 
-                state.history[trans.type][trans.category][currentMonthIndex] -= trans.amount;
                 state.transactions = state.transactions.filter(t => t.id !== id);
                 DB.save(state);
             }
@@ -814,7 +843,6 @@ const firebaseConfig = {
         const val = input.value.trim();
         if(val && !state.categories[type].includes(val)) {
             state.categories[type].push(val);
-            state.history[type][val] = [0,0,0,0];
             input.value = '';
             DB.save(state);
         }
@@ -822,14 +850,33 @@ const firebaseConfig = {
 
     function confirmDeleteCategory(type, index) {
         const cat = state.categories[type][index];
+        const relatedCount = state.transactions.filter(t => t.type === type && t.category === cat).length;
+        
         showModal({
             title: 'Удаление категории',
-            message: `Удалить категорию "${cat}"? Это повлияет на аналитику.`,
-            submitText: 'Удалить',
+            message: `Удалить категорию "${cat}"? Связанных операций: ${relatedCount}. Они будут удалены, а баланс счетов восстановлен.`,
+            submitText: 'Удалить всё',
             isDanger: true,
             onSubmit: () => {
+                const toDelete = state.transactions.filter(t => t.type === type && t.category === cat);
+                toDelete.forEach(trans => {
+                    if(trans.accountDetails) {
+                        const ad = trans.accountDetails;
+                        if(ad.type === 'fiat') {
+                            const acc = state.accounts.find(a => a.id === ad.accId);
+                            if(acc) acc.balance += (trans.type === 'income' ? -ad.amount : ad.amount);
+                        } else if(ad.type === 'crypto') {
+                            const wallet = state.accounts.find(a => a.id === ad.accId);
+                            if(wallet) {
+                                const token = wallet.tokens.find(t => t.id === ad.tokenId);
+                                if(token) token.balance += (trans.type === 'income' ? -ad.amount : ad.amount);
+                            }
+                        }
+                    }
+                });
+
                 state.categories[type].splice(index, 1);
-                delete state.history[type][cat];
+                state.transactions = state.transactions.filter(t => !(t.type === type && t.category === cat));
                 DB.save(state);
             }
         });
@@ -982,6 +1029,10 @@ const firebaseConfig = {
                 const coin = data.coin_name.trim().toUpperCase();
                 const bal = parseNum(data.coin_bal);
                 if(coin && !isNaN(bal)) {
+                    const rate = state.rates[coin];
+                    if (!rate && coin !== 'USDT') {
+                        return showAlert(`Токен ${coin} не найден на бирже.`);
+                    }
                     wallet.tokens = wallet.tokens || [];
                     wallet.tokens.push({ id: Date.now(), coin, balance: bal });
                     DB.save(state);
@@ -1049,16 +1100,43 @@ const firebaseConfig = {
         });
     }
 
+    // Динамическая генерация данных для истории
+    function generateHistoryData(type, category) {
+        const data = [0,0,0,0];
+        const d = new Date();
+        for(let i=0; i<4; i++) {
+            const targetDate = new Date(d.getFullYear(), d.getMonth() - (3 - i), 1);
+            const prefix = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2,'0')}`;
+            data[i] = state.transactions
+                .filter(t => t.type === type && t.category === category && t.date.startsWith(prefix))
+                .reduce((sum, t) => sum + t.amount, 0);
+        }
+        return data;
+    }
+
+    function generateTrendData(type) {
+         const data = [0,0,0,0];
+         const d = new Date();
+         for(let i=0; i<4; i++) {
+             const targetDate = new Date(d.getFullYear(), d.getMonth() - (3 - i), 1);
+             const prefix = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2,'0')}`;
+             data[i] = state.transactions
+                .filter(t => t.type === type && t.date.startsWith(prefix))
+                .reduce((sum, t) => sum + t.amount, 0);
+         }
+         return data;
+    }
+
     function updateAnalyticsCharts() {
         const expCat = document.getElementById('analytics-exp-select').value;
         const incCat = document.getElementById('analytics-inc-select').value;
 
         if(charts.expHistory && expCat) {
-            charts.expHistory.data.datasets[0].data = state.history.expense[expCat] || [0,0,0,0];
+            charts.expHistory.data.datasets[0].data = generateHistoryData('expense', expCat);
             charts.expHistory.update();
         }
         if(charts.incHistory && incCat) {
-            charts.incHistory.data.datasets[0].data = state.history.income[incCat] || [0,0,0,0];
+            charts.incHistory.data.datasets[0].data = generateHistoryData('income', incCat);
             charts.incHistory.update();
         }
     }
@@ -1073,7 +1151,7 @@ const firebaseConfig = {
             data: { 
                 labels: state.monthsLabels, 
                 datasets: [{ 
-                    data: state.history.expense[catExp] || [0,0,0,0], 
+                    data: generateHistoryData('expense', catExp), 
                     borderColor: '#1c1c1e', pointBackgroundColor: '#1c1c1e', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 4, 
                     backgroundColor: 'rgba(28, 28, 30, 0.1)', fill: true 
                 }] 
@@ -1083,7 +1161,7 @@ const firebaseConfig = {
 
         if(charts.incHistory) charts.incHistory.destroy();
         const catInc = document.getElementById('analytics-inc-select').value || state.categories.income[0];
-        const incomeData = state.history.income[catInc] || [0,0,0,0];
+        const incomeData = generateHistoryData('income', catInc);
         
         charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
             type: 'line',
@@ -1109,15 +1187,9 @@ const firebaseConfig = {
         });
 
         if(charts.trend) charts.trend.destroy();
-        let totalIncArr = [0,0,0,0], totalExpArr = [0,0,0,0];
-        state.monthsLabels.forEach((_, i) => {
-            state.categories.income.forEach(c => totalIncArr[i] += (state.history.income[c]?.[i] || 0));
-            state.categories.expense.forEach(c => totalExpArr[i] += (state.history.expense[c]?.[i] || 0));
-        });
-
         charts.trend = new Chart(document.getElementById('chartTrend'), {
             type: 'bar',
-            data: { labels: state.monthsLabels, datasets: [ { label: 'Доходы', data: totalIncArr, backgroundColor: '#34c759', borderRadius: 6 }, { label: 'Расходы', data: totalExpArr, backgroundColor: '#1c1c1e', borderRadius: 6 } ] },
+            data: { labels: state.monthsLabels, datasets: [ { label: 'Доходы', data: generateTrendData('income'), backgroundColor: '#34c759', borderRadius: 6 }, { label: 'Расходы', data: generateTrendData('expense'), backgroundColor: '#1c1c1e', borderRadius: 6 } ] },
             options: { responsive: true, maintainAspectRatio: false }
         });
     }
