@@ -402,19 +402,23 @@ const firebaseConfig = {
         '#ff8a80', '#ffcc80', '#fff59d', '#f48fb1', '#ce93d8', '#bcaaa4', '#d1d1d6'
     ];
 
-    // --- АВТОРИЗАЦИЯ И ИНИЦИАЛИЗАЦИЯ ---
+// --- АВТОРИЗАЦИЯ И ИНИЦИАЛИЗАЦИЯ ---
     function initAuth() {
         if (!auth) {
-            // Если Firebase не настроен - скрываем авторизацию и работаем локально (LocalStorage)
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-container').style.display = 'block';
             initApp();
             return;
         }
 
-        // Подписка на изменение состояния пользователя
         auth.onAuthStateChanged(user => {
             if (user) {
+                if (user.email !== 'sushkoartem962@gmail.com') {
+                    auth.signOut();
+                    showAlert("Доступ закрыт. Вы не являетесь владельцем приложения.");
+                    return;
+                }
+
                 currentUser = user;
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app-container').style.display = 'block';
@@ -425,7 +429,6 @@ const firebaseConfig = {
                     initApp();
                     isAppInitialized = true;
                 } else {
-                    // Перезагрузка данных при смене аккаунта без рефреша
                     initApp(); 
                 }
             } else {
