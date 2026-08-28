@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Finance Tracker - Bento</title>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase Compat SDK (App, Database, Auth) -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+    
     <style>
         :root {
             --bg-color: #f2f2f7;
@@ -22,6 +28,12 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
         .container { max-width: 1200px; margin: 0 auto; padding: var(--spacing); padding-bottom: 120px; }
+
+        /* Экран авторизации */
+        .auth-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 20000; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .auth-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .auth-card { background: var(--card-bg); width: 90%; max-width: 360px; border-radius: var(--radius); padding: 40px 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-align: center; }
+        .auth-logo { width: 64px; height: 64px; background: var(--primary); color: #fff; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,122,255,0.3); }
 
         /* Навигация */
         .nav { display: flex; gap: 10px; margin-bottom: var(--spacing); overflow-x: auto; scrollbar-width: none; align-items: center; }
@@ -66,7 +78,7 @@
         input, select, button { width: 100%; max-width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none; box-sizing: border-box; }
         input[type="date"] { font-family: -apple-system, sans-serif; -webkit-appearance: none; appearance: none; display: block; }
         input:focus, select:focus { border-color: var(--primary); }
-        .btn-primary { background: var(--primary); color: #fff; border: none; font-weight: 600; cursor: pointer; margin-top: 5px; transition: background 0.2s; margin-bottom: 0; }
+        .btn-primary { background: var(--primary); color: #fff; border: none; font-weight: 600; cursor: pointer; margin-top: 5px; transition: background 0.2s; margin-bottom: 0; display: flex; justify-content: center; align-items: center; gap: 8px;}
         .btn-primary:hover { background: var(--primary-hover); }
 
         .flex-row { display: flex; gap: 10px; width: 100%; align-items: stretch; margin-bottom: 10px; }
@@ -84,7 +96,7 @@
 
         .category-tag { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 8px 16px; border-radius: 100px; font-size: 14px; margin: 4px; transition: all 0.2s ease; cursor: pointer; user-select: none; -webkit-user-select: none; }
         
-        /* Скрытие иконок (Desktop Hover) */
+        /* Скрытие иконок */
         @media (hover: hover) and (pointer: fine) {
             .list-item .actions, .token-item .actions { opacity: 0; transition: opacity 0.2s ease; display: flex; align-items: center; gap: 4px; }
             .list-item:hover .actions, .token-item:hover .actions { opacity: 1; }
@@ -92,7 +104,6 @@
             .category-tag:hover .actions { max-width: 20px; opacity: 1; margin-left: 6px; }
         }
 
-        /* Скрытие иконок (Mobile Long Press) */
         @media (hover: none) {
             .list-item .actions, .token-item .actions { opacity: 0; pointer-events: none; transition: opacity 0.2s; display: flex; align-items: center; gap: 4px; }
             .list-item.show-actions .actions, .token-item.show-actions .actions { opacity: 1; pointer-events: auto; }
@@ -133,7 +144,20 @@
 </head>
 <body>
 
-<div class="container">
+<!-- Экран Авторизации -->
+<div id="auth-screen" class="auth-overlay">
+    <div class="auth-card">
+        <div class="auth-logo">₽</div>
+        <h2 style="margin-bottom: 5px; font-size: 24px;">Finance Tracker</h2>
+        <div class="subtitle" style="margin-bottom: 30px;">Учет личных финансов</div>
+        <button class="btn-primary" style="padding: 14px; font-size: 16px;" onclick="loginWithGoogle()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            Войти через Google
+        </button>
+    </div>
+</div>
+
+<div class="container" id="app-container" style="display: none;">
     <div class="nav">
         <button class="nav-btn active" onclick="switchTab('month')" id="tab-month-btn">Месяц</button>
         <button class="nav-btn" onclick="switchTab('accounts')">Счета</button>
@@ -237,6 +261,15 @@
     <!-- Вкладка 4: Настройки -->
     <div id="settings" class="tab-content">
         <div class="bento-grid">
+            <!-- Блок профиля -->
+            <div class="bento-card span-full" id="profile-card" style="display: none; border: 1px solid #e5e5ea; background: #fafafa;">
+                <h2>Аккаунт</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-weight: 500;" id="user-email">email@example.com</div>
+                    <button class="btn-primary btn-cancel" style="color: var(--danger); width: auto; margin:0; padding: 8px 16px;" onclick="logout()">Выйти</button>
+                </div>
+            </div>
+
             <div class="bento-card span-full">
                 <h2>Создать счет / кошелек</h2>
                 <input type="text" id="new-acc-name" placeholder="Название (напр. Bybit или Т-Банк)">
@@ -283,48 +316,76 @@
 </div>
 
 <script>
+    // === FIREBASE ИНИЦИАЛИЗАЦИЯ ===
+    // TODO: Вставь сюда ключи из своей консоли Firebase
+    // Важно: Включи Google провайдер в Firebase Authentication -> Sign-in method
+const firebaseConfig = {
+  apiKey: "AIzaSyDjK2zlz5tF9EFS53aLhG4uTJlZKAEDXaM",
+  authDomain: "finance-tracker-44e2a.firebaseapp.com",
+  databaseURL: "https://finance-tracker-44e2a-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "finance-tracker-44e2a",
+  storageBucket: "finance-tracker-44e2a.firebasestorage.app",
+  messagingSenderId: "309538443227",
+  appId: "1:309538443227:web:2f11759258845c8e8421fe"
+};
+
+    let db;
+    let auth;
+    let currentUser = null;
+    let isAppInitialized = false;
+
+    if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        auth = firebase.auth();
+    }
+
     const icons = {
         delete: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
         edit: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
         minus: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`
     };
 
+    // --- Firebase DB Обёртка (Индивидуальные данные по UID) ---
     const DB = {
-        async load() { const local = localStorage.getItem('financeState_v9'); return local ? JSON.parse(local) : null; },
-        async save(state) { localStorage.setItem('financeState_v9', JSON.stringify(state)); }
+        async load() { 
+            if (!db || !currentUser) {
+                const local = localStorage.getItem('financeState_v10'); 
+                return local ? JSON.parse(local) : null;
+            }
+            try {
+                const snapshot = await db.ref(`users/${currentUser.uid}/financeState`).once('value');
+                return snapshot.exists() ? snapshot.val() : null;
+            } catch (e) {
+                console.error("Ошибка загрузки из Firebase:", e);
+                return null;
+            }
+        },
+        async save(stateToSave) { 
+            if (!db || !currentUser) {
+                localStorage.setItem('financeState_v10', JSON.stringify(stateToSave));
+                return;
+            }
+            try {
+                await db.ref(`users/${currentUser.uid}/financeState`).set(stateToSave);
+            } catch (e) {
+                console.error("Ошибка сохранения в Firebase:", e);
+            }
+        }
     };
 
     let state = {
         rates: { USD: 95, BTC: 60000, ETH: 3000, USDT: 1, SOL: 150 },
-        monthsLabels: ['Май', 'Июнь', 'Июль', 'Август'],
+        monthsLabels: ['Май', 'Июнь', 'Июль', 'Август'], 
         categories: {
             expense: ['Еда', 'Авто', 'Дом', 'Развлечения', 'Подписки'],
-            income: ['Зарплата', 'Проекты', 'Инвестиции', 'Крипта (PnL)']
+            income: ['Зарплата', 'Проекты']
         },
-        accounts: [
-            { id: 1, name: 'Т-Банк', type: 'fiat', balance: 120000 },
-            { id: 2, name: 'Bybit', type: 'crypto_wallet', tokens: [
-                { id: 21, coin: 'USDT', balance: 1500 },
-                { id: 22, coin: 'BTC', balance: 0.05 }
-            ]},
-            { id: 3, name: 'Trust Wallet', type: 'crypto_wallet', tokens: [
-                { id: 31, coin: 'ETH', balance: 1.2 },
-                { id: 32, coin: 'SOL', balance: 25 }
-            ]}
-        ],
-        transactions: [
-            { id: 101, date: '2026-08-25', type: 'expense', category: 'Еда', amount: 1500 },
-            { id: 102, date: '2026-08-26', type: 'expense', category: 'Авто', amount: 3000 }
-        ],
+        accounts: [],       
+        transactions: [],   
         history: {
-            expense: {
-                'Еда': [38000, 42000, 39500, 45000], 'Авто': [12000, 15000, 10000, 15000], 'Дом': [28000, 31000, 29000, 30000],
-                'Развлечения': [15000, 22000, 18000, 20000], 'Подписки': [4500, 4800, 5000, 5000]
-            },
-            income: {
-                'Зарплата': [200000, 200000, 200000, 200000], 'Проекты': [100000, 50000, 120000, 150000],
-                'Инвестиции': [20000, 10000, 15000, 0], 'Крипта (PnL)': [12000, -5000, 24000, -3000] 
-            }
+            expense: { 'Еда': [0,0,0,0], 'Авто': [0,0,0,0], 'Дом': [0,0,0,0], 'Развлечения': [0,0,0,0], 'Подписки': [0,0,0,0] },
+            income: { 'Зарплата': [0,0,0,0], 'Проекты': [0,0,0,0] }
         }
     };
 
@@ -334,8 +395,6 @@
     Chart.defaults.scale.grid.display = false;
     Chart.defaults.scale.border.display = false;
     
-    // Новая расширенная палитра для графиков категорий и счетов (Без синего, черного и базового зеленого)
-    // 28 гармоничных HIG-оттенков (Теплые, розовые, фиолетовые, серые, желтые)
     const chartColors = [
         '#ff3b30', '#ff9500', '#ffcc00', '#ff2d55', '#af52de', '#a2845e', '#8e8e93',
         '#ff6b22', '#ffb340', '#ffe033', '#ff6482', '#c57be6', '#b69e80', '#aeaeb2',
@@ -343,9 +402,69 @@
         '#ff8a80', '#ffcc80', '#fff59d', '#f48fb1', '#ce93d8', '#bcaaa4', '#d1d1d6'
     ];
 
-    async function init() {
+    // --- АВТОРИЗАЦИЯ И ИНИЦИАЛИЗАЦИЯ ---
+    function initAuth() {
+        if (!auth) {
+            // Если Firebase не настроен - скрываем авторизацию и работаем локально (LocalStorage)
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-container').style.display = 'block';
+            initApp();
+            return;
+        }
+
+        // Подписка на изменение состояния пользователя
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-container').style.display = 'block';
+                document.getElementById('profile-card').style.display = 'block';
+                document.getElementById('user-email').innerText = user.email;
+                
+                if (!isAppInitialized) {
+                    initApp();
+                    isAppInitialized = true;
+                } else {
+                    // Перезагрузка данных при смене аккаунта без рефреша
+                    initApp(); 
+                }
+            } else {
+                currentUser = null;
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('app-container').style.display = 'none';
+                document.getElementById('profile-card').style.display = 'none';
+            }
+        });
+    }
+
+    function loginWithGoogle() {
+        if (!auth) return showAlert("Пожалуйста, добавьте ключи Firebase в конфигурацию кода.");
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(error => {
+            console.error("Ошибка авторизации:", error);
+            showAlert(error.message);
+        });
+    }
+
+    function logout() {
+        if (auth) {
+            auth.signOut().then(() => {
+                // Перезагружаем страницу, чтобы полностью сбросить локальный state и графики
+                window.location.reload(); 
+            });
+        }
+    }
+
+    async function initApp() {
         const loaded = await DB.load();
-        if(loaded) state = { ...state, ...loaded };
+        if(loaded) {
+            state.rates = loaded.rates || state.rates;
+            state.monthsLabels = loaded.monthsLabels || state.monthsLabels;
+            state.categories = loaded.categories || state.categories;
+            state.accounts = loaded.accounts || []; 
+            state.transactions = loaded.transactions || [];
+            state.history = loaded.history || state.history;
+        }
         
         const date = new Date();
         const monthName = date.toLocaleString('ru-RU', { month: 'long' });
@@ -414,7 +533,6 @@
         showModal({ title: 'Внимание', message: msg, cancelText: 'Понятно' });
     }
 
-    // --- Long Press Логика ---
     function initLongPress() {
         let pressTimer;
         const startPress = (e) => {
@@ -488,9 +606,9 @@
         renderAccounts();
     }
 
-    // --- Текущий месяц ---
     function renderMonthTab() {
         let tInc = 0, tExp = 0;
+        
         state.categories.income.forEach(cat => tInc += (state.history.income[cat]?.[currentMonthIndex] || 0));
         state.categories.expense.forEach(cat => tExp += (state.history.expense[cat]?.[currentMonthIndex] || 0));
         
@@ -518,25 +636,29 @@
         const dailyListEl = document.getElementById('daily-transactions-list');
         const sortedTrans = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date)); 
         
-        dailyListEl.innerHTML = sortedTrans.map(t => {
-            const dateObj = new Date(t.date);
-            const dateStr = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-            const sign = t.type === 'income' ? '+' : '-';
-            const colorClass = t.type === 'income' ? 'income' : '';
-            return `
-                <div class="list-item">
-                    <div class="list-item-title">
-                        <span class="date-badge">${dateStr}</span> ${t.category}
-                    </div>
-                    <div style="display:flex; align-items:center; gap: 8px;">
-                        <span class="amount ${colorClass}" style="font-size:16px; margin:0;">${sign} ${t.amount.toLocaleString('ru-RU')} ₽</span>
-                        <div class="actions">
-                            <button class="action-btn" onclick="confirmDeleteTransaction(${t.id})">${icons.delete}</button>
+        if (sortedTrans.length === 0) {
+             dailyListEl.innerHTML = '<div class="subtitle" style="text-align:center; padding: 20px;">Нет операций</div>';
+        } else {
+            dailyListEl.innerHTML = sortedTrans.map(t => {
+                const dateObj = new Date(t.date);
+                const dateStr = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+                const sign = t.type === 'income' ? '+' : '-';
+                const colorClass = t.type === 'income' ? 'income' : '';
+                return `
+                    <div class="list-item">
+                        <div class="list-item-title">
+                            <span class="date-badge">${dateStr}</span> ${t.category}
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 8px;">
+                            <span class="amount ${colorClass}" style="font-size:16px; margin:0;">${sign} ${t.amount.toLocaleString('ru-RU')} ₽</span>
+                            <div class="actions">
+                                <button class="action-btn" onclick="confirmDeleteTransaction(${t.id})">${icons.delete}</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
+        }
 
         if(charts.dailyExpenses) charts.dailyExpenses.destroy();
         const dailyAgg = {};
@@ -562,6 +684,7 @@
         const date = document.getElementById('op-date').value || new Date().toISOString().split('T')[0];
         
         if(!amount) return showAlert('Укажите сумму');
+        if(!cat) return showAlert('Сначала создайте категорию в настройках');
         
         state.transactions.push({ id: Date.now(), type, category: cat, amount, date });
         state.history[type][cat][currentMonthIndex] += amount;
@@ -588,7 +711,6 @@
         });
     }
 
-    // --- Категории (Настройки) ---
     function renderCategories() {
         const renderList = (type, listId) => {
             const list = document.getElementById(listId);
@@ -646,7 +768,6 @@
         });
     }
 
-    // --- Логика Счетов и Кошельков ---
     function toggleAccountInput() {
         const isCrypto = document.getElementById('new-acc-type').value === 'crypto_wallet';
         document.getElementById('new-acc-balance').style.display = isCrypto ? 'none' : 'block';
@@ -656,6 +777,10 @@
         let totalRub = 0;
         const list = document.getElementById('accounts-list');
         list.innerHTML = '';
+
+        if (state.accounts.length === 0) {
+            list.innerHTML = '<div class="subtitle" style="text-align:center; padding: 20px;">Нет счетов. Добавьте их в настройках.</div>';
+        }
 
         state.accounts.forEach(acc => {
             if (acc.type === 'fiat') {
@@ -675,7 +800,7 @@
             } else if (acc.type === 'crypto_wallet') {
                 let walletRub = 0, walletUsd = 0;
                 
-                const tokensHTML = acc.tokens.map(t => {
+                const tokensHTML = (acc.tokens || []).map(t => {
                     const rate = state.rates[t.coin] || 0;
                     const usdVal = t.balance * rate;
                     walletUsd += usdVal;
@@ -795,6 +920,7 @@
                 const coin = data.coin_name.trim().toUpperCase();
                 const bal = Number(data.coin_bal);
                 if(coin && !isNaN(bal)) {
+                    wallet.tokens = wallet.tokens || [];
                     wallet.tokens.push({ id: Date.now(), coin, balance: bal });
                     renderAccounts();
                     if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
@@ -856,7 +982,7 @@
         const data = state.accounts.map(acc => {
             if(acc.type === 'fiat') return acc.balance;
             let walletRub = 0;
-            acc.tokens.forEach(t => walletRub += (t.balance * (state.rates[t.coin] || 0) * state.rates.USD));
+            (acc.tokens || []).forEach(t => walletRub += (t.balance * (state.rates[t.coin] || 0) * state.rates.USD));
             return walletRub;
         });
 
@@ -899,7 +1025,6 @@
             options: commonLineOptions
         });
 
-        // График Доходов (Умная окраска линии и заливки через градиент, плюс точки)
         if(charts.incHistory) charts.incHistory.destroy();
         const catInc = document.getElementById('analytics-inc-select').value || state.categories.income[0];
         const incomeData = state.history.income[catInc] || [0,0,0,0];
@@ -910,30 +1035,9 @@
                 labels: state.monthsLabels, 
                 datasets: [{ 
                     data: incomeData,
-                    
-                    // Функция создает градиент, который делит график на зеленый и красный ровно по оси X=0
-                    borderColor: function(context) {
-                        const chart = context.chart;
-                        const {ctx, chartArea, scales} = chart;
-                        if (!chartArea) return null;
-                        
-                        const yZero = scales.y.getPixelForValue(0);
-                        const top = chartArea.top;
-                        const bottom = chartArea.bottom;
-                        
-                        let stop = (yZero - top) / (bottom - top);
-                        stop = Math.max(0, Math.min(1, stop));
-                        
-                        const gradient = ctx.createLinearGradient(0, top, 0, bottom);
-                        gradient.addColorStop(0, '#34c759');
-                        gradient.addColorStop(stop, '#34c759'); // Зеленый до 0
-                        gradient.addColorStop(stop, '#ff3b30'); // Красный после 0
-                        gradient.addColorStop(1, '#ff3b30');
-                        
-                        return gradient;
+                    segment: {
+                        borderColor: ctx => (ctx.p0.parsed.y < 0 || ctx.p1.parsed.y < 0) ? '#ff3b30' : '#34c759'
                     },
-                    
-                    // Умная окраска точек: ниже нуля - красные
                     pointBackgroundColor: ctx => ctx.raw < 0 ? '#ff3b30' : '#34c759',
                     pointBorderColor: '#ffffff', 
                     pointBorderWidth: 2, 
@@ -962,7 +1066,8 @@
         });
     }
 
-    window.onload = init;
+    // Запуск приложения через Auth
+    window.onload = initAuth;
 </script>
 </body>
 </html>
