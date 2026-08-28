@@ -593,7 +593,7 @@
             const fiatData = await fiatRes.json();
             state.rates.USD = fiatData.rates.RUB;
 
-            const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,solana&vs_currencies=usd');
+            const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,solana,tron&vs_currencies=usd');
             const cryptoData = await cryptoRes.json();
             
             state.rates.BTC = cryptoData.bitcoin?.usd || 0;
