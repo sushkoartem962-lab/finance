@@ -125,6 +125,7 @@
         .analytics-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .analytics-controls select { margin-bottom: 0; width: auto; flex-grow: 1; max-width: 300px; }
         
+        /* Модалка с A11y */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.25s ease; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-box { background: var(--card-bg); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transform: scale(0.95); transition: transform 0.25s ease; }
@@ -159,7 +160,7 @@
         <button class="nav-btn" onclick="switchTab('accounts')">Счета</button>
         <button class="nav-btn" onclick="switchTab('analytics')">Аналитика</button>
         <div class="nav-spacer"></div>
-        <button class="nav-btn icon-btn" onclick="switchTab('settings')">
+        <button class="nav-btn icon-btn" aria-label="Настройки" onclick="switchTab('settings')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
     </div>
@@ -263,7 +264,7 @@
                 <h2>Аккаунт</h2>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="font-weight: 500;" id="user-email">email@example.com</div>
-                    <button class="btn-primary btn-cancel" style="color: var(--danger); width: auto; margin:0; padding: 8px 16px;" onclick="logout()">Выйти</button>
+                    <button class="btn-primary btn-cancel" aria-label="Выйти" style="color: var(--danger); width: auto; margin:0; padding: 8px 16px;" onclick="logout()">Выйти</button>
                 </div>
             </div>
 
@@ -286,7 +287,7 @@
                         <option value="expense">Расход</option>
                         <option value="income">Доход</option>
                     </select>
-                    <button class="btn-primary" style="margin:0;" onclick="addCategory()">+</button>
+                    <button class="btn-primary" aria-label="Добавить категорию" style="margin:0;" onclick="addCategory()">+</button>
                 </div>
                 <div style="margin-top: 15px;">
                     <div class="subtitle" style="margin-bottom: 5px;">Расходы:</div>
@@ -300,7 +301,7 @@
 </div>
 
 <div class="modal-overlay" id="app-modal">
-    <div class="modal-box">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-title" id="modal-title">Внимание</div>
         <div class="modal-message" id="modal-message"></div>
         <div class="modal-body" id="modal-body"></div>
@@ -312,6 +313,23 @@
 </div>
 
 <script>
+    // --- XSS ЗАЩИТА ---
+    function escapeHTML(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    // --- Локальная дата для устранения бага с toISOString() ---
+    function getLocalDate() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
     function parseNum(val) {
         if (val === null || val === undefined || val === '') return NaN;
         return Number(String(val).replace(',', '.').replace(/\s/g, ''));
@@ -350,7 +368,7 @@ const firebaseConfig = {
     const DB = {
         listen(callback) { 
             if (!db || !currentUser) {
-                const local = localStorage.getItem('financeState_v12'); 
+                const local = localStorage.getItem('financeState_v13'); 
                 if (local) callback(JSON.parse(local));
                 return;
             }
@@ -363,10 +381,13 @@ const firebaseConfig = {
         },
         async save(stateToSave) { 
             if (!db || !currentUser) {
-                localStorage.setItem('financeState_v12', JSON.stringify(stateToSave));
+                localStorage.setItem('financeState_v13', JSON.stringify(stateToSave));
                 return;
             }
-            try { await db.ref(`users/${currentUser.uid}/financeState`).set(stateToSave); } 
+            try { 
+                // Атомарное обновление корневых узлов
+                await db.ref(`users/${currentUser.uid}/financeState`).update(stateToSave); 
+            } 
             catch (e) { console.error("Ошибка сохранения:", e); }
         }
     };
@@ -439,6 +460,7 @@ const firebaseConfig = {
             isLoggingIn = false;
         }).catch(error => {
             isLoggingIn = false;
+            // Игнорируем закрытие окна пользователем
             if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') return; 
             showAlert("Ошибка входа: " + error.message);
         });
@@ -465,7 +487,7 @@ const firebaseConfig = {
         
         document.getElementById('tab-month-btn').innerText = capitalizedMonth;
         document.getElementById('month-title-text').innerText = `Баланс (${capitalizedMonth})`;
-        document.getElementById('op-date').value = date.toISOString().split('T')[0];
+        document.getElementById('op-date').value = getLocalDate();
 
         state.monthsLabels = getHistoryLabels();
 
@@ -493,7 +515,7 @@ const firebaseConfig = {
     function showModal({ title, message, inputs, submitText, cancelText, isDanger, onSubmit }) {
         document.getElementById('modal-title').innerText = title || '';
         const msgEl = document.getElementById('modal-message');
-        msgEl.innerText = message || '';
+        msgEl.innerHTML = message || ''; // Разрешаем HTML для иконок в модалке (sanitized via escapeHTML passed below)
         msgEl.style.display = message ? 'block' : 'none';
 
         const bodyEl = document.getElementById('modal-body');
@@ -521,7 +543,8 @@ const firebaseConfig = {
             if (onSubmit) {
                 const data = {};
                 if (inputs) inputs.forEach(inp => data[inp.id] = document.getElementById(`modal-inp-${inp.id}`).value);
-                onSubmit(data);
+                // Блокируем закрытие, если onSubmit возвращает false
+                if (onSubmit(data) === false) return;
             }
             hideModal();
         };
@@ -529,7 +552,7 @@ const firebaseConfig = {
     }
 
     function hideModal() { document.getElementById('app-modal').classList.remove('active'); }
-    function showAlert(msg) { showModal({ title: 'Внимание', message: msg, cancelText: 'Понятно' }); }
+    function showAlert(msg) { showModal({ title: 'Внимание', message: escapeHTML(msg), cancelText: 'Понятно' }); }
 
     function initLongPress() {
         let pressTimer;
@@ -559,10 +582,12 @@ const firebaseConfig = {
         const statusEl = document.getElementById('rates-status');
         try {
             const fiatRes = await fetch('https://open.er-api.com/v6/latest/USD');
+            if (!fiatRes.ok) throw new Error('Network error fiat');
             const fiatData = await fiatRes.json();
             state.rates.USD = fiatData.rates.RUB;
 
             const cryptoRes = await fetch('https://api.binance.com/api/v3/ticker/price');
+            if (!cryptoRes.ok) throw new Error('Network error crypto');
             const cryptoData = await cryptoRes.json();
             
             state.rates.USDT = 1;
@@ -614,10 +639,10 @@ const firebaseConfig = {
         } else {
             state.accounts.forEach(acc => {
                 if (acc.type === 'fiat') {
-                    select.innerHTML += `<option value="fiat_${acc.id}">${acc.name} • ${acc.balance.toLocaleString('ru-RU')} ₽</option>`;
+                    select.innerHTML += `<option value="fiat_${acc.id}">${escapeHTML(acc.name)} • ${acc.balance.toLocaleString('ru-RU')} ₽</option>`;
                 } else if (acc.type === 'crypto_wallet' && acc.tokens) {
                     acc.tokens.forEach(t => {
-                        select.innerHTML += `<option value="crypto_${acc.id}_${t.id}" data-coin="${t.coin}">${acc.name} • ${t.coin} (${t.balance})</option>`;
+                        select.innerHTML += `<option value="crypto_${acc.id}_${t.id}" data-coin="${escapeHTML(t.coin)}">${escapeHTML(acc.name)} • ${escapeHTML(t.coin)} (${t.balance})</option>`;
                     });
                 }
             });
@@ -638,7 +663,7 @@ const firebaseConfig = {
     }
 
     function renderMonthTab() {
-        const currentMonthPrefix = document.getElementById('op-date').value.slice(0, 7) || new Date().toISOString().slice(0, 7);
+        const currentMonthPrefix = document.getElementById('op-date').value.slice(0, 7) || getLocalDate().slice(0, 7);
         const monthTransactions = state.transactions.filter(t => t.date.startsWith(currentMonthPrefix));
 
         let tInc = 0, tExp = 0;
@@ -660,7 +685,7 @@ const firebaseConfig = {
 
         document.getElementById('current-month-expenses-list').innerHTML = expensesArr.map(e => `
             <div class="list-item" style="padding: 8px 0;">
-                <span class="list-item-title">${e.name}</span>
+                <span class="list-item-title">${escapeHTML(e.name)}</span>
                 <span>${e.val.toLocaleString('ru-RU')} ₽</span>
             </div>
         `).join('');
@@ -668,7 +693,7 @@ const firebaseConfig = {
         if(charts.currentMonth) charts.currentMonth.destroy();
         charts.currentMonth = new Chart(document.getElementById('currentMonthChart').getContext('2d'), {
             type: 'doughnut',
-            data: { labels: expensesArr.map(e => e.name), datasets: [{ data: expensesArr.map(e => e.val), backgroundColor: chartColors, borderWidth: 0 }] },
+            data: { labels: expensesArr.map(e => escapeHTML(e.name)), datasets: [{ data: expensesArr.map(e => e.val), backgroundColor: chartColors, borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
 
@@ -687,20 +712,20 @@ const firebaseConfig = {
                 let accInfo = '';
                 if(t.accountDetails) {
                     const icon = t.accountDetails.type === 'fiat' ? icons.card : icons.crypto;
-                    accInfo = `<span class="account-badge">${icon} ${t.accountDetails.coin || 'RUB'}</span>`;
+                    accInfo = `<span class="account-badge">${icon} ${escapeHTML(t.accountDetails.coin || 'RUB')}</span>`;
                 }
 
                 return `
                     <div class="list-item">
                         <div class="list-item-title">
                             <span class="date-badge">${dateStr}</span> 
-                            <span class="list-item-category">${t.category}</span>
+                            <span class="list-item-category">${escapeHTML(t.category)}</span>
                             ${accInfo}
                         </div>
                         <div class="list-item-right">
                             <span class="amount ${colorClass}" style="font-size:16px; margin:0; white-space: nowrap;">${sign} ${t.amount.toLocaleString('ru-RU')} ₽</span>
                             <div class="actions">
-                                <button class="action-btn" onclick="confirmDeleteTransaction(${t.id})">${icons.delete}</button>
+                                <button class="action-btn" aria-label="Удалить" onclick="confirmDeleteTransaction(${t.id})">${icons.delete}</button>
                             </div>
                         </div>
                     </div>
@@ -731,13 +756,13 @@ const firebaseConfig = {
     function addTransaction() {
         const type = document.getElementById('op-type').value;
         const cat = document.getElementById('op-category').value;
-        const date = document.getElementById('op-date').value || new Date().toISOString().split('T')[0];
+        const date = document.getElementById('op-date').value || getLocalDate();
         const accVal = document.getElementById('op-account').value;
         const inputAmount = parseNum(document.getElementById('op-amount').value);
         
-        if(isNaN(inputAmount) || inputAmount <= 0) return showAlert('Укажите корректную сумму');
-        if(!cat) return showAlert('Сначала создайте категорию в настройках');
-        if(!accVal) return showAlert('Сначала создайте счет в настройках');
+        if(isNaN(inputAmount) || inputAmount <= 0) { showAlert('Укажите корректную сумму'); return; }
+        if(!cat) { showAlert('Сначала создайте категорию в настройках'); return; }
+        if(!accVal) { showAlert('Сначала создайте счет в настройках'); return; }
         
         let rubAmount = 0;
         let accountAmount = inputAmount;
@@ -762,7 +787,8 @@ const firebaseConfig = {
                     coin = token.coin;
                     const rate = state.rates[coin];
                     if (!rate && coin !== 'USDT') {
-                        return showAlert(`Не удалось найти курс для ${coin}. Операция отменена.`);
+                        showAlert(`Не удалось найти курс для ${escapeHTML(coin)}. Операция отменена.`);
+                        return;
                     }
                     rubAmount = inputAmount * (rate || 1) * state.rates.USD;
                     token.balance += (type === 'income' ? accountAmount : -accountAmount); 
@@ -814,15 +840,15 @@ const firebaseConfig = {
             const list = document.getElementById(listId);
             list.innerHTML = state.categories[type].map((cat, idx) => `
                 <div class="category-tag">
-                    <span>${cat}</span>
+                    <span>${escapeHTML(cat)}</span>
                     <div class="actions">
-                        <button class="action-btn" onclick="confirmDeleteCategory('${type}', ${idx})">${icons.delete}</button>
+                        <button class="action-btn" aria-label="Удалить" onclick="confirmDeleteCategory('${type}', ${idx})">${icons.delete}</button>
                     </div>
                 </div>
             `).join('');
             
             const select = document.getElementById(`analytics-${type === 'expense' ? 'exp' : 'inc'}-select`);
-            if(select) select.innerHTML = state.categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
+            if(select) select.innerHTML = state.categories[type].map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
         };
         renderList('expense', 'exp-categories-list');
         renderList('income', 'inc-categories-list');
@@ -833,7 +859,7 @@ const firebaseConfig = {
         const select = document.getElementById('op-category');
         const currentVal = select.value; 
         
-        select.innerHTML = state.categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
+        select.innerHTML = state.categories[type].map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
         if (currentVal && state.categories[type].includes(currentVal)) select.value = currentVal;
     }
 
@@ -854,7 +880,7 @@ const firebaseConfig = {
         
         showModal({
             title: 'Удаление категории',
-            message: `Удалить категорию "${cat}"? Связанных операций: ${relatedCount}. Они будут удалены, а баланс счетов восстановлен.`,
+            message: `Удалить категорию "${escapeHTML(cat)}"? Связанных операций: ${relatedCount}. Они будут удалены, а баланс счетов восстановлен.`,
             submitText: 'Удалить всё',
             isDanger: true,
             onSubmit: () => {
@@ -902,12 +928,12 @@ const firebaseConfig = {
                 list.innerHTML += `
                     <div class="list-item">
                         <div>
-                            <div class="list-item-title">${acc.name}</div>
+                            <div class="list-item-title">${escapeHTML(acc.name)}</div>
                             <div class="subtitle">${acc.balance.toLocaleString('ru-RU')} ₽</div>
                         </div>
                         <div class="actions">
-                            <button class="action-btn edit-btn" onclick="editFiatBalance(${acc.id})">${icons.edit}</button>
-                            <button class="action-btn" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button>
+                            <button class="action-btn edit-btn" aria-label="Изменить баланс" onclick="editFiatBalance(${acc.id})">${icons.edit}</button>
+                            <button class="action-btn" aria-label="Удалить счет" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button>
                         </div>
                     </div>
                 `;
@@ -921,12 +947,12 @@ const firebaseConfig = {
                     
                     return `
                         <div class="token-item">
-                            <span style="font-size: 14px; font-weight: 500;">${t.balance} ${t.coin}</span>
+                            <span style="font-size: 14px; font-weight: 500;">${t.balance} ${escapeHTML(t.coin)}</span>
                             <div style="display:flex; align-items:center; gap: 8px;">
                                 <span style="font-size: 13px; color: var(--text-muted);">$${usdVal.toLocaleString('en-US',{maximumFractionDigits:2})}</span>
                                 <div class="actions">
-                                    <button class="action-btn edit-btn" onclick="editTokenBalance(${acc.id}, ${t.id})">${icons.edit}</button>
-                                    <button class="action-btn" onclick="confirmDeleteToken(${acc.id}, ${t.id})">${icons.minus}</button>
+                                    <button class="action-btn edit-btn" aria-label="Изменить" onclick="editTokenBalance(${acc.id}, ${t.id})">${icons.edit}</button>
+                                    <button class="action-btn" aria-label="Удалить" onclick="confirmDeleteToken(${acc.id}, ${t.id})">${icons.minus}</button>
                                 </div>
                             </div>
                         </div>
@@ -940,13 +966,13 @@ const firebaseConfig = {
                     <div style="background: #fafafa; padding: 12px; border-radius: 16px; margin-bottom: 10px;">
                         <div class="list-item" style="border-bottom: none; padding: 0 0 4px 0;">
                             <div>
-                                <div class="list-item-title">${acc.name} <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px; margin-left:6px;">WALLET</span></div>
+                                <div class="list-item-title">${escapeHTML(acc.name)} <span style="font-size:10px; background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px; margin-left:6px;">WALLET</span></div>
                                 <div class="subtitle">~ ${Math.round(walletRub).toLocaleString('ru-RU')} ₽ ($${walletUsd.toLocaleString('en-US',{maximumFractionDigits:2})})</div>
                             </div>
                             <div style="display:flex; gap: 6px; align-items: center;">
                                 <button class="add-token-btn" onclick="addTokenToWallet(${acc.id})">+ Токен</button>
                                 <div class="actions">
-                                    <button class="action-btn" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button>
+                                    <button class="action-btn" aria-label="Удалить счет" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button>
                                 </div>
                             </div>
                         </div>
@@ -964,11 +990,11 @@ const firebaseConfig = {
         const name = document.getElementById('new-acc-name').value;
         const type = document.getElementById('new-acc-type').value;
         
-        if(!name) return showAlert('Введите название счета');
+        if(!name) { showAlert('Введите название счета'); return; }
 
         if (type === 'fiat') {
             const balance = parseNum(document.getElementById('new-acc-balance').value);
-            if(isNaN(balance)) return showAlert('Укажите корректный баланс');
+            if(isNaN(balance)) { showAlert('Укажите корректный баланс'); return; }
             state.accounts.push({ id: Date.now(), name, type, balance });
         } else {
             state.accounts.push({ id: Date.now(), name, type, tokens: [] });
@@ -998,7 +1024,7 @@ const firebaseConfig = {
         
         showModal({
             title: 'Изменить баланс',
-            message: `Счет: ${acc.name}`,
+            message: `Счет: ${escapeHTML(acc.name)}`,
             inputs: [{ id: 'new_bal', type: 'text', inputmode: 'decimal', placeholder: 'Новый баланс (₽)', value: acc.balance }],
             submitText: 'Сохранить',
             onSubmit: (data) => {
@@ -1008,6 +1034,7 @@ const firebaseConfig = {
                     DB.save(state);
                 } else {
                     showAlert('Введено некорректное число');
+                    return false; // Предотвращаем скрытие модалки
                 }
             }
         });
@@ -1019,7 +1046,7 @@ const firebaseConfig = {
         
         showModal({
             title: 'Добавить токен',
-            message: `Кошелек: ${wallet.name}`,
+            message: `Кошелек: ${escapeHTML(wallet.name)}`,
             inputs: [
                 { id: 'coin_name', type: 'text', placeholder: 'Тикер (USDT, BTC, SOL...)' },
                 { id: 'coin_bal', type: 'text', inputmode: 'decimal', placeholder: 'Количество' }
@@ -1031,7 +1058,8 @@ const firebaseConfig = {
                 if(coin && !isNaN(bal)) {
                     const rate = state.rates[coin];
                     if (!rate && coin !== 'USDT') {
-                        return showAlert(`Токен ${coin} не найден на бирже.`);
+                        showAlert(`Токен ${escapeHTML(coin)} не найден на бирже.`);
+                        return false;
                     }
                     wallet.tokens = wallet.tokens || [];
                     wallet.tokens.push({ id: Date.now(), coin, balance: bal });
@@ -1039,6 +1067,7 @@ const firebaseConfig = {
                     fetchLiveRates();
                 } else {
                     showAlert('Заполните данные корректно');
+                    return false;
                 }
             }
         });
@@ -1052,7 +1081,7 @@ const firebaseConfig = {
 
         showModal({
             title: 'Изменить баланс',
-            message: `Монета: ${token.coin}`,
+            message: `Монета: ${escapeHTML(token.coin)}`,
             inputs: [{ id: 'new_bal', type: 'text', inputmode: 'decimal', placeholder: 'Количество', value: token.balance }],
             submitText: 'Сохранить',
             onSubmit: (data) => {
@@ -1062,6 +1091,7 @@ const firebaseConfig = {
                     DB.save(state);
                 } else {
                     showAlert('Введено некорректное число');
+                    return false;
                 }
             }
         });
@@ -1095,12 +1125,11 @@ const firebaseConfig = {
 
         charts.accounts = new Chart(ctx, {
             type: 'doughnut',
-            data: { labels: state.accounts.map(a => a.name), datasets: [{ data, backgroundColor: chartColors, borderWidth: 0 }] },
+            data: { labels: state.accounts.map(a => escapeHTML(a.name)), datasets: [{ data, backgroundColor: chartColors, borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
     }
 
-    // Динамическая генерация данных для истории
     function generateHistoryData(type, category) {
         const data = [0,0,0,0];
         const d = new Date();
