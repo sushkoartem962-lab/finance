@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Finance Tracker - Bento</title>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase Compat SDK (App, Database, Auth) -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -27,11 +29,13 @@
         body { background-color: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
         .container { max-width: 1200px; margin: 0 auto; padding: var(--spacing); padding-bottom: 120px; }
 
+        /* Экран авторизации */
         .auth-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 20000; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease, visibility 0.3s ease; }
         .auth-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .auth-card { background: var(--card-bg); width: 90%; max-width: 360px; border-radius: var(--radius); padding: 40px 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-align: center; }
         .auth-logo { width: 64px; height: 64px; background: var(--primary); color: #fff; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,122,255,0.3); }
 
+        /* Навигация */
         .nav { display: flex; gap: 10px; margin-bottom: var(--spacing); overflow-x: auto; scrollbar-width: none; align-items: center; }
         .nav::-webkit-scrollbar { display: none; }
         .nav-btn { background: var(--card-bg); border: none; padding: 12px 20px; border-radius: 100px; font-size: 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
@@ -39,6 +43,7 @@
         .icon-btn { padding: 12px; display: flex; align-items: center; justify-content: center; }
         .nav-spacer { margin-left: auto; } 
 
+        /* Бенто-сетка */
         .bento-grid { display: grid; gap: var(--spacing); grid-template-columns: 1fr; }
         .bento-card { background: var(--card-bg); border-radius: var(--radius); padding: var(--spacing); box-shadow: 0 4px 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; width: 100%; max-width: 100%; overflow: hidden; }
         
@@ -55,6 +60,7 @@
             .nav-spacer { margin-left: 0; }
         }
 
+        /* Типографика */
         h2 { font-size: 20px; margin-bottom: 15px; font-weight: 600; }
         .amount { font-size: 32px; font-weight: 700; margin-bottom: 5px; }
         .amount.income { color: var(--success); }
@@ -62,12 +68,13 @@
         .subtitle { color: var(--text-muted); font-size: 14px; }
         .date-badge { font-size: 12px; color: var(--text-muted); background: var(--bg-color); padding: 4px 8px; border-radius: 8px; margin-right: 10px; }
         
+        /* Статус API */
         .live-status { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-top: 10px; font-weight: 500; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); }
         .live-status.loading .status-dot { background-color: #ff9500; }
         .live-status.error .status-dot { background-color: var(--danger); }
 
-        /* Использован input[type=text] с inputmode для корректной работы запятых на всех ОС */
+        /* Формы */
         input, select, button { width: 100%; max-width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none; box-sizing: border-box; }
         input[type="date"] { font-family: -apple-system, sans-serif; -webkit-appearance: none; appearance: none; display: block; }
         input:focus, select:focus { border-color: var(--primary); }
@@ -78,6 +85,7 @@
         .flex-row > * { flex: 1; min-width: 0; margin-bottom: 0; }
         .flex-row > button { flex: 0 0 auto; width: 60px; }
 
+        /* Элементы списков */
         .list-item, .token-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; user-select: none; -webkit-user-select: none; }
         .list-item:last-child { border-bottom: none; }
         .list-item-title { font-weight: 500; display: flex; align-items: center; }
@@ -88,6 +96,7 @@
 
         .category-tag { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 8px 16px; border-radius: 100px; font-size: 14px; margin: 4px; transition: all 0.2s ease; cursor: pointer; user-select: none; -webkit-user-select: none; }
         
+        /* Скрытие иконок */
         @media (hover: hover) and (pointer: fine) {
             .list-item .actions, .token-item .actions { opacity: 0; transition: opacity 0.2s ease; display: flex; align-items: center; gap: 4px; }
             .list-item:hover .actions, .token-item:hover .actions { opacity: 1; }
@@ -118,6 +127,7 @@
         .analytics-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .analytics-controls select { margin-bottom: 0; width: auto; flex-grow: 1; max-width: 300px; }
         
+        /* Встроенная модалка */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.25s ease; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-box { background: var(--card-bg); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transform: scale(0.95); transition: transform 0.25s ease; }
@@ -157,6 +167,7 @@
         </button>
     </div>
 
+    <!-- Вкладка 1: Текущий месяц -->
     <div id="month" class="tab-content active">
         <div class="bento-grid">
             <div class="bento-card">
@@ -177,9 +188,7 @@
                     </select>
                     <select id="op-category"></select>
                 </div>
-                <!-- Новый селект для выбора счета -->
                 <select id="op-account" onchange="updateOpAmountPlaceholder()" style="margin-bottom: 10px;"></select>
-                
                 <input type="text" inputmode="decimal" placeholder="Сумма (₽)" id="op-amount" style="margin-bottom: 10px;">
                 <button class="btn-primary" onclick="addTransaction()">Добавить</button>
             </div>
@@ -204,6 +213,7 @@
         </div>
     </div>
 
+    <!-- Вкладка 2: Мои счета -->
     <div id="accounts" class="tab-content">
         <div class="bento-grid">
             <div class="bento-card span-full">
@@ -222,6 +232,7 @@
         </div>
     </div>
 
+    <!-- Вкладка 3: Аналитика -->
     <div id="analytics" class="tab-content">
         <div class="bento-grid">
             <div class="bento-card span-full">
@@ -247,6 +258,7 @@
         </div>
     </div>
 
+    <!-- Вкладка 4: Настройки -->
     <div id="settings" class="tab-content">
         <div class="bento-grid">
             <div class="bento-card span-full" id="profile-card" style="display: none; border: 1px solid #e5e5ea; background: #fafafa;">
@@ -302,14 +314,13 @@
 </div>
 
 <script>
-    // УМНЫЙ ПАРСЕР ЧИСЕЛ: понимает и запятую и точку
     function parseNum(val) {
         if (val === null || val === undefined || val === '') return NaN;
         return Number(String(val).replace(',', '.').replace(/\s/g, ''));
     }
 
     // === FIREBASE ИНИЦИАЛИЗАЦИЯ ===
-    const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyDjK2zlz5tF9EFS53aLhG4uTJlZKAEDXaM",
   authDomain: "finance-tracker-44e2a.firebaseapp.com",
   databaseURL: "https://finance-tracker-44e2a-default-rtdb.europe-west1.firebasedatabase.app",
@@ -333,7 +344,10 @@
     const icons = {
         delete: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
         edit: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
-        minus: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`
+        minus: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+        // Тонкие SVG иконки для истории
+        card: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>`,
+        crypto: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`
     };
 
     const DB = {
@@ -577,12 +591,12 @@
     function renderAll() {
         renderCategories();
         updateOpCategories();
-        updateOpAccounts(); // Обновление списка счетов в транзакциях
+        updateOpAccounts(); 
         renderMonthTab();
         renderAccounts();
     }
 
-    // --- ОБНОВЛЕНИЕ СПИСКА СЧЕТОВ ДЛЯ ТРАНЗАКЦИЙ ---
+    // --- Обновление селекта без эмодзи (строгий текст) ---
     function updateOpAccounts() {
         const select = document.getElementById('op-account');
         if(!select) return;
@@ -593,10 +607,10 @@
         } else {
             state.accounts.forEach(acc => {
                 if (acc.type === 'fiat') {
-                    select.innerHTML += `<option value="fiat_${acc.id}">💳 ${acc.name} (${acc.balance.toLocaleString('ru-RU')} ₽)</option>`;
+                    select.innerHTML += `<option value="fiat_${acc.id}">${acc.name} (${acc.balance.toLocaleString('ru-RU')} ₽)</option>`;
                 } else if (acc.type === 'crypto_wallet' && acc.tokens) {
                     acc.tokens.forEach(t => {
-                        select.innerHTML += `<option value="crypto_${acc.id}_${t.id}" data-coin="${t.coin}">🪙 ${acc.name} - ${t.coin} (${t.balance})</option>`;
+                        select.innerHTML += `<option value="crypto_${acc.id}_${t.id}" data-coin="${t.coin}">${acc.name} • ${t.coin} (${t.balance})</option>`;
                     });
                 }
             });
@@ -655,11 +669,11 @@
                 const sign = t.type === 'income' ? '+' : '-';
                 const colorClass = t.type === 'income' ? 'income' : '';
                 
-                // Отображение счета списания
+                // SVG иконки счета списания
                 let accInfo = '';
                 if(t.accountDetails) {
-                    const icon = t.accountDetails.type === 'fiat' ? '💳' : '🪙';
-                    accInfo = `<span style="font-size:12px; color:var(--text-muted); margin-left:8px;">${icon} ${t.accountDetails.coin || 'RUB'}</span>`;
+                    const icon = t.accountDetails.type === 'fiat' ? icons.card : icons.crypto;
+                    accInfo = `<span style="font-size:12px; color:var(--text-muted); margin-left:8px; display:inline-flex; align-items:center; gap:4px;">${icon} ${t.accountDetails.coin || 'RUB'}</span>`;
                 }
 
                 return `
@@ -710,7 +724,6 @@
         let accountAmount = inputAmount;
         let accType, accId, tokenId, coin;
 
-        // Расчет балансов и автоконвертация
         if(accVal.startsWith('fiat_')) {
             accType = 'fiat';
             accId = parseInt(accVal.split('_')[1]);
@@ -729,8 +742,8 @@
                 if(token) {
                     coin = token.coin;
                     const rate = state.rates[coin] || 0;
-                    rubAmount = inputAmount * rate * state.rates.USD; // Сохраняем в историю в рублях
-                    token.balance += (type === 'income' ? accountAmount : -accountAmount); // А с кошелька списываем токены
+                    rubAmount = inputAmount * rate * state.rates.USD;
+                    token.balance += (type === 'income' ? accountAmount : -accountAmount); 
                 }
             }
         }
@@ -756,7 +769,6 @@
                 const trans = state.transactions.find(t => t.id === id);
                 if(!trans) return;
                 
-                // Возвращаем баланс
                 if(trans.accountDetails) {
                     const ad = trans.accountDetails;
                     if(ad.type === 'fiat') {
@@ -908,7 +920,7 @@
         });
 
         document.getElementById('total-capital').innerText = Math.round(totalRub).toLocaleString('ru-RU') + ' ₽';
-        updateOpAccounts(); // Счета могли измениться, обновляем список в селекте операций
+        updateOpAccounts(); 
     }
 
     function addAccount() {
