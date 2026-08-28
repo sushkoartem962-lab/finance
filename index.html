@@ -21,30 +21,35 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
-        .container { max-width: 1200px; margin: 0 auto; padding: var(--spacing); padding-bottom: 100px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: var(--spacing); padding-bottom: 120px; }
 
         /* Навигация */
         .nav { display: flex; gap: 10px; margin-bottom: var(--spacing); overflow-x: auto; scrollbar-width: none; }
         .nav::-webkit-scrollbar { display: none; }
         .nav-btn { background: var(--card-bg); border: none; padding: 12px 20px; border-radius: 100px; font-size: 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-        .nav-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.03); /* Синяя тень убрана */ }
+        .nav-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
 
         /* Бенто-сетка */
-        .bento-grid { 
-            display: grid; 
-            gap: var(--spacing); 
-            grid-template-columns: 1fr; 
-        }
-        
-        .bento-card { background: var(--card-bg); border-radius: var(--radius); padding: var(--spacing); box-shadow: 0 4px 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; }
+        .bento-grid { display: grid; gap: var(--spacing); grid-template-columns: 1fr; }
+        .bento-card { background: var(--card-bg); border-radius: var(--radius); padding: var(--spacing); box-shadow: 0 4px 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; width: 100%; max-width: 100%; overflow: hidden; }
         
         @media (min-width: 768px) {
             .bento-grid { grid-template-columns: repeat(2, 1fr); }
             .span-full { grid-column: 1 / -1; }
         }
         
+        /* Мобильные отступы и меню */
         @media (max-width: 767px) {
-            .nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 0; padding: 15px 10px; padding-bottom: env(safe-area-inset-bottom, 15px); border-radius: 24px 24px 0 0; justify-content: space-around; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1000; }
+            .container { padding-bottom: 140px; } /* Увеличен отступ чтобы не перекрывало карточки */
+            .nav { 
+                position: fixed; bottom: 0; left: 0; right: 0; 
+                background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 0; 
+                padding: 15px 10px; 
+                /* Увеличен отступ снизу для мобилок */
+                padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px); 
+                border-radius: 24px 24px 0 0; justify-content: space-around; 
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1000; 
+            }
             .nav-btn { font-size: 14px; padding: 10px 15px; }
         }
 
@@ -60,31 +65,42 @@
         .live-status.loading { color: #ff9500; background: rgba(255, 149, 0, 0.1); }
 
         /* Формы */
-        input, select, button { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none; }
-        input[type="date"] { font-family: inherit; }
+        input, select, button { width: 100%; max-width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none; box-sizing: border-box; }
+        
+        /* Исправление календаря на iOS/Android */
+        input[type="date"] { font-family: -apple-system, sans-serif; -webkit-appearance: none; appearance: none; display: block; }
+        
         input:focus, select:focus { border-color: var(--primary); }
-        .btn-primary { background: var(--primary); color: #fff; border: none; font-weight: 600; cursor: pointer; margin-top: 5px; transition: background 0.2s; }
+        .btn-primary { background: var(--primary); color: #fff; border: none; font-weight: 600; cursor: pointer; margin-top: 5px; transition: background 0.2s; margin-bottom: 0; }
         .btn-primary:hover { background: var(--primary-hover); }
 
+        /* Flex Row исправление (чтобы элементы не вылезали за границы) */
+        .flex-row { display: flex; gap: 10px; width: 100%; align-items: stretch; margin-bottom: 10px; }
+        .flex-row > * { flex: 1; min-width: 0; margin-bottom: 0; }
+        .flex-row > button { flex: 0 0 auto; width: 60px; }
+
         /* Элементы списков */
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; user-select: none; -webkit-user-select: none; }
         .list-item:last-child { border-bottom: none; }
         .list-item-title { font-weight: 500; display: flex; align-items: center; }
         
-        /* Исправленные теги категорий */
-        .category-tag { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 8px 16px; border-radius: 100px; font-size: 14px; margin: 4px; transition: all 0.2s ease; cursor: pointer; }
+        .category-tag { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 8px 16px; border-radius: 100px; font-size: 14px; margin: 4px; transition: all 0.2s ease; cursor: pointer; user-select: none; -webkit-user-select: none; }
         
-        /* Иконки в списках (счета, история) */
-        .list-item .actions { opacity: 0; transition: opacity 0.2s ease; display: flex; align-items: center; gap: 4px; }
-        .list-item:hover .actions { opacity: 1; }
+        /* Иконки в списках (Десктоп Hover) */
+        @media (hover: hover) and (pointer: fine) {
+            .list-item .actions { opacity: 0; transition: opacity 0.2s ease; display: flex; align-items: center; gap: 4px; }
+            .list-item:hover .actions { opacity: 1; }
+            .category-tag .actions { max-width: 0; opacity: 0; overflow: hidden; transition: all 0.2s ease; display: flex; align-items: center; }
+            .category-tag:hover .actions { max-width: 20px; opacity: 1; margin-left: 6px; }
+        }
 
-        /* Иконки в тегах (схлопнуты по умолчанию, чтобы текст был по центру) */
-        .category-tag .actions { max-width: 0; opacity: 0; overflow: hidden; transition: all 0.2s ease; display: flex; align-items: center; }
-        .category-tag:hover .actions { max-width: 20px; opacity: 1; margin-left: 6px; }
-        
+        /* Иконки в списках (Мобилка - Long Press) */
         @media (hover: none) {
-            .list-item .actions { opacity: 1; }
-            .category-tag .actions { max-width: 20px; opacity: 1; margin-left: 6px; }
+            .list-item .actions { opacity: 0; pointer-events: none; transition: opacity 0.2s; display: flex; align-items: center; gap: 4px; }
+            .list-item.show-actions .actions { opacity: 1; pointer-events: auto; }
+            
+            .category-tag .actions { max-width: 0; opacity: 0; overflow: hidden; transition: all 0.2s ease; display: flex; align-items: center; pointer-events: none; }
+            .category-tag.show-actions .actions { max-width: 20px; opacity: 1; margin-left: 6px; pointer-events: auto; }
         }
 
         .action-btn { color: var(--text-muted); cursor: pointer; background: none; border: none; padding: 4px; display: flex; align-items: center; justify-content: center; width: auto; transition: color 0.2s; margin: 0; }
@@ -100,7 +116,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .chart-container { position: relative; height: 250px; width: 100%; }
-        .flex-row { display: flex; gap: 10px; }
         .analytics-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .analytics-controls select { margin-bottom: 0; width: auto; flex-grow: 1; max-width: 300px; }
     </style>
@@ -108,9 +123,10 @@
 <body>
 
 <div class="container">
+    <!-- Навигация -->
     <div class="nav">
-        <button class="nav-btn active" onclick="switchTab('month')">Текущий месяц</button>
-        <button class="nav-btn" onclick="switchTab('accounts')">Мои счета</button>
+        <button class="nav-btn active" onclick="switchTab('month')" id="tab-month-btn">Текущий месяц</button>
+        <button class="nav-btn" onclick="switchTab('accounts')">Счета</button>
         <button class="nav-btn" onclick="switchTab('analytics')">Аналитика</button>
     </div>
 
@@ -119,7 +135,7 @@
         <div class="bento-grid">
             
             <div class="bento-card">
-                <h2>Баланс августа</h2>
+                <h2 id="month-title-text">Баланс месяца</h2>
                 <div class="amount income" id="month-income-total">+ 0 ₽</div>
                 <div class="subtitle">Доходы</div>
                 <div class="amount expense" id="month-expense-total" style="margin-top: 15px;">- 0 ₽</div>
@@ -136,7 +152,7 @@
                     </select>
                     <select id="op-category"></select>
                 </div>
-                <input type="number" placeholder="Сумма (₽)" id="op-amount">
+                <input type="number" placeholder="Сумма (₽)" id="op-amount" style="margin-bottom: 10px;">
                 <button class="btn-primary" onclick="addTransaction()">Добавить</button>
             </div>
 
@@ -147,6 +163,7 @@
 
             <div class="bento-card span-full">
                 <h2>История операций</h2>
+                <div class="subtitle" style="margin-bottom:10px; display:none;" id="mobile-hint">Удерживайте строку для редактирования</div>
                 <div class="scrollable-list" id="daily-transactions-list"></div>
             </div>
 
@@ -162,11 +179,11 @@
                 <h2>Настройка категорий</h2>
                 <div class="flex-row">
                     <input type="text" id="new-cat-name" placeholder="Новая категория" style="margin:0;">
-                    <select id="new-cat-type" style="margin:0; width: 120px;">
+                    <select id="new-cat-type" style="margin:0;">
                         <option value="expense">Расход</option>
                         <option value="income">Доход</option>
                     </select>
-                    <button class="btn-primary" style="margin:0; width: 60px;" onclick="addCategory()">+</button>
+                    <button class="btn-primary" style="margin:0;" onclick="addCategory()">+</button>
                 </div>
                 <div style="margin-top: 15px;">
                     <div class="subtitle" style="margin-bottom: 5px;">Расходы:</div>
@@ -245,53 +262,35 @@
     };
 
     const DB = {
-        async load() {
-            const local = localStorage.getItem('financeState_v3');
-            if (local) return JSON.parse(local);
-            return null;
-        },
-        async save(state) {
-            localStorage.setItem('financeState_v3', JSON.stringify(state));
-        }
+        async load() { const local = localStorage.getItem('financeState_v4'); return local ? JSON.parse(local) : null; },
+        async save(state) { localStorage.setItem('financeState_v4', JSON.stringify(state)); }
     };
 
     let state = {
         rates: { USD: 95, BTC: 60000, ETH: 3000, USDT: 1 },
         monthsLabels: ['Май', 'Июнь', 'Июль', 'Август'],
-        
         categories: {
             expense: ['Еда', 'Авто', 'Дом', 'Развлечения', 'Подписки'],
             income: ['Зарплата', 'Проекты', 'Инвестиции', 'Крипта (PnL)']
         },
-        
         accounts: [
             { id: 1, name: 'Т-Банк', type: 'fiat', balance: 120000 },
             { id: 2, name: 'Инвестиции', type: 'fiat', balance: 450000 },
-            { id: 3, name: 'Наличка', type: 'fiat', balance: 15000 },
-            { id: 4, name: 'Bybit', type: 'crypto', coin: 'USDT', balance: 1500 },
-            { id: 5, name: 'Trust Wallet', type: 'crypto', coin: 'ETH', balance: 1.2 }
+            { id: 3, name: 'Bybit', type: 'crypto', coin: 'USDT', balance: 1500 }
         ],
-        
         transactions: [
             { id: 101, date: '2026-08-25', type: 'expense', category: 'Еда', amount: 1500 },
             { id: 102, date: '2026-08-26', type: 'expense', category: 'Авто', amount: 3000 },
-            { id: 103, date: '2026-08-27', type: 'expense', category: 'Развлечения', amount: 2000 },
-            { id: 104, date: '2026-08-28', type: 'income', category: 'Проекты', amount: 15000 }
+            { id: 103, date: '2026-08-28', type: 'income', category: 'Проекты', amount: 15000 }
         ],
-
         history: {
             expense: {
-                'Еда': [38000, 42000, 39500, 45000],
-                'Авто': [12000, 15000, 10000, 15000],
-                'Дом': [28000, 31000, 29000, 30000],
-                'Развлечения': [15000, 22000, 18000, 20000],
-                'Подписки': [4500, 4800, 5000, 5000]
+                'Еда': [38000, 42000, 39500, 45000], 'Авто': [12000, 15000, 10000, 15000], 'Дом': [28000, 31000, 29000, 30000],
+                'Развлечения': [15000, 22000, 18000, 20000], 'Подписки': [4500, 4800, 5000, 5000]
             },
             income: {
-                'Зарплата': [200000, 200000, 200000, 200000],
-                'Проекты': [100000, 50000, 120000, 150000],
-                'Инвестиции': [20000, 10000, 15000, 0],
-                'Крипта (PnL)': [12000, -5000, 24000, 18000]
+                'Зарплата': [200000, 200000, 200000, 200000], 'Проекты': [100000, 50000, 120000, 150000],
+                'Инвестиции': [20000, 10000, 15000, 0], 'Крипта (PnL)': [12000, -5000, 24000, -2000] // Добавлен минус для теста красной зоны
             }
         }
     };
@@ -306,11 +305,54 @@
     async function init() {
         const loaded = await DB.load();
         if(loaded) state = { ...state, ...loaded };
-        document.getElementById('op-date').value = new Date().toISOString().split('T')[0];
+        
+        // Динамическое имя текущего месяца
+        const date = new Date();
+        const monthName = date.toLocaleString('ru-RU', { month: 'long' });
+        const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+        
+        document.getElementById('tab-month-btn').innerText = capitalizedMonth;
+        document.getElementById('month-title-text').innerText = `Баланс (${capitalizedMonth})`;
+        document.getElementById('op-date').value = date.toISOString().split('T')[0];
+
+        // Подсказка на мобилках
+        if (window.matchMedia("(hover: none)").matches) {
+            document.getElementById('mobile-hint').style.display = 'block';
+        }
+
         renderAll();
+        initLongPress(); // Активация удержания (long press)
         await fetchLiveRates();
     }
 
+    // --- Обработка Long Press на мобилках ---
+    function initLongPress() {
+        let pressTimer;
+        const startPress = (e) => {
+            const target = e.target.closest('.list-item, .category-tag');
+            if(target) {
+                pressTimer = setTimeout(() => {
+                    document.querySelectorAll('.show-actions').forEach(el => el.classList.remove('show-actions'));
+                    target.classList.add('show-actions');
+                    if(navigator.vibrate) navigator.vibrate(50);
+                }, 600); // 600мс удержание
+            }
+        };
+        const cancelPress = () => clearTimeout(pressTimer);
+
+        document.addEventListener('touchstart', startPress, {passive: true});
+        document.addEventListener('touchend', cancelPress);
+        document.addEventListener('touchmove', cancelPress);
+        document.addEventListener('touchcancel', cancelPress);
+
+        document.addEventListener('click', (e) => {
+            if(!e.target.closest('.actions') && !e.target.closest('.show-actions')) {
+                document.querySelectorAll('.show-actions').forEach(el => el.classList.remove('show-actions'));
+            }
+        });
+    }
+
+    // --- API и Навигация ---
     async function fetchLiveRates() {
         const statusEl = document.getElementById('rates-status');
         try {
@@ -353,6 +395,7 @@
         renderAccounts();
     }
 
+    // --- Текущий месяц ---
     function renderMonthTab() {
         let tInc = 0, tExp = 0;
         state.categories.income.forEach(cat => tInc += (state.history.income[cat]?.[currentMonthIndex] || 0));
@@ -445,6 +488,7 @@
         DB.save(state);
     }
 
+    // --- Категории ---
     function renderCategories() {
         const renderList = (type, listId) => {
             const list = document.getElementById(listId);
@@ -494,6 +538,7 @@
         DB.save(state);
     }
 
+    // --- Счета ---
     function toggleCoinInput() {
         const isCrypto = document.getElementById('new-acc-type').value === 'crypto';
         document.getElementById('new-acc-coin').style.display = isCrypto ? 'block' : 'none';
@@ -588,6 +633,7 @@
         });
     }
 
+    // --- Аналитика ---
     function updateAnalyticsCharts() {
         const expCat = document.getElementById('analytics-exp-select').value;
         const incCat = document.getElementById('analytics-inc-select').value;
@@ -613,11 +659,26 @@
             options: commonLineOptions
         });
 
+        // График Доходов (с красной зоной для отрицательных значений)
         if(charts.incHistory) charts.incHistory.destroy();
         const catInc = document.getElementById('analytics-inc-select').value || state.categories.income[0];
         charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
             type: 'line',
-            data: { labels: state.monthsLabels, datasets: [{ data: state.history.income[catInc] || [0,0,0,0], borderColor: '#34c759', backgroundColor: 'rgba(52, 199, 89, 0.15)', fill: true }] },
+            data: { 
+                labels: state.monthsLabels, 
+                datasets: [{ 
+                    data: state.history.income[catInc] || [0,0,0,0], 
+                    fill: {
+                        target: 'origin',
+                        above: 'rgba(52, 199, 89, 0.15)', // Зеленый фон выше нуля
+                        below: 'rgba(255, 59, 48, 0.15)'  // Красный фон ниже нуля
+                    },
+                    segment: {
+                        // Если точка уходит ниже нуля, линия становится красной
+                        borderColor: ctx => ctx.p1.parsed.y < 0 || ctx.p0.parsed.y < 0 ? '#ff3b30' : '#34c759'
+                    }
+                }] 
+            },
             options: commonLineOptions
         });
 
