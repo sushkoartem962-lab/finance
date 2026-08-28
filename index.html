@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Finance Tracker PRO</title>
+    <title>Finance Tracker - Live</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -74,13 +74,13 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
-            position: relative;
         }
 
         .bento-card.span-2 { grid-column: span 2; }
+        .bento-card.span-3 { grid-column: 1 / -1; }
         
         @media (max-width: 768px) {
-            .bento-card.span-2 { grid-column: span 1; }
+            .bento-card.span-2, .bento-card.span-3 { grid-column: span 1; }
             .nav {
                 position: fixed;
                 bottom: 0; left: 0; right: 0;
@@ -97,57 +97,97 @@
             .nav-btn { font-size: 14px; padding: 10px 15px; }
         }
 
-        /* Элементы */
-        h2 { font-size: 20px; margin-bottom: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;}
-        .amount { font-size: 32px; font-weight: 700; margin-bottom: 5px; transition: color 0.3s;}
+        /* Типографика и элементы */
+        h2 { font-size: 20px; margin-bottom: 15px; font-weight: 600; }
+        .amount { font-size: 32px; font-weight: 700; margin-bottom: 5px; transition: color 0.3s; }
         .amount.income { color: var(--success); }
         .amount.expense { color: var(--text-main); }
         .subtitle { color: var(--text-muted); font-size: 14px; }
         
-        .live-badge {
+        /* Статус обновления курсов */
+        .live-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-size: 12px;
-            background: rgba(52, 199, 89, 0.1);
-            color: var(--success);
+            color: var(--primary);
+            background: rgba(0, 122, 255, 0.1);
             padding: 4px 10px;
             border-radius: 100px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: 600;
+            margin-top: 10px;
+            font-weight: 500;
         }
-        .live-badge::before {
-            content: ''; display: block; width: 6px; height: 6px; background: var(--success); border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+        .live-status.loading { color: #ff9500; background: rgba(255, 149, 0, 0.1); }
+        .live-status.error { color: var(--danger); background: rgba(255, 59, 48, 0.1); }
 
+        /* Формы и списки */
         input, select, button {
-            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #e5e5ea;
+            margin-bottom: 10px;
+            font-size: 16px;
+            background: #fafafa;
+            outline: none;
         }
         input:focus, select:focus { border-color: var(--primary); }
         
-        .btn-primary { background: var(--primary); color: #fff; border: none; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
         .btn-primary:hover { background: var(--primary-hover); }
 
-        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f2f2f7;
+        }
         .list-item:last-child { border-bottom: none; }
         .list-item-title { font-weight: 500; }
         .crypto-sub { font-size: 12px; color: var(--text-muted); }
 
-        .category-tag { display: inline-block; background: var(--bg-color); padding: 6px 12px; border-radius: 100px; font-size: 14px; margin: 4px; }
-        .delete-cat { color: var(--danger); margin-left: 8px; font-weight: bold; cursor: pointer; }
+        .category-tag {
+            display: inline-block;
+            background: var(--bg-color);
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 14px;
+            margin: 4px;
+            cursor: pointer;
+        }
+        .delete-cat { color: var(--danger); margin-left: 8px; font-weight: bold; }
 
+        /* Табы */
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .chart-container { position: relative; height: 250px; width: 100%; }
-        .loader { color: var(--text-muted); font-size: 14px; font-style: italic; }
+        
+        /* Стили для селекта в аналитике */
+        .analytics-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+        .analytics-controls select { margin-bottom: 0; width: auto; min-width: 200px; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- Навигация -->
     <div class="nav">
         <button class="nav-btn active" onclick="switchTab('month')">Текущий месяц</button>
         <button class="nav-btn" onclick="switchTab('accounts')">Мои счета</button>
@@ -172,17 +212,21 @@
                     <option value="income">Доход</option>
                 </select>
                 <input type="number" placeholder="Сумма (₽)" id="op-amount">
-                <select id="op-category"></select>
+                <select id="op-category">
+                    <!-- Заполняется JS -->
+                </select>
                 <button class="btn-primary" onclick="addTransaction()">Добавить</button>
             </div>
 
             <div class="bento-card span-2">
-                <h2>Категории расходов</h2>
+                <h2>Категории расходов (настройка)</h2>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <input type="text" id="new-category" placeholder="Новая категория" style="margin:0;">
                     <button class="btn-primary" style="margin:0; width: 120px;" onclick="addCategory()">Добавить</button>
                 </div>
-                <div id="categories-list"></div>
+                <div id="categories-list">
+                    <!-- Категории рендерятся здесь -->
+                </div>
             </div>
         </div>
     </div>
@@ -191,9 +235,10 @@
     <div id="accounts" class="tab-content">
         <div class="bento-grid">
             <div class="bento-card">
-                <h2>Общий капитал <span class="live-badge">Live API</span></h2>
+                <h2>Общий капитал</h2>
                 <div class="amount" id="total-capital">Загрузка...</div>
-                <div class="subtitle">1$ = <span id="usd-rate">...</span> ₽ (Real-time)</div>
+                <div class="subtitle">Итого в рублях по живому курсу</div>
+                <div class="live-status loading" id="rates-status">⏳ Обновление курсов онлайн...</div>
                 <div class="chart-container" style="margin-top: 20px;">
                     <canvas id="accountsChart"></canvas>
                 </div>
@@ -205,8 +250,8 @@
             </div>
 
             <div class="bento-card">
-                <h2>Крипта (Real-time)</h2>
-                <div id="crypto-accounts"><div class="loader">Получение рыночных данных...</div></div>
+                <h2>Крипта (Bybit & Trust Wallet)</h2>
+                <div id="crypto-accounts"></div>
             </div>
         </div>
     </div>
@@ -215,21 +260,16 @@
     <div id="analytics" class="tab-content">
         <div class="bento-grid">
             
-            <!-- Новая карточка: Статистика по отдельным категориям -->
-            <div class="bento-card">
-                <h2>Динамика категории</h2>
-                <select id="analytics-category-select" onchange="updateCategoryChart()">
-                    <!-- Заполняется JS -->
-                </select>
-                <div class="chart-container" style="height: 200px;">
-                    <canvas id="categoryHistoryChart"></canvas>
+            <!-- Новый блок: Динамика по конкретной категории -->
+            <div class="bento-card span-3">
+                <div class="analytics-controls">
+                    <h2 style="margin:0;">Динамика по категориям</h2>
+                    <select id="category-analytics-select" onchange="updateCategoryChart()">
+                        <!-- Заполняется JS -->
+                    </select>
                 </div>
-            </div>
-
-            <div class="bento-card">
-                <h2>Доходы vs Расходы</h2>
-                <div class="chart-container" style="height: 250px;">
-                    <canvas id="trendChart"></canvas>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="categoryHistoryChart"></canvas>
                 </div>
             </div>
 
@@ -239,16 +279,24 @@
                     <canvas id="expensesChart"></canvas>
                 </div>
             </div>
+            <div class="bento-card">
+                <h2>Общий тренд (Доходы vs Расходы)</h2>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // --- Состояние (State) ---
+    // --- Состояние приложения (State) ---
     const state = {
-        rates: { USD: 90, BTC: 60000, ETH: 3000, USDT: 1 }, // Fallback значения
+        // Дефолтные курсы на случай, если API недоступно
+        rates: { USD: 95, BTC: 60000, ETH: 3000, USDT: 1 },
         categories: ['Еда', 'Авто', 'Подписки', 'Развлечения', 'Дом'],
-        months: ['Май', 'Июн', 'Июл', 'Авг'],
+        monthsLabels: ['Май', 'Июнь', 'Июль', 'Август'],
+        
         accounts: [
             { name: 'Т-Банк карта', type: 'fiat', balance: 120000 },
             { name: 'Инвестиции', type: 'fiat', balance: 450000 },
@@ -260,52 +308,65 @@
             Bybit: [ { coin: 'USDT', amount: 1500 }, { coin: 'BTC', amount: 0.05 } ],
             TrustWallet: [ { coin: 'ETH', amount: 1.2 } ]
         },
-        expenses: { 'Еда': 45000, 'Авто': 15000, 'Дом': 30000, 'Развлечения': 20000, 'Подписки': 5000 },
-        // Исторические данные для аналитики по категориям
-        historyExpenses: {
-            'Еда': [38000, 42000, 41000, 45000],
-            'Авто': [12000, 18000, 15000, 15000],
-            'Подписки': [5000, 5000, 5000, 5000],
-            'Развлечения': [25000, 22000, 30000, 20000],
-            'Дом': [28000, 31000, 29000, 30000]
+        
+        // Данные для аналитики по месяцам
+        expensesHistory: {
+            'Еда': [38000, 42000, 39500, 45000],
+            'Авто': [12000, 15000, 10000, 15000],
+            'Дом': [28000, 31000, 29000, 30000],
+            'Развлечения': [15000, 22000, 18000, 20000],
+            'Подписки': [4500, 4800, 5000, 5000]
+        },
+        
+        // Общий тренд
+        monthlyTrend: {
+            income: [320000, 310000, 340000, 350000],
+            expense: [145000, 180000, 140000, 124500]
         }
     };
 
-    let charts = {};
+    let charts = {}; 
 
-    // --- Инициализация и API ---
+    // --- Инициализация ---
     async function init() {
         renderCategories();
-        renderAccounts(); // Рендерим с fallback-данными
-        populateAnalyticsSelect();
-        
-        // Запускаем асинхронный сбор реальных курсов
-        await fetchLiveRates();
+        renderAccounts(); // Рендер с дефолтными курсами
+        await fetchLiveRates(); // Запрос реальных курсов
     }
 
+    // --- API: Получение реальных курсов ---
     async function fetchLiveRates() {
+        const statusEl = document.getElementById('rates-status');
         try {
-            // 1. Курс Доллара к Рублю (бесплатный API ExchangeRate)
+            statusEl.className = 'live-status loading';
+            statusEl.innerText = '⏳ Обновление курсов онлайн...';
+
+            // 1. Получаем курс USD -> RUB (через open.er-api.com)
             const fiatRes = await fetch('https://open.er-api.com/v6/latest/USD');
             const fiatData = await fiatRes.json();
             state.rates.USD = fiatData.rates.RUB;
 
-            // 2. Курс Крипты (Binance API)
-            const btcRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-            const btcData = await btcRes.json();
-            state.rates.BTC = parseFloat(btcData.price);
+            // 2. Получаем курс Crypto -> USD (через CoinGecko)
+            const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd');
+            const cryptoData = await cryptoRes.json();
+            
+            state.rates.BTC = cryptoData.bitcoin.usd;
+            state.rates.ETH = cryptoData.ethereum.usd;
+            state.rates.USDT = cryptoData.tether?.usd || 1;
 
-            const ethRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
-            const ethData = await ethRes.json();
-            state.rates.ETH = parseFloat(ethData.price);
+            statusEl.className = 'live-status';
+            statusEl.innerText = `🟢 Онлайн: 1$=${state.rates.USD.toFixed(1)}₽ | BTC=$${state.rates.BTC.toLocaleString()}`;
 
-            // Перерисовываем UI с новыми данными
+            // Перерисовываем счета с новыми курсами
             renderAccounts();
             if(document.getElementById('accounts').classList.contains('active')) {
                 initAccountsChart();
             }
+
         } catch (error) {
-            console.error('Ошибка загрузки live-курсов. Используются старые данные.', error);
+            console.error('Ошибка при получении курсов:', error);
+            statusEl.className = 'live-status error';
+            statusEl.innerText = '🔴 Ошибка сети (показаны примерные курсы)';
         }
     }
 
@@ -321,49 +382,66 @@
         if(tabId === 'analytics') initAnalyticsCharts();
     }
 
-    // --- Категории ---
+    // --- Вкладка 1: Категории ---
     function renderCategories() {
-        const select = document.getElementById('op-category');
+        const selectOp = document.getElementById('op-category');
+        const selectAnalyt = document.getElementById('category-analytics-select');
         const list = document.getElementById('categories-list');
-        select.innerHTML = ''; list.innerHTML = '';
+        
+        selectOp.innerHTML = '';
+        selectAnalyt.innerHTML = '';
+        list.innerHTML = '';
 
         state.categories.forEach((cat, index) => {
-            select.innerHTML += `<option value="${cat}">${cat}</option>`;
-            list.innerHTML += `<div class="category-tag">${cat} <span class="delete-cat" onclick="deleteCategory(${index})">×</span></div>`;
+            selectOp.innerHTML += `<option value="${cat}">${cat}</option>`;
+            selectAnalyt.innerHTML += `<option value="${cat}">${cat}</option>`;
+            list.innerHTML += `
+                <div class="category-tag">
+                    ${cat} <span class="delete-cat" onclick="deleteCategory(${index})">×</span>
+                </div>
+            `;
         });
     }
 
     function addCategory() {
         const input = document.getElementById('new-category');
-        const val = input.value.trim();
-        if(val !== '') {
-            state.categories.push(val);
-            state.expenses[val] = 0; // Инициализируем нулем
+        const newCat = input.value.trim();
+        if(newCat !== '' && !state.categories.includes(newCat)) {
+            state.categories.push(newCat);
+            // Добавляем пустую историю для новой категории
+            state.expensesHistory[newCat] = [0, 0, 0, 0]; 
             input.value = '';
             renderCategories();
-            populateAnalyticsSelect(); // Обновляем дропдаун в аналитике
+            
+            // Если мы на вкладке аналитики, обновляем графики
+            if(document.getElementById('analytics').classList.contains('active')) {
+                initAnalyticsCharts();
+            }
         }
     }
 
     function deleteCategory(index) {
+        const catToRemove = state.categories[index];
         state.categories.splice(index, 1);
+        delete state.expensesHistory[catToRemove];
         renderCategories();
-        populateAnalyticsSelect();
+        
+        if(document.getElementById('analytics').classList.contains('active')) {
+            initAnalyticsCharts();
+        }
     }
 
     function addTransaction() {
         const amount = document.getElementById('op-amount').value;
         if(!amount) return alert('Введите сумму');
-        alert('Операция учтена! (UI обновится при подключении БД)');
+        alert('Операция добавлена! (в прототипе UI очищается)');
         document.getElementById('op-amount').value = '';
     }
 
-    // --- Счета и Live Капитал ---
+    // --- Вкладка 2: Счета и Капитал ---
     function renderAccounts() {
-        document.getElementById('usd-rate').innerText = state.rates.USD.toFixed(2);
         let totalRub = 0;
         
-        // Фиат
         const fiatDiv = document.getElementById('fiat-accounts');
         fiatDiv.innerHTML = '';
         state.accounts.forEach(acc => {
@@ -376,18 +454,17 @@
             `;
         });
 
-        // Крипта
         const cryptoDiv = document.getElementById('crypto-accounts');
         cryptoDiv.innerHTML = '';
         
-        const renderWallet = (name, assets) => {
+        const renderCryptoWallet = (name, assets) => {
             let walletUsd = 0;
             let assetHTML = '';
             assets.forEach(asset => {
                 const rate = state.rates[asset.coin];
                 const usdValue = asset.amount * rate;
                 walletUsd += usdValue;
-                assetHTML += `<span class="crypto-sub">${asset.amount} ${asset.coin} ($${usdValue.toLocaleString('en-US', {maximumFractionDigits:2})})</span><br>`;
+                assetHTML += `<span class="crypto-sub">${asset.amount} ${asset.coin} ($${usdValue.toLocaleString('en-US', {maximumFractionDigits: 2})})</span><br>`;
             });
             const walletRub = walletUsd * state.rates.USD;
             totalRub += walletRub;
@@ -399,21 +476,17 @@
                         ${assetHTML}
                     </div>
                     <div style="text-align: right;">
-                        <div>$${walletUsd.toLocaleString('en-US', {maximumFractionDigits:0})}</div>
+                        <div>$${walletUsd.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>
                         <div class="crypto-sub">~ ${Math.round(walletRub).toLocaleString('ru-RU')} ₽</div>
                     </div>
                 </div>
             `;
         };
 
-        renderWallet('Bybit', state.crypto.Bybit);
-        renderWallet('Trust Wallet', state.crypto.TrustWallet);
+        renderCryptoWallet('Bybit', state.crypto.Bybit);
+        renderCryptoWallet('Trust Wallet', state.crypto.TrustWallet);
 
-        // Анимация обновления суммы
-        const totalEl = document.getElementById('total-capital');
-        totalEl.style.color = 'var(--primary)';
-        totalEl.innerText = Math.round(totalRub).toLocaleString('ru-RU') + ' ₽';
-        setTimeout(() => totalEl.style.color = '', 500); // Возвращаем цвет
+        document.getElementById('total-capital').innerText = Math.round(totalRub).toLocaleString('ru-RU') + ' ₽';
     }
 
     // --- Графики (Chart.js) ---
@@ -423,7 +496,7 @@
         if(charts.accounts) charts.accounts.destroy();
         const ctx = document.getElementById('accountsChart').getContext('2d');
         
-        const labels = state.accounts.map(a => a.name).concat(['Крипта']);
+        const labels = state.accounts.map(a => a.name).concat(['Крипта (Суммарно)']);
         let cryptoRub = 0;
         Object.values(state.crypto).flat().forEach(asset => {
             cryptoRub += (asset.amount * state.rates[asset.coin] * state.rates.USD);
@@ -432,77 +505,90 @@
 
         charts.accounts = new Chart(ctx, {
             type: 'doughnut',
-            data: { labels: labels, datasets: [{ data: data, backgroundColor: blueColors, borderWidth: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            data: {
+                labels: labels,
+                datasets: [{ data: data, backgroundColor: blueColors, borderWidth: 0 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: {font: {family: '-apple-system'}} } } }
         });
     }
 
-    // --- Логика Аналитики ---
-    function populateAnalyticsSelect() {
-        const select = document.getElementById('analytics-category-select');
-        select.innerHTML = '';
-        state.categories.forEach(cat => {
-            select.innerHTML += `<option value="${cat}">${cat}</option>`;
-        });
-        if(charts.categoryHistory) updateCategoryChart();
-    }
-
+    // Обновление графика отдельной категории
     function updateCategoryChart() {
-        const cat = document.getElementById('analytics-category-select').value;
-        // Если история есть берем ее, если категория новая - ставим нули
-        const data = state.historyExpenses[cat] || [0, 0, 0, 0]; 
-
+        const selectedCat = document.getElementById('category-analytics-select').value;
+        const data = state.expensesHistory[selectedCat] || [0,0,0,0];
+        
         if(charts.categoryHistory) {
             charts.categoryHistory.data.datasets[0].data = data;
-            charts.categoryHistory.data.datasets[0].label = `Траты на "${cat}"`;
+            charts.categoryHistory.data.datasets[0].label = `Траты на "${selectedCat}" (₽)`;
             charts.categoryHistory.update();
-        } else {
-            const ctx = document.getElementById('categoryHistoryChart').getContext('2d');
-            charts.categoryHistory = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: state.months,
-                    datasets: [{ label: `Траты на "${cat}"`, data: data, backgroundColor: '#af52de', borderRadius: 6 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
         }
     }
 
     function initAnalyticsCharts() {
-        // Тренд категории (новый)
-        updateCategoryChart();
+        // 1. График истории по конкретной категории (Новый)
+        if(charts.categoryHistory) charts.categoryHistory.destroy();
+        const ctxCat = document.getElementById('categoryHistoryChart').getContext('2d');
+        const initialCat = document.getElementById('category-analytics-select').value || state.categories[0];
+        
+        charts.categoryHistory = new Chart(ctxCat, {
+            type: 'line',
+            data: {
+                labels: state.monthsLabels,
+                datasets: [{
+                    label: `Траты на "${initialCat}" (₽)`,
+                    data: state.expensesHistory[initialCat] || [0,0,0,0],
+                    borderColor: '#007aff',
+                    backgroundColor: 'rgba(0, 122, 255, 0.15)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#007aff',
+                    pointRadius: 4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
 
-        // Круговая/Бар структура
-        if(!charts.expenses) {
-            const ctxExp = document.getElementById('expensesChart').getContext('2d');
-            charts.expenses = new Chart(ctxExp, {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(state.expenses),
-                    datasets: [{ label: 'Сумма (₽)', data: Object.values(state.expenses), backgroundColor: '#007aff', borderRadius: 8 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
+        // 2. Круговая диаграмма текущего месяца
+        if(charts.expenses) charts.expenses.destroy();
+        const ctxExp = document.getElementById('expensesChart').getContext('2d');
+        
+        // Берем последние данные (индекс 3 - Август)
+        const currentMonthData = state.categories.map(cat => {
+            const hist = state.expensesHistory[cat];
+            return hist ? hist[hist.length - 1] : 0;
+        });
 
-        // Тренд (Доходы/Расходы)
-        if(!charts.trend) {
-            const ctxTrend = document.getElementById('trendChart').getContext('2d');
-            charts.trend = new Chart(ctxTrend, {
-                type: 'line',
-                data: {
-                    labels: state.months,
-                    datasets: [
-                        { label: 'Доходы', data: [320000, 310000, 340000, 350000], borderColor: '#34c759', tension: 0.4 },
-                        { label: 'Расходы', data: [150000, 180000, 140000, 124500], borderColor: '#ff3b30', tension: 0.4 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
+        charts.expenses = new Chart(ctxExp, {
+            type: 'doughnut',
+            data: {
+                labels: state.categories,
+                datasets: [{
+                    data: currentMonthData,
+                    backgroundColor: blueColors,
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right'} } }
+        });
+
+        // 3. Тренд доходов и расходов
+        if(charts.trend) charts.trend.destroy();
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        charts.trend = new Chart(ctxTrend, {
+            type: 'bar',
+            data: {
+                labels: state.monthsLabels,
+                datasets: [
+                    { label: 'Доходы', data: state.monthlyTrend.income, backgroundColor: '#34c759', borderRadius: 6 },
+                    { label: 'Расходы', data: state.monthlyTrend.expense, backgroundColor: '#1c1c1e', borderRadius: 6 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
     }
 
+    // Запуск приложения
     window.onload = init;
 </script>
 </body>
