@@ -317,9 +317,7 @@
 
 <script>
     // === FIREBASE ИНИЦИАЛИЗАЦИЯ ===
-    // TODO: Вставь сюда ключи из своей консоли Firebase
-    // Важно: Включи Google провайдер в Firebase Authentication -> Sign-in method
-const firebaseConfig = {
+    const firebaseConfig = {
   apiKey: "AIzaSyDjK2zlz5tF9EFS53aLhG4uTJlZKAEDXaM",
   authDomain: "finance-tracker-44e2a.firebaseapp.com",
   databaseURL: "https://finance-tracker-44e2a-default-rtdb.europe-west1.firebasedatabase.app",
@@ -346,19 +344,24 @@ const firebaseConfig = {
         minus: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`
     };
 
-    // --- Firebase DB Обёртка (Индивидуальные данные по UID) ---
+    // --- Firebase DB Обёртка (Реалтайм Синхронизация) ---
     const DB = {
-        async load() { 
+        listen(callback) { 
             if (!db || !currentUser) {
                 const local = localStorage.getItem('financeState_v10'); 
-                return local ? JSON.parse(local) : null;
+                if (local) callback(JSON.parse(local));
+                return;
             }
-            try {
-                const snapshot = await db.ref(`users/${currentUser.uid}/financeState`).once('value');
-                return snapshot.exists() ? snapshot.val() : null;
-            } catch (e) {
-                console.error("Ошибка загрузки из Firebase:", e);
-                return null;
+            // Магия здесь: слушатель on('value') срабатывает моментально при любом изменении базы
+            db.ref(`users/${currentUser.uid}/financeState`).on('value', snapshot => {
+                if(snapshot.exists()) {
+                    callback(snapshot.val());
+                }
+            });
+        },
+        stopListen() {
+            if (db && currentUser) {
+                db.ref(`users/${currentUser.uid}/financeState`).off();
             }
         },
         async save(stateToSave) { 
@@ -367,6 +370,7 @@ const firebaseConfig = {
                 return;
             }
             try {
+                // Отправляем в базу. Как только база обновится, сработает listen() на всех устройствах
                 await db.ref(`users/${currentUser.uid}/financeState`).set(stateToSave);
             } catch (e) {
                 console.error("Ошибка сохранения в Firebase:", e);
@@ -402,7 +406,7 @@ const firebaseConfig = {
         '#ff8a80', '#ffcc80', '#fff59d', '#f48fb1', '#ce93d8', '#bcaaa4', '#d1d1d6'
     ];
 
-// --- АВТОРИЗАЦИЯ И ИНИЦИАЛИЗАЦИЯ ---
+    // --- АВТОРИЗАЦИЯ И ИНИЦИАЛИЗАЦИЯ ---
     function initAuth() {
         if (!auth) {
             document.getElementById('auth-screen').classList.add('hidden');
@@ -425,14 +429,12 @@ const firebaseConfig = {
                 document.getElementById('profile-card').style.display = 'block';
                 document.getElementById('user-email').innerText = user.email;
                 
-                if (!isAppInitialized) {
-                    initApp();
-                    isAppInitialized = true;
-                } else {
-                    initApp(); 
-                }
+                DB.stopListen(); 
+                initApp();
             } else {
                 currentUser = null;
+                isAppInitialized = false;
+                DB.stopListen();
                 document.getElementById('auth-screen').classList.remove('hidden');
                 document.getElementById('app-container').style.display = 'none';
                 document.getElementById('profile-card').style.display = 'none';
@@ -440,35 +442,37 @@ const firebaseConfig = {
         });
     }
 
+    let isLoggingIn = false; 
+
     function loginWithGoogle() {
         if (!auth) return showAlert("Пожалуйста, добавьте ключи Firebase в конфигурацию кода.");
+        
+        if (isLoggingIn) return; 
+        isLoggingIn = true;
+        
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).catch(error => {
+        auth.signInWithPopup(provider).then(() => {
+            isLoggingIn = false;
+        }).catch(error => {
+            isLoggingIn = false;
+            if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                return; 
+            }
             console.error("Ошибка авторизации:", error);
-            showAlert(error.message);
+            showAlert("Ошибка входа: " + error.message);
         });
     }
 
     function logout() {
         if (auth) {
             auth.signOut().then(() => {
-                // Перезагружаем страницу, чтобы полностью сбросить локальный state и графики
                 window.location.reload(); 
             });
         }
     }
 
-    async function initApp() {
-        const loaded = await DB.load();
-        if(loaded) {
-            state.rates = loaded.rates || state.rates;
-            state.monthsLabels = loaded.monthsLabels || state.monthsLabels;
-            state.categories = loaded.categories || state.categories;
-            state.accounts = loaded.accounts || []; 
-            state.transactions = loaded.transactions || [];
-            state.history = loaded.history || state.history;
-        }
-        
+    function initApp() {
+        // Устанавливаем текущую дату и название месяца
         const date = new Date();
         const monthName = date.toLocaleString('ru-RU', { month: 'long' });
         const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
@@ -477,9 +481,28 @@ const firebaseConfig = {
         document.getElementById('month-title-text').innerText = `Баланс (${capitalizedMonth})`;
         document.getElementById('op-date').value = date.toISOString().split('T')[0];
 
-        renderAll();
-        initLongPress();
-        await fetchLiveRates();
+        // Слушаем облако 24/7. Как только прилетают изменения, обновляем UI
+        DB.listen((loaded) => {
+            if(loaded) {
+                state.rates = loaded.rates || state.rates;
+                state.monthsLabels = loaded.monthsLabels || state.monthsLabels;
+                state.categories = loaded.categories || state.categories;
+                state.accounts = loaded.accounts || []; 
+                state.transactions = loaded.transactions || [];
+                state.history = loaded.history || state.history;
+            }
+            
+            renderAll();
+            
+            if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
+            if(document.getElementById('analytics').classList.contains('active')) initAnalyticsCharts();
+
+            if (!isAppInitialized) {
+                initLongPress();
+                fetchLiveRates();
+                isAppInitialized = true;
+            }
+        });
     }
 
     // --- Кастомная Модалка ---
@@ -693,8 +716,7 @@ const firebaseConfig = {
         state.history[type][cat][currentMonthIndex] += amount;
         
         document.getElementById('op-amount').value = '';
-        renderMonthTab();
-        DB.save(state);
+        DB.save(state); // Сохраняем в облако. Listen подхватит и перерисует
     }
 
     function confirmDeleteTransaction(id) {
@@ -708,7 +730,6 @@ const firebaseConfig = {
                 if(!trans) return;
                 state.history[trans.type][trans.category][currentMonthIndex] -= trans.amount;
                 state.transactions = state.transactions.filter(t => t.id !== id);
-                renderMonthTab();
                 DB.save(state);
             }
         });
@@ -736,7 +757,13 @@ const firebaseConfig = {
     function updateOpCategories() {
         const type = document.getElementById('op-type').value;
         const select = document.getElementById('op-category');
+        const currentVal = select.value; // Сохраняем выбор, чтобы он не сбросился при фоновой синхронизации
+        
         select.innerHTML = state.categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
+        
+        if (currentVal && state.categories[type].includes(currentVal)) {
+            select.value = currentVal;
+        }
     }
 
     function addCategory() {
@@ -747,8 +774,6 @@ const firebaseConfig = {
             state.categories[type].push(val);
             state.history[type][val] = [0,0,0,0];
             input.value = '';
-            renderCategories();
-            updateOpCategories();
             DB.save(state);
         }
     }
@@ -763,9 +788,6 @@ const firebaseConfig = {
             onSubmit: () => {
                 state.categories[type].splice(index, 1);
                 delete state.history[type][cat];
-                renderCategories();
-                updateOpCategories();
-                renderMonthTab();
                 DB.save(state);
             }
         });
@@ -862,11 +884,9 @@ const firebaseConfig = {
             state.accounts.push({ id: Date.now(), name, type, tokens: [] });
         }
         
-        renderAccounts();
-        if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
-        DB.save(state);
         document.getElementById('new-acc-name').value = '';
         document.getElementById('new-acc-balance').value = '';
+        DB.save(state);
     }
 
     function confirmDeleteAccount(id) {
@@ -877,8 +897,6 @@ const firebaseConfig = {
             isDanger: true,
             onSubmit: () => {
                 state.accounts = state.accounts.filter(a => a.id !== id);
-                renderAccounts();
-                initAccountsChart();
                 DB.save(state);
             }
         });
@@ -897,8 +915,6 @@ const firebaseConfig = {
                 const nb = Number(data.new_bal);
                 if(!isNaN(nb)) {
                     acc.balance = nb;
-                    renderAccounts();
-                    if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
                     DB.save(state);
                 } else {
                     showAlert('Введено некорректное число');
@@ -925,8 +941,6 @@ const firebaseConfig = {
                 if(coin && !isNaN(bal)) {
                     wallet.tokens = wallet.tokens || [];
                     wallet.tokens.push({ id: Date.now(), coin, balance: bal });
-                    renderAccounts();
-                    if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
                     DB.save(state);
                     fetchLiveRates();
                 } else {
@@ -951,8 +965,6 @@ const firebaseConfig = {
                 const nb = Number(data.new_bal);
                 if(!isNaN(nb)) {
                     token.balance = nb;
-                    renderAccounts();
-                    if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
                     DB.save(state);
                 } else {
                     showAlert('Введено некорректное число');
@@ -971,8 +983,6 @@ const firebaseConfig = {
                 const wallet = state.accounts.find(a => a.id === walletId);
                 if(!wallet) return;
                 wallet.tokens = wallet.tokens.filter(t => t.id !== tokenId);
-                renderAccounts();
-                initAccountsChart();
                 DB.save(state);
             }
         });
@@ -1069,7 +1079,7 @@ const firebaseConfig = {
         });
     }
 
-    // Запуск приложения через Auth
+    // Запуск
     window.onload = initAuth;
 </script>
 </body>
