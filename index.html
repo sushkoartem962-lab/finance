@@ -70,7 +70,7 @@
         .chart-container { position: relative; height: 250px; width: 100%; }
         .flex-row { display: flex; gap: 10px; }
         .analytics-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        .analytics-controls select { margin-bottom: 0; width: auto; flex-grow: 1; }
+        .analytics-controls select { margin-bottom: 0; width: auto; flex-grow: 1; max-width: 300px; }
     </style>
 </head>
 <body>
@@ -166,7 +166,7 @@
     <!-- Вкладка 3: Аналитика -->
     <div id="analytics" class="tab-content">
         <div class="bento-grid">
-            <div class="bento-card span-2">
+            <div class="bento-card span-3">
                 <div class="analytics-controls">
                     <h2 style="margin:0;">Динамика Расходов</h2>
                     <select id="analytics-exp-select" onchange="updateAnalyticsCharts()"></select>
@@ -174,7 +174,7 @@
                 <div class="chart-container"><canvas id="chartExpHistory"></canvas></div>
             </div>
 
-            <div class="bento-card span-2">
+            <div class="bento-card span-3">
                 <div class="analytics-controls">
                     <h2 style="margin:0;">Динамика Доходов</h2>
                     <select id="analytics-inc-select" onchange="updateAnalyticsCharts()"></select>
@@ -182,12 +182,7 @@
                 <div class="chart-container"><canvas id="chartIncHistory"></canvas></div>
             </div>
 
-            <div class="bento-card">
-                <h2>Доход с Крипты (PnL)</h2>
-                <div class="chart-container"><canvas id="chartCryptoHistory"></canvas></div>
-            </div>
-
-            <div class="bento-card">
+            <div class="bento-card span-3">
                 <h2>Тренд (Доходы vs Расходы)</h2>
                 <div class="chart-container"><canvas id="chartTrend"></canvas></div>
             </div>
@@ -198,17 +193,13 @@
 <script>
     // --- Архитектура Firebase RTDB (Обертка) ---
     const DB = {
-        // TODO: В будущем подключи SDK: import { getDatabase, ref, set, get } from "firebase/database";
         async load() {
-            // Имитация загрузки из БД
             const local = localStorage.getItem('financeState');
             if (local) return JSON.parse(local);
             return null;
         },
         async save(state) {
-            // Имитация сохранения в БД
             localStorage.setItem('financeState', JSON.stringify(state));
-            // TODO: set(ref(db, 'users/' + userId), state);
         }
     };
 
@@ -219,7 +210,7 @@
         
         categories: {
             expense: ['Еда', 'Авто', 'Дом', 'Развлечения', 'Подписки'],
-            income: ['Зарплата', 'Проекты', 'Инвестиции']
+            income: ['Зарплата', 'Проекты', 'Инвестиции', 'Крипта (PnL)'] // Крипта теперь здесь
         },
         
         accounts: [
@@ -241,23 +232,22 @@
             income: {
                 'Зарплата': [200000, 200000, 200000, 200000],
                 'Проекты': [100000, 50000, 120000, 150000],
-                'Инвестиции': [20000, 10000, 15000, 0]
-            },
-            cryptoPnL: [12000, -5000, 24000, 18000] // Доход с крипты в руб
+                'Инвестиции': [20000, 10000, 15000, 0],
+                'Крипта (PnL)': [12000, -5000, 24000, 18000] // Данные по крипте перенесены сюда
+            }
         }
     };
 
     let charts = {}; 
-    const currentMonthIndex = 3; // Индекс "Август"
+    const currentMonthIndex = 3; 
 
-    // Глобальные настройки Chart.js для отключения сеток (Apple style)
     Chart.defaults.scale.grid.display = false;
     Chart.defaults.scale.border.display = false;
     const blueColors = ['#007aff', '#34c759', '#ff9500', '#af52de', '#ff3b30', '#5ac8fa'];
 
     async function init() {
         const loaded = await DB.load();
-        if(loaded) state = { ...state, ...loaded }; // Слияние дефолта и базы
+        if(loaded) state = { ...state, ...loaded };
 
         renderAll();
         await fetchLiveRates();
@@ -298,7 +288,6 @@
         if(tabId === 'analytics') initAnalyticsCharts();
     }
 
-    // --- Вкладка 1: Месяц и Категории ---
     function renderAll() {
         renderCategories();
         updateOpCategories();
@@ -307,12 +296,10 @@
     }
 
     function renderMonthTab() {
-        // Считаем тоталы
         let tInc = 0, tExp = 0;
         state.categories.income.forEach(cat => tInc += (state.history.income[cat]?.[currentMonthIndex] || 0));
         document.getElementById('month-income-total').innerText = `+ ${tInc.toLocaleString('ru-RU')} ₽`;
 
-        // Сортировка расходов по убыванию
         let expensesArr = state.categories.expense.map(cat => ({
             name: cat, val: state.history.expense[cat]?.[currentMonthIndex] || 0
         })).filter(e => e.val > 0).sort((a, b) => b.val - a.val);
@@ -320,7 +307,6 @@
         expensesArr.forEach(e => tExp += e.val);
         document.getElementById('month-expense-total').innerText = `- ${tExp.toLocaleString('ru-RU')} ₽`;
 
-        // Рендер списка
         const listEl = document.getElementById('current-month-expenses-list');
         listEl.innerHTML = expensesArr.map(e => `
             <div class="list-item" style="padding: 8px 0;">
@@ -329,7 +315,6 @@
             </div>
         `).join('');
 
-        // Рендер графика
         if(charts.currentMonth) charts.currentMonth.destroy();
         const ctx = document.getElementById('currentMonthChart').getContext('2d');
         charts.currentMonth = new Chart(ctx, {
@@ -351,7 +336,6 @@
                 </div>
             `).join('');
             
-            // Заполнение селектов в аналитике
             const select = document.getElementById(`analytics-${type === 'expense' ? 'exp' : 'inc'}-select`);
             if(select) {
                 select.innerHTML = state.categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
@@ -373,7 +357,7 @@
         const val = input.value.trim();
         if(val && !state.categories[type].includes(val)) {
             state.categories[type].push(val);
-            state.history[type][val] = [0,0,0,0]; // Инициализация истории
+            state.history[type][val] = [0,0,0,0];
             input.value = '';
             renderCategories();
             updateOpCategories();
@@ -403,7 +387,6 @@
         DB.save(state);
     }
 
-    // --- Вкладка 2: Счета ---
     function toggleCoinInput() {
         const isCrypto = document.getElementById('new-acc-type').value === 'crypto';
         document.getElementById('new-acc-coin').style.display = isCrypto ? 'block' : 'none';
@@ -483,7 +466,6 @@
         });
     }
 
-    // --- Вкладка 3: Аналитика ---
     function updateAnalyticsCharts() {
         const expCat = document.getElementById('analytics-exp-select').value;
         const incCat = document.getElementById('analytics-inc-select').value;
@@ -514,7 +496,7 @@
             options: commonLineOptions
         });
 
-        // 2. Доходы
+        // 2. Доходы (включая Крипту)
         if(charts.incHistory) charts.incHistory.destroy();
         const catInc = document.getElementById('analytics-inc-select').value || state.categories.income[0];
         charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
@@ -523,22 +505,7 @@
             options: commonLineOptions
         });
 
-        // 3. Крипта PnL
-        if(charts.cryptoHistory) charts.cryptoHistory.destroy();
-        charts.cryptoHistory = new Chart(document.getElementById('chartCryptoHistory'), {
-            type: 'bar',
-            data: { 
-                labels: state.monthsLabels, 
-                datasets: [{ 
-                    data: state.history.cryptoPnL, 
-                    backgroundColor: ctx => ctx.raw > 0 ? '#007aff' : '#ff3b30', 
-                    borderRadius: 6 
-                }] 
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
-
-        // 4. Тренд (Суммарно Доходы vs Расходы)
+        // 3. Тренд (Суммарно Доходы vs Расходы)
         if(charts.trend) charts.trend.destroy();
         
         let totalIncArr = [0,0,0,0], totalExpArr = [0,0,0,0];
