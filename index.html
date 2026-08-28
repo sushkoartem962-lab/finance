@@ -40,7 +40,7 @@
         
         @media (max-width: 767px) {
             .container { padding-bottom: 140px; } 
-            .nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 0; padding: 15px 10px; padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px); border-radius: 24px 24px 0 0; justify-content: space-around; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1000; }
+            .nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin: 0; padding: 15px 10px; padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px); border-radius: 24px 24px 0 0; justify-content: space-around; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1000; }
             .nav-btn { font-size: 14px; padding: 10px 15px; }
         }
 
@@ -52,10 +52,11 @@
         .subtitle { color: var(--text-muted); font-size: 14px; }
         .date-badge { font-size: 12px; color: var(--text-muted); background: var(--bg-color); padding: 4px 8px; border-radius: 8px; margin-right: 10px; }
         
-        /* Стилизованный статус (как на скрине) */
-        .live-status { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; color: #007aff; background: #eaf2ff; padding: 6px 14px; border-radius: 100px; margin-top: 10px; font-weight: 500; align-self: flex-start; }
-        .live-status.loading { color: #ff9500; background: rgba(255, 149, 0, 0.1); }
-        .status-dot { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #4cd964, #148323); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        /* Статус (Минималистичный дизайн) */
+        .live-status { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-top: 10px; font-weight: 500; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); }
+        .live-status.loading .status-dot { background-color: #ff9500; }
+        .live-status.error .status-dot { background-color: var(--danger); }
 
         /* Формы */
         input, select, button { width: 100%; max-width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; margin-bottom: 10px; font-size: 16px; background: #fafafa; outline: none; box-sizing: border-box; }
@@ -75,16 +76,18 @@
         
         .category-tag { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 8px 16px; border-radius: 100px; font-size: 14px; margin: 4px; transition: all 0.2s ease; cursor: pointer; user-select: none; -webkit-user-select: none; }
         
+        /* Скрытие иконок (Desktop Hover) */
         @media (hover: hover) and (pointer: fine) {
-            .list-item .actions { opacity: 0; transition: opacity 0.2s ease; display: flex; align-items: center; gap: 4px; }
-            .list-item:hover .actions { opacity: 1; }
+            .list-item .actions, .token-item .actions { opacity: 0; transition: opacity 0.2s ease; display: flex; align-items: center; gap: 4px; }
+            .list-item:hover .actions, .token-item:hover .actions { opacity: 1; }
             .category-tag .actions { max-width: 0; opacity: 0; overflow: hidden; transition: all 0.2s ease; display: flex; align-items: center; }
             .category-tag:hover .actions { max-width: 20px; opacity: 1; margin-left: 6px; }
         }
 
+        /* Скрытие иконок (Mobile Long Press) */
         @media (hover: none) {
-            .list-item .actions { opacity: 0; pointer-events: none; transition: opacity 0.2s; display: flex; align-items: center; gap: 4px; }
-            .list-item.show-actions .actions { opacity: 1; pointer-events: auto; }
+            .list-item .actions, .token-item .actions { opacity: 0; pointer-events: none; transition: opacity 0.2s; display: flex; align-items: center; gap: 4px; }
+            .list-item.show-actions .actions, .token-item.show-actions .actions { opacity: 1; pointer-events: auto; }
             .category-tag .actions { max-width: 0; opacity: 0; overflow: hidden; transition: all 0.2s ease; display: flex; align-items: center; pointer-events: none; }
             .category-tag.show-actions .actions { max-width: 20px; opacity: 1; margin-left: 6px; pointer-events: auto; }
         }
@@ -105,10 +108,22 @@
         .analytics-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .analytics-controls select { margin-bottom: 0; width: auto; flex-grow: 1; max-width: 300px; }
         
-        /* Стили для криптокошельков */
-        .token-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; margin-left: 12px; border-bottom: 1px dashed #e5e5ea; }
+        /* Стили для токенов */
+        .token-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; margin-left: 12px; border-bottom: 1px dashed #e5e5ea; user-select: none; -webkit-user-select: none; }
         .token-item:last-child { border-bottom: none; }
         .add-token-btn { font-size: 13px; color: var(--primary); background: rgba(0,122,255,0.1); padding: 4px 10px; border-radius: 100px; border: none; cursor: pointer; font-weight: 500; }
+
+        /* Встроенная модалка Apple-style */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.25s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-box { background: var(--card-bg); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transform: scale(0.95); transition: transform 0.25s ease; }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; text-align: center; }
+        .modal-message { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; text-align: center; line-height: 1.4; }
+        .modal-body input { margin-bottom: 12px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 5px; }
+        .btn-cancel { background: var(--bg-color); color: var(--text-main); }
+        .btn-cancel:hover { background: #e5e5ea; }
     </style>
 </head>
 <body>
@@ -189,7 +204,7 @@
             <div class="bento-card">
                 <h2>Общий капитал</h2>
                 <div class="amount" id="total-capital">Загрузка...</div>
-                <div class="live-status loading" id="rates-status">⏳ Загрузка...</div>
+                <div class="live-status loading" id="rates-status"><div class="status-dot"></div> Загрузка...</div>
                 <div class="chart-container" style="margin-top: 20px;">
                     <canvas id="accountsChart"></canvas>
                 </div>
@@ -240,6 +255,19 @@
     </div>
 </div>
 
+<!-- Встроенная Модалка -->
+<div class="modal-overlay" id="app-modal">
+    <div class="modal-box">
+        <div class="modal-title" id="modal-title">Внимание</div>
+        <div class="modal-message" id="modal-message"></div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-buttons">
+            <button class="btn-primary btn-cancel" id="modal-cancel" onclick="hideModal()">Отмена</button>
+            <button class="btn-primary" id="modal-submit">ОК</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const icons = {
         delete: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
@@ -248,8 +276,8 @@
     };
 
     const DB = {
-        async load() { const local = localStorage.getItem('financeState_v5'); return local ? JSON.parse(local) : null; },
-        async save(state) { localStorage.setItem('financeState_v5', JSON.stringify(state)); }
+        async load() { const local = localStorage.getItem('financeState_v6'); return local ? JSON.parse(local) : null; },
+        async save(state) { localStorage.setItem('financeState_v6', JSON.stringify(state)); }
     };
 
     let state = {
@@ -281,7 +309,7 @@
             },
             income: {
                 'Зарплата': [200000, 200000, 200000, 200000], 'Проекты': [100000, 50000, 120000, 150000],
-                'Инвестиции': [20000, 10000, 15000, 0], 'Крипта (PnL)': [12000, -5000, 24000, -2000] 
+                'Инвестиции': [20000, 10000, 15000, 0], 'Крипта (PnL)': [12000, -5000, 24000, 18000] 
             }
         }
     };
@@ -310,6 +338,54 @@
         await fetchLiveRates();
     }
 
+    // --- Кастомная Модалка ---
+    function showModal({ title, message, inputs, submitText, cancelText, onSubmit }) {
+        document.getElementById('modal-title').innerText = title || '';
+        const msgEl = document.getElementById('modal-message');
+        msgEl.innerText = message || '';
+        msgEl.style.display = message ? 'block' : 'none';
+
+        const bodyEl = document.getElementById('modal-body');
+        bodyEl.innerHTML = '';
+        if (inputs) {
+            inputs.forEach(inp => {
+                const el = document.createElement('input');
+                el.type = inp.type || 'text';
+                el.placeholder = inp.placeholder || '';
+                el.value = inp.value || '';
+                el.id = `modal-inp-${inp.id}`;
+                bodyEl.appendChild(el);
+            });
+        }
+
+        const submitBtn = document.getElementById('modal-submit');
+        submitBtn.innerText = submitText || 'ОК';
+        submitBtn.style.display = onSubmit ? 'block' : 'none';
+        
+        const cancelBtn = document.getElementById('modal-cancel');
+        cancelBtn.innerText = cancelText || 'Отмена';
+
+        submitBtn.onclick = () => {
+            if (onSubmit) {
+                const data = {};
+                if (inputs) inputs.forEach(inp => data[inp.id] = document.getElementById(`modal-inp-${inp.id}`).value);
+                onSubmit(data);
+            }
+            hideModal();
+        };
+
+        document.getElementById('app-modal').classList.add('active');
+    }
+
+    function hideModal() {
+        document.getElementById('app-modal').classList.remove('active');
+    }
+
+    function showAlert(msg) {
+        showModal({ title: 'Внимание', message: msg, cancelText: 'Понятно' });
+    }
+
+    // --- Long Press Логика ---
     function initLongPress() {
         let pressTimer;
         const startPress = (e) => {
@@ -318,8 +394,8 @@
                 pressTimer = setTimeout(() => {
                     document.querySelectorAll('.show-actions').forEach(el => el.classList.remove('show-actions'));
                     target.classList.add('show-actions');
-                    if(navigator.vibrate) navigator.vibrate(50);
-                }, 500); 
+                    if(navigator.vibrate) navigator.vibrate(50); // Работает на Android, игнорируется на iOS
+                }, 400); 
             }
         };
         const cancelPress = () => clearTimeout(pressTimer);
@@ -336,6 +412,7 @@
         });
     }
 
+    // --- API ---
     async function fetchLiveRates() {
         const statusEl = document.getElementById('rates-status');
         try {
@@ -358,7 +435,7 @@
             if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
         } catch (e) {
             statusEl.className = 'live-status error';
-            statusEl.innerText = '🔴 Ошибка курсов';
+            statusEl.innerHTML = `<div class="status-dot"></div> Ошибка сети`;
         }
     }
 
@@ -380,6 +457,7 @@
         renderAccounts();
     }
 
+    // --- Текущий месяц ---
     function renderMonthTab() {
         let tInc = 0, tExp = 0;
         state.categories.income.forEach(cat => tInc += (state.history.income[cat]?.[currentMonthIndex] || 0));
@@ -452,7 +530,7 @@
         const cat = document.getElementById('op-category').value;
         const date = document.getElementById('op-date').value || new Date().toISOString().split('T')[0];
         
-        if(!amount) return alert('Укажите сумму');
+        if(!amount) return showAlert('Укажите сумму');
         
         state.transactions.push({ id: Date.now(), type, category: cat, amount, date });
         state.history[type][cat][currentMonthIndex] += amount;
@@ -471,6 +549,7 @@
         DB.save(state);
     }
 
+    // --- Категории ---
     function renderCategories() {
         const renderList = (type, listId) => {
             const list = document.getElementById(listId);
@@ -560,6 +639,7 @@
                             <div style="display:flex; align-items:center; gap: 8px;">
                                 <span style="font-size: 13px; color: var(--text-muted);">$${usdVal.toLocaleString('en-US',{maximumFractionDigits:2})}</span>
                                 <div class="actions">
+                                    <button class="action-btn edit-btn" onclick="editTokenBalance(${acc.id}, ${t.id})">${icons.edit}</button>
                                     <button class="action-btn" onclick="deleteToken(${acc.id}, ${t.id})">${icons.minus}</button>
                                 </div>
                             </div>
@@ -595,11 +675,11 @@
         const name = document.getElementById('new-acc-name').value;
         const type = document.getElementById('new-acc-type').value;
         
-        if(!name) return alert('Введите название');
+        if(!name) return showAlert('Введите название счета');
 
         if (type === 'fiat') {
             const balance = Number(document.getElementById('new-acc-balance').value);
-            if(isNaN(balance)) return alert('Введите баланс');
+            if(isNaN(balance)) return showAlert('Укажите корректный баланс');
             state.accounts.push({ id: Date.now(), name, type, balance });
         } else {
             state.accounts.push({ id: Date.now(), name, type, tokens: [] });
@@ -622,31 +702,75 @@
     function editFiatBalance(id) {
         const acc = state.accounts.find(a => a.id === id);
         if(!acc || acc.type !== 'fiat') return;
-        const newBalance = prompt(`Новый баланс для "${acc.name}" в ₽:`, acc.balance);
-        if(newBalance !== null && !isNaN(Number(newBalance))) {
-            acc.balance = Number(newBalance);
-            renderAccounts();
-            if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
-            DB.save(state);
-        }
+        
+        showModal({
+            title: 'Изменить баланс',
+            message: `Счет: ${acc.name}`,
+            inputs: [{ id: 'new_bal', type: 'number', placeholder: 'Новый баланс (₽)', value: acc.balance }],
+            submitText: 'Сохранить',
+            onSubmit: (data) => {
+                const nb = Number(data.new_bal);
+                if(!isNaN(nb)) {
+                    acc.balance = nb;
+                    renderAccounts();
+                    if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
+                    DB.save(state);
+                } else {
+                    showAlert('Введено некорректное число');
+                }
+            }
+        });
     }
 
     function addTokenToWallet(walletId) {
         const wallet = state.accounts.find(a => a.id === walletId);
         if(!wallet) return;
         
-        const coin = prompt('Введите тикер монеты (USDT, BTC, SOL, ETH и тд):');
-        if(!coin) return;
-        const balance = prompt(`Количество ${coin.toUpperCase()}:`);
-        if(balance === null || isNaN(Number(balance))) return;
+        showModal({
+            title: 'Добавить токен',
+            message: `Кошелек: ${wallet.name}`,
+            inputs: [
+                { id: 'coin_name', type: 'text', placeholder: 'Тикер (USDT, BTC, SOL...)' },
+                { id: 'coin_bal', type: 'number', placeholder: 'Количество' }
+            ],
+            submitText: 'Добавить',
+            onSubmit: (data) => {
+                const coin = data.coin_name.trim().toUpperCase();
+                const bal = Number(data.coin_bal);
+                if(coin && !isNaN(bal)) {
+                    wallet.tokens.push({ id: Date.now(), coin, balance: bal });
+                    renderAccounts();
+                    if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
+                    DB.save(state);
+                    fetchLiveRates(); // Запрос курса для новой монеты
+                } else {
+                    showAlert('Заполните данные корректно');
+                }
+            }
+        });
+    }
 
-        wallet.tokens.push({ id: Date.now(), coin: coin.toUpperCase(), balance: Number(balance) });
-        renderAccounts();
-        if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
-        DB.save(state);
-        
-        // Перезапросим курсы на случай если монета новая (в реальном проекте тут нужен динамический API запрос)
-        fetchLiveRates(); 
+    function editTokenBalance(walletId, tokenId) {
+        const wallet = state.accounts.find(a => a.id === walletId);
+        if(!wallet) return;
+        const token = wallet.tokens.find(t => t.id === tokenId);
+        if(!token) return;
+
+        showModal({
+            title: 'Изменить баланс',
+            message: `Монета: ${token.coin}`,
+            inputs: [{ id: 'new_bal', type: 'number', placeholder: 'Количество', value: token.balance }],
+            submitText: 'Сохранить',
+            onSubmit: (data) => {
+                const nb = Number(data.new_bal);
+                if(!isNaN(nb)) {
+                    token.balance = nb;
+                    renderAccounts();
+                    if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
+                    DB.save(state);
+                }
+            }
+        });
     }
 
     function deleteToken(walletId, tokenId) {
@@ -708,7 +832,6 @@
             options: commonLineOptions
         });
 
-        // График Доходов (Только зеленая линия с зелеными точками, заливка зависит от нуля)
         if(charts.incHistory) charts.incHistory.destroy();
         const catInc = document.getElementById('analytics-inc-select').value || state.categories.income[0];
         charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
@@ -717,15 +840,15 @@
                 labels: state.monthsLabels, 
                 datasets: [{ 
                     data: state.history.income[catInc] || [0,0,0,0], 
-                    borderColor: '#34c759', // Всегда зеленая линия
-                    pointBackgroundColor: '#34c759', // Зеленые точки
+                    borderColor: '#34c759', 
+                    pointBackgroundColor: '#34c759', 
                     pointBorderColor: '#ffffff', 
                     pointBorderWidth: 2, 
                     pointRadius: 4,
                     fill: {
                         target: 'origin',
-                        above: 'rgba(52, 199, 89, 0.2)', // Зеленая заливка выше нуля
-                        below: 'rgba(255, 59, 48, 0.2)'  // Красная заливка ниже нуля
+                        above: 'rgba(52, 199, 89, 0.2)', 
+                        below: 'rgba(255, 59, 48, 0.2)'  
                     }
                 }] 
             },
