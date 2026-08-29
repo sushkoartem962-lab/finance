@@ -186,7 +186,7 @@
         <button class="nav-btn" onclick="switchTab('analytics')">Аналитика</button>
         <div class="nav-spacer"></div>
         <button class="nav-btn icon-btn" aria-label="Настройки" onclick="switchTab('settings')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
     </div>
 
@@ -397,7 +397,6 @@
         return Number(String(val).replace(',', '.').replace(/\s/g, ''));
     }
 
-    // ВНИМАНИЕ: Оставьте свои ключи здесь
     const firebaseConfig = {
       apiKey: "AIzaSyDjK2zlz5tF9EFS53aLhG4uTJlZKAEDXaM",
       authDomain: "finance-tracker-44e2a.firebaseapp.com",
@@ -428,18 +427,15 @@
         transfer: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3l4 4-4 4"></path><path d="M3 7h18"></path><path d="M7 21l-4-4 4-4"></path><path d="M21 17H3"></path></svg>`
     };
 
-    // --- ИСПРАВЛЕННАЯ ЛОГИКА ЗАГРУЗКИ И СОХРАНЕНИЯ ДАННЫХ ---
     const DB = {
         listen(callback) { 
             if (!db || !currentUser) {
                 const local = localStorage.getItem('financeState_v15'); 
-                // ИСПРАВЛЕНИЕ: Обязательно вызываем callback, даже если local пустой (первый вход)
                 if (local) callback(JSON.parse(local));
                 else callback(null); 
                 return;
             }
             db.ref(`users/${currentUser.uid}/financeState`).on('value', snapshot => {
-                // ИСПРАВЛЕНИЕ: Если в БД еще нет данных, передаем null, чтобы интерфейс загрузил стартовый шаблон
                 if(snapshot.exists()) {
                     callback(snapshot.val());
                 } else {
@@ -451,19 +447,26 @@
             if (db && currentUser) db.ref(`users/${currentUser.uid}/financeState`).off();
         },
         async save(stateToSave) { 
+            // Очистка стейта от undefined, которые приводят к ошибкам Firebase
+            const cleanState = JSON.parse(JSON.stringify(stateToSave));
+            
             if (!db || !currentUser) {
-                localStorage.setItem('financeState_v15', JSON.stringify(stateToSave));
-                // ИСПРАВЛЕНИЕ: В локальном режиме нужно перерисовывать интерфейс вручную
+                localStorage.setItem('financeState_v15', JSON.stringify(cleanState));
                 renderAll();
                 if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
                 if(document.getElementById('analytics').classList.contains('active')) updateAnalyticsCharts();
                 return;
             }
             try { 
-                await db.ref(`users/${currentUser.uid}/financeState`).update(stateToSave); 
+                // Вызываем мгновенное обновление UI для устранения лага задержки
+                renderAll();
+                if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
+                if(document.getElementById('analytics').classList.contains('active')) updateAnalyticsCharts();
+
+                // Используем set вместо update для чистого сохранения массивов
+                await db.ref(`users/${currentUser.uid}/financeState`).set(cleanState); 
             } catch (e) { 
                 console.error("Ошибка сохранения:", e); 
-                showAlert("Ошибка сохранения в Firebase. Проверьте права доступа (Rules) в базе данных.");
             }
         }
     };
@@ -473,7 +476,7 @@
         categories: { expense: ['Еда', 'Транспорт'], income: ['Зарплата'] },
         accounts: [],       
         transactions: [],
-        budgets: {} // Хранение лимитов { "Еда": 20000 }
+        budgets: {}
     };
 
     let charts = {}; 
@@ -841,7 +844,9 @@
                 <span class="list-item-title">${escapeHTML(cat)}</span>
                 <div class="list-item-right">
                     <span style="font-size: 14px; font-weight: 500;">${state.budgets[cat].toLocaleString('ru-RU')} ₽</span>
-                    <button class="action-btn" onclick="removeBudget('${escapeHTML(cat)}')">${icons.delete}</button>
+                    <div class="actions">
+                        <button class="action-btn" aria-label="Удалить" onclick="removeBudget('${escapeHTML(cat)}')">${icons.delete}</button>
+                    </div>
                 </div>
             </div>
         `).join('');
