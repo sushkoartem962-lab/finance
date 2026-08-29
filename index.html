@@ -926,10 +926,10 @@ const firebaseConfig = {
                 });
 
                 if(allWalletCoins.size > 0) {
-                    html += `<optgroup label="Крипта (Реальный PnL)">`;
-                    html += `<option value="coin_ALL">🪙 Все монеты (PnL)</option>`;
+                    html += `<optgroup label="Крипта (PnL)">`;
+                    html += `<option value="coin_ALL">Все монеты (PnL)</option>`;
                     allWalletCoins.forEach(coin => {
-                        html += `<option value="coin_${escapeHTML(coin)}">🪙 ${escapeHTML(coin)}</option>`;
+                        html += `<option value="coin_${escapeHTML(coin)}">${escapeHTML(coin)}</option>`;
                     });
                     html += `</optgroup>`;
                 }
