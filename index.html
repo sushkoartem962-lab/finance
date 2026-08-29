@@ -51,8 +51,8 @@
         .nav { display: flex; gap: 10px; margin-bottom: var(--spacing); overflow-x: auto; scrollbar-width: none; align-items: center; }
         .nav::-webkit-scrollbar { display: none; }
         .nav-btn { background: var(--card-bg); border: none; padding: 12px 20px; border-radius: 100px; font-size: 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.03); flex-shrink: 0; }
-.icon-btn { padding: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .icon-btn { padding: 12px; display: flex; align-items: center; justify-content: center; }
+        .nav-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .icon-btn { padding: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .nav-spacer { margin-left: auto; } 
 
         .bento-grid { display: grid; gap: var(--spacing); grid-template-columns: 1fr; }
@@ -113,6 +113,7 @@
 
         .category-tag { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 8px 16px; border-radius: 100px; font-size: 14px; margin: 4px; transition: all 0.2s ease; cursor: pointer; user-select: none; -webkit-user-select: none; }
         
+        /* Стили для скрытия кнопок действий (крестиков и тд) по умолчанию */
         @media (hover: hover) and (pointer: fine) {
             .list-item .actions, .token-item .actions { opacity: 0; transition: opacity 0.2s ease; display: flex; align-items: center; gap: 4px; }
             .list-item:hover .actions, .token-item:hover .actions { opacity: 1; }
@@ -186,7 +187,7 @@
         <button class="nav-btn" onclick="switchTab('analytics')">Аналитика</button>
         <div class="nav-spacer"></div>
         <button class="nav-btn icon-btn" aria-label="Настройки" onclick="switchTab('settings')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
     </div>
 
@@ -447,7 +448,6 @@
             if (db && currentUser) db.ref(`users/${currentUser.uid}/financeState`).off();
         },
         async save(stateToSave) { 
-            // Очистка стейта от undefined, которые приводят к ошибкам Firebase
             const cleanState = JSON.parse(JSON.stringify(stateToSave));
             
             if (!db || !currentUser) {
@@ -458,12 +458,10 @@
                 return;
             }
             try { 
-                // Вызываем мгновенное обновление UI для устранения лага задержки
                 renderAll();
                 if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
                 if(document.getElementById('analytics').classList.contains('active')) updateAnalyticsCharts();
 
-                // Используем set вместо update для чистого сохранения массивов
                 await db.ref(`users/${currentUser.uid}/financeState`).set(cleanState); 
             } catch (e) { 
                 console.error("Ошибка сохранения:", e); 
