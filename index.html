@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Финучет</title>
-    <!-- Chart.js -->
+    <title>Finance Tracker - Bento</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -28,6 +26,11 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
         .container { max-width: 1200px; margin: 0 auto; padding: var(--spacing); padding-bottom: 120px; }
+
+        /* Глобальный лоадер для скрытия окна авторизации */
+        #global-loader { position: fixed; inset: 0; background: var(--bg-color); z-index: 99999; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; transition: opacity 0.3s ease; }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 8px 20px rgba(0,122,255,0.3); } 50% { transform: scale(1.05); box-shadow: 0 12px 30px rgba(0,122,255,0.5); } 100% { transform: scale(1); box-shadow: 0 8px 20px rgba(0,122,255,0.3); } }
+        #global-loader .auth-logo { animation: pulse 1.5s infinite; margin: 0; }
 
         .auth-overlay { position: fixed; inset: 0; background: var(--bg-color); z-index: 20000; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease, visibility 0.3s ease; }
         .auth-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -64,6 +67,7 @@
         .subtitle { color: var(--text-muted); font-size: 14px; }
         
         .date-badge { font-size: 12px; color: var(--text-muted); background: var(--bg-color); padding: 4px 8px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
+        .account-badge { font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0; }
         
         .live-status { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-top: 10px; font-weight: 500; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--success); }
@@ -87,8 +91,6 @@
         .list-item-category { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; min-width: 0; }
         .list-item-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; justify-content: flex-end; }
         
-        .account-badge { font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0; }
-
         .token-item { padding: 8px 0; margin-left: 12px; border-bottom: 1px dashed #e5e5ea; }
         .token-item:last-child { border-bottom: none; }
         .add-token-btn { font-size: 13px; color: var(--primary); background: rgba(0,122,255,0.1); padding: 4px 10px; border-radius: 100px; border: none; cursor: pointer; font-weight: 500; margin-bottom: 0; width: auto; }
@@ -142,7 +144,12 @@
 </head>
 <body>
 
-<div id="auth-screen" class="auth-overlay">
+<div id="global-loader">
+    <div class="auth-logo">₽</div>
+    <div class="subtitle" style="color: var(--text-main); font-weight: 500;">Загрузка...</div>
+</div>
+
+<div id="auth-screen" class="auth-overlay hidden">
     <div class="auth-card">
         <div class="auth-logo">₽</div>
         <h2 style="margin-bottom: 5px; font-size: 24px;">Finance Tracker</h2>
@@ -324,7 +331,7 @@
             .replace(/'/g, '&#039;');
     }
 
-    // --- Локальная дата для устранения бага с toISOString() ---
+    // --- Локальная дата ---
     function getLocalDate() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -336,15 +343,15 @@
     }
 
     // === FIREBASE ИНИЦИАЛИЗАЦИЯ ===
-const firebaseConfig = {
-  apiKey: "AIzaSyDjK2zlz5tF9EFS53aLhG4uTJlZKAEDXaM",
-  authDomain: "finance-tracker-44e2a.firebaseapp.com",
-  databaseURL: "https://finance-tracker-44e2a-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "finance-tracker-44e2a",
-  storageBucket: "finance-tracker-44e2a.firebasestorage.app",
-  messagingSenderId: "309538443227",
-  appId: "1:309538443227:web:2f11759258845c8e8421fe"
-};
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
 
     let db;
     let auth;
@@ -365,6 +372,7 @@ const firebaseConfig = {
         crypto: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`
     };
 
+    // --- Firebase DB Обёртка ---
     const DB = {
         listen(callback) { 
             if (!db || !currentUser) {
@@ -385,16 +393,13 @@ const firebaseConfig = {
                 return;
             }
             try { 
-                // Атомарное обновление корневых узлов
                 await db.ref(`users/${currentUser.uid}/financeState`).update(stateToSave); 
-            } 
-            catch (e) { console.error("Ошибка сохранения:", e); }
+            } catch (e) { console.error("Ошибка сохранения:", e); }
         }
     };
 
     let state = {
         rates: { USD: 95 },
-        monthsLabels: [], 
         categories: { expense: [], income: [] },
         accounts: [],       
         transactions: []
@@ -412,19 +417,28 @@ const firebaseConfig = {
         '#ff8a80', '#ffcc80', '#fff59d', '#f48fb1', '#ce93d8', '#bcaaa4', '#d1d1d6'
     ];
 
+    function hideLoader() {
+        const loader = document.getElementById('global-loader');
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 300);
+        }
+    }
+
     function initAuth() {
         if (!auth) {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-container').style.display = 'block';
+            hideLoader();
             initApp();
             return;
         }
 
-        let isLoggingIn = false;
         auth.onAuthStateChanged(user => {
             if (user) {
                 if (user.email !== 'sushkoartem962@gmail.com') {
                     auth.signOut();
+                    hideLoader();
                     showAlert("Доступ закрыт. Вы не являетесь владельцем приложения.");
                     return;
                 }
@@ -437,10 +451,12 @@ const firebaseConfig = {
                 
                 DB.stopListen(); 
                 initApp();
+                hideLoader();
             } else {
                 currentUser = null;
                 isAppInitialized = false;
                 DB.stopListen();
+                hideLoader();
                 document.getElementById('auth-screen').classList.remove('hidden');
                 document.getElementById('app-container').style.display = 'none';
                 document.getElementById('profile-card').style.display = 'none';
@@ -460,7 +476,6 @@ const firebaseConfig = {
             isLoggingIn = false;
         }).catch(error => {
             isLoggingIn = false;
-            // Игнорируем закрытие окна пользователем
             if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') return; 
             showAlert("Ошибка входа: " + error.message);
         });
@@ -470,14 +485,35 @@ const firebaseConfig = {
         if (auth) auth.signOut().then(() => window.location.reload());
     }
 
-    function getHistoryLabels() {
+    // --- ДИНАМИЧЕСКИЙ ТАЙМЛАЙН "С СЕНТЯБРЯ 2026" ---
+    function getTimeline() {
+        const startYear = 2026;
+        const startMonth = 8; // Сентябрь (индекс 8)
+        const current = new Date();
+        
+        let total = (current.getFullYear() - startYear) * 12 + (current.getMonth() - startMonth) + 1;
+        if (total < 1) total = 1; 
+        
         const labels = [];
-        const d = new Date();
-        for(let i=3; i>=0; i--) {
-            const targetDate = new Date(d.getFullYear(), d.getMonth() - i, 1);
-            labels.push(targetDate.toLocaleString('ru-RU', { month: 'short' }));
+        const prefixes = [];
+        
+        for (let i = 0; i < total; i++) {
+            const d = new Date(startYear, startMonth + i, 1);
+            const mStr = d.toLocaleString('ru-RU', { month: 'short' });
+            const yStr = d.getFullYear() !== current.getFullYear() ? ` ${d.getFullYear()}` : '';
+            labels.push(mStr.charAt(0).toUpperCase() + mStr.slice(1) + yStr);
+            prefixes.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
         }
-        return labels;
+        return { labels, prefixes };
+    }
+
+    // --- ВЫЧИСЛЕНИЕ ЖИВОЙ СТОИМОСТИ КРИПТО-ОПЕРАЦИИ ---
+    function getTxRub(t) {
+        if (t.accountDetails && t.accountDetails.type === 'crypto') {
+            const rate = state.rates[t.accountDetails.coin] || 0;
+            return t.accountDetails.amount * rate * state.rates.USD;
+        }
+        return t.accountDetails ? t.accountDetails.amount : (t.amount || 0);
     }
 
     function initApp() {
@@ -488,8 +524,6 @@ const firebaseConfig = {
         document.getElementById('tab-month-btn').innerText = capitalizedMonth;
         document.getElementById('month-title-text').innerText = `Баланс (${capitalizedMonth})`;
         document.getElementById('op-date').value = getLocalDate();
-
-        state.monthsLabels = getHistoryLabels();
 
         DB.listen((loaded) => {
             if(loaded) {
@@ -515,7 +549,7 @@ const firebaseConfig = {
     function showModal({ title, message, inputs, submitText, cancelText, isDanger, onSubmit }) {
         document.getElementById('modal-title').innerText = title || '';
         const msgEl = document.getElementById('modal-message');
-        msgEl.innerHTML = message || ''; // Разрешаем HTML для иконок в модалке (sanitized via escapeHTML passed below)
+        msgEl.innerHTML = message || ''; 
         msgEl.style.display = message ? 'block' : 'none';
 
         const bodyEl = document.getElementById('modal-body');
@@ -543,7 +577,6 @@ const firebaseConfig = {
             if (onSubmit) {
                 const data = {};
                 if (inputs) inputs.forEach(inp => data[inp.id] = document.getElementById(`modal-inp-${inp.id}`).value);
-                // Блокируем закрытие, если onSubmit возвращает false
                 if (onSubmit(data) === false) return;
             }
             hideModal();
@@ -639,10 +672,10 @@ const firebaseConfig = {
         } else {
             state.accounts.forEach(acc => {
                 if (acc.type === 'fiat') {
-                    select.innerHTML += `<option value="fiat_${acc.id}">${escapeHTML(acc.name)} • ${acc.balance.toLocaleString('ru-RU')} ₽</option>`;
+                    select.innerHTML += `<option value="fiat_${acc.id}">${escapeHTML(acc.name)}</option>`;
                 } else if (acc.type === 'crypto_wallet' && acc.tokens) {
                     acc.tokens.forEach(t => {
-                        select.innerHTML += `<option value="crypto_${acc.id}_${t.id}" data-coin="${escapeHTML(t.coin)}">${escapeHTML(acc.name)} • ${escapeHTML(t.coin)} (${t.balance})</option>`;
+                        select.innerHTML += `<option value="crypto_${acc.id}_${t.id}" data-coin="${escapeHTML(t.coin)}">${escapeHTML(acc.name)} • ${escapeHTML(t.coin)}</option>`;
                     });
                 }
             });
@@ -670,11 +703,12 @@ const firebaseConfig = {
         const expMap = {};
 
         monthTransactions.forEach(t => {
+            const liveRub = getTxRub(t);
             if (t.type === 'income') {
-                tInc += t.amount;
+                tInc += liveRub;
             } else {
-                tExp += t.amount;
-                expMap[t.category] = (expMap[t.category] || 0) + t.amount;
+                tExp += liveRub;
+                expMap[t.category] = (expMap[t.category] || 0) + liveRub;
             }
         });
         
@@ -708,6 +742,7 @@ const firebaseConfig = {
                 const dateStr = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
                 const sign = t.type === 'income' ? '+' : '-';
                 const colorClass = t.type === 'income' ? 'income' : '';
+                const liveRub = getTxRub(t);
                 
                 let accInfo = '';
                 if(t.accountDetails) {
@@ -723,7 +758,7 @@ const firebaseConfig = {
                             ${accInfo}
                         </div>
                         <div class="list-item-right">
-                            <span class="amount ${colorClass}" style="font-size:16px; margin:0; white-space: nowrap;">${sign} ${t.amount.toLocaleString('ru-RU')} ₽</span>
+                            <span class="amount ${colorClass}" style="font-size:16px; margin:0; white-space: nowrap;">${sign} ${liveRub.toLocaleString('ru-RU')} ₽</span>
                             <div class="actions">
                                 <button class="action-btn" aria-label="Удалить" onclick="confirmDeleteTransaction(${t.id})">${icons.delete}</button>
                             </div>
@@ -736,7 +771,7 @@ const firebaseConfig = {
         if(charts.dailyExpenses) charts.dailyExpenses.destroy();
         const dailyAgg = {};
         monthTransactions.filter(t => t.type === 'expense').forEach(t => {
-            dailyAgg[t.date] = (dailyAgg[t.date] || 0) + t.amount;
+            dailyAgg[t.date] = (dailyAgg[t.date] || 0) + getTxRub(t);
         });
         
         const sortedDailyKeys = Object.keys(dailyAgg).sort();
@@ -764,14 +799,12 @@ const firebaseConfig = {
         if(!cat) { showAlert('Сначала создайте категорию в настройках'); return; }
         if(!accVal) { showAlert('Сначала создайте счет в настройках'); return; }
         
-        let rubAmount = 0;
         let accountAmount = inputAmount;
         let accType, accId, tokenId, coin;
 
         if(accVal.startsWith('fiat_')) {
             accType = 'fiat';
             accId = parseInt(accVal.split('_')[1]);
-            rubAmount = inputAmount;
             
             const acc = state.accounts.find(a => a.id === accId);
             if (acc) acc.balance += (type === 'income' ? accountAmount : -accountAmount);
@@ -790,14 +823,17 @@ const firebaseConfig = {
                         showAlert(`Не удалось найти курс для ${escapeHTML(coin)}. Операция отменена.`);
                         return;
                     }
-                    rubAmount = inputAmount * (rate || 1) * state.rates.USD;
                     token.balance += (type === 'income' ? accountAmount : -accountAmount); 
                 }
             }
         }
         
+        const rubSnapshot = (accType === 'crypto') 
+            ? inputAmount * (state.rates[coin] || 1) * state.rates.USD 
+            : inputAmount;
+
         state.transactions.push({ 
-            id: Date.now(), type, category: cat, amount: rubAmount, date,
+            id: Date.now(), type, category: cat, amount: rubSnapshot, date,
             accountDetails: { type: accType, accId, tokenId, amount: accountAmount, coin: coin || 'RUB' }
         });
         
@@ -847,8 +883,25 @@ const firebaseConfig = {
                 </div>
             `).join('');
             
-            const select = document.getElementById(`analytics-${type === 'expense' ? 'exp' : 'inc'}-select`);
-            if(select) select.innerHTML = state.categories[type].map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+            const expSelect = document.getElementById('analytics-exp-select');
+            if(type === 'expense' && expSelect) {
+                expSelect.innerHTML = state.categories.expense.map(c => `<option value="cat_${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+            }
+            
+            const incSelect = document.getElementById('analytics-inc-select');
+            if(type === 'income' && incSelect) {
+                let html = `<optgroup label="Категории">`;
+                html += state.categories.income.map(c => `<option value="cat_${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+                html += `</optgroup>`;
+                
+                const coins = [...new Set(state.transactions.filter(t => t.accountDetails?.type === 'crypto').map(t => t.accountDetails.coin))];
+                if(coins.length > 0) {
+                    html += `<optgroup label="Монеты">`;
+                    html += coins.map(c => `<option value="coin_${escapeHTML(c)}">🪙 ${escapeHTML(c)}</option>`).join('');
+                    html += `</optgroup>`;
+                }
+                incSelect.innerHTML = html;
+            }
         };
         renderList('expense', 'exp-categories-list');
         renderList('income', 'inc-categories-list');
@@ -1034,7 +1087,7 @@ const firebaseConfig = {
                     DB.save(state);
                 } else {
                     showAlert('Введено некорректное число');
-                    return false; // Предотвращаем скрытие модалки
+                    return false; 
                 }
             }
         });
@@ -1130,30 +1183,27 @@ const firebaseConfig = {
         });
     }
 
-    function generateHistoryData(type, category) {
-        const data = [0,0,0,0];
-        const d = new Date();
-        for(let i=0; i<4; i++) {
-            const targetDate = new Date(d.getFullYear(), d.getMonth() - (3 - i), 1);
-            const prefix = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2,'0')}`;
-            data[i] = state.transactions
-                .filter(t => t.type === type && t.category === category && t.date.startsWith(prefix))
-                .reduce((sum, t) => sum + t.amount, 0);
-        }
-        return data;
+    function generateHistoryData(type, selectValue) {
+        const tl = getTimeline();
+        return tl.prefixes.map(prefix => {
+            return state.transactions.filter(t => {
+                if (t.type !== type || !t.date.startsWith(prefix)) return false;
+                if (selectValue.startsWith('coin_')) {
+                    return t.accountDetails?.coin === selectValue.replace('coin_', '');
+                } else {
+                    return t.category === selectValue.replace('cat_', '');
+                }
+            }).reduce((sum, t) => sum + getTxRub(t), 0);
+        });
     }
 
     function generateTrendData(type) {
-         const data = [0,0,0,0];
-         const d = new Date();
-         for(let i=0; i<4; i++) {
-             const targetDate = new Date(d.getFullYear(), d.getMonth() - (3 - i), 1);
-             const prefix = `${targetDate.getFullYear()}-${String(targetDate.getMonth()+1).padStart(2,'0')}`;
-             data[i] = state.transactions
+         const tl = getTimeline();
+         return tl.prefixes.map(prefix => {
+             return state.transactions
                 .filter(t => t.type === type && t.date.startsWith(prefix))
-                .reduce((sum, t) => sum + t.amount, 0);
-         }
-         return data;
+                .reduce((sum, t) => sum + getTxRub(t), 0);
+         });
     }
 
     function updateAnalyticsCharts() {
@@ -1162,23 +1212,26 @@ const firebaseConfig = {
 
         if(charts.expHistory && expCat) {
             charts.expHistory.data.datasets[0].data = generateHistoryData('expense', expCat);
+            charts.expHistory.data.labels = getTimeline().labels;
             charts.expHistory.update();
         }
         if(charts.incHistory && incCat) {
             charts.incHistory.data.datasets[0].data = generateHistoryData('income', incCat);
+            charts.incHistory.data.labels = getTimeline().labels;
             charts.incHistory.update();
         }
     }
 
     function initAnalyticsCharts() {
         const commonLineOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, elements: { line: { tension: 0.4 } } };
+        const tl = getTimeline();
 
         if(charts.expHistory) charts.expHistory.destroy();
-        const catExp = document.getElementById('analytics-exp-select').value || state.categories.expense[0];
+        const catExp = document.getElementById('analytics-exp-select').value || `cat_${state.categories.expense[0]}`;
         charts.expHistory = new Chart(document.getElementById('chartExpHistory'), {
             type: 'line',
             data: { 
-                labels: state.monthsLabels, 
+                labels: tl.labels, 
                 datasets: [{ 
                     data: generateHistoryData('expense', catExp), 
                     borderColor: '#1c1c1e', pointBackgroundColor: '#1c1c1e', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 4, 
@@ -1189,27 +1242,19 @@ const firebaseConfig = {
         });
 
         if(charts.incHistory) charts.incHistory.destroy();
-        const catInc = document.getElementById('analytics-inc-select').value || state.categories.income[0];
+        const catInc = document.getElementById('analytics-inc-select').value || `cat_${state.categories.income[0]}`;
         const incomeData = generateHistoryData('income', catInc);
         
         charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
             type: 'line',
             data: { 
-                labels: state.monthsLabels, 
+                labels: tl.labels, 
                 datasets: [{ 
                     data: incomeData,
-                    segment: {
-                        borderColor: ctx => (ctx.p0.parsed.y < 0 || ctx.p1.parsed.y < 0) ? '#ff3b30' : '#34c759'
-                    },
+                    segment: { borderColor: ctx => (ctx.p0.parsed.y < 0 || ctx.p1.parsed.y < 0) ? '#ff3b30' : '#34c759' },
                     pointBackgroundColor: ctx => ctx.raw < 0 ? '#ff3b30' : '#34c759',
-                    pointBorderColor: '#ffffff', 
-                    pointBorderWidth: 2, 
-                    pointRadius: 4,
-                    fill: {
-                        target: 'origin',
-                        above: 'rgba(52, 199, 89, 0.2)', 
-                        below: 'rgba(255, 59, 48, 0.2)'  
-                    }
+                    pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 4,
+                    fill: { target: 'origin', above: 'rgba(52, 199, 89, 0.2)', below: 'rgba(255, 59, 48, 0.2)' }
                 }] 
             },
             options: commonLineOptions
@@ -1218,7 +1263,7 @@ const firebaseConfig = {
         if(charts.trend) charts.trend.destroy();
         charts.trend = new Chart(document.getElementById('chartTrend'), {
             type: 'bar',
-            data: { labels: state.monthsLabels, datasets: [ { label: 'Доходы', data: generateTrendData('income'), backgroundColor: '#34c759', borderRadius: 6 }, { label: 'Расходы', data: generateTrendData('expense'), backgroundColor: '#1c1c1e', borderRadius: 6 } ] },
+            data: { labels: tl.labels, datasets: [ { label: 'Доходы', data: generateTrendData('income'), backgroundColor: '#34c759', borderRadius: 6 }, { label: 'Расходы', data: generateTrendData('expense'), backgroundColor: '#1c1c1e', borderRadius: 6 } ] },
             options: { responsive: true, maintainAspectRatio: false }
         });
     }
