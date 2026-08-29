@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Finance Tracker - Bento</title>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -27,7 +29,6 @@
         body { background-color: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
         .container { max-width: 1200px; margin: 0 auto; padding: var(--spacing); padding-bottom: 120px; }
 
-        /* Глобальный лоадер для скрытия окна авторизации */
         #global-loader { position: fixed; inset: 0; background: var(--bg-color); z-index: 99999; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; transition: opacity 0.3s ease; }
         @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 8px 20px rgba(0,122,255,0.3); } 50% { transform: scale(1.05); box-shadow: 0 12px 30px rgba(0,122,255,0.5); } 100% { transform: scale(1); box-shadow: 0 8px 20px rgba(0,122,255,0.3); } }
         #global-loader .auth-logo { animation: pulse 1.5s infinite; margin: 0; }
@@ -127,7 +128,6 @@
         .analytics-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .analytics-controls select { margin-bottom: 0; width: auto; flex-grow: 1; max-width: 300px; }
         
-        /* Модалка с A11y */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.25s ease; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-box { background: var(--card-bg); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transform: scale(0.95); transition: transform 0.25s ease; }
@@ -320,7 +320,6 @@
 </div>
 
 <script>
-    // --- XSS ЗАЩИТА ---
     function escapeHTML(str) {
         if (str == null) return '';
         return String(str)
@@ -331,7 +330,6 @@
             .replace(/'/g, '&#039;');
     }
 
-    // --- Локальная дата ---
     function getLocalDate() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -342,7 +340,6 @@
         return Number(String(val).replace(',', '.').replace(/\s/g, ''));
     }
 
-    // === FIREBASE ИНИЦИАЛИЗАЦИЯ ===
 const firebaseConfig = {
   apiKey: "AIzaSyDjK2zlz5tF9EFS53aLhG4uTJlZKAEDXaM",
   authDomain: "finance-tracker-44e2a.firebaseapp.com",
@@ -372,11 +369,10 @@ const firebaseConfig = {
         crypto: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`
     };
 
-    // --- Firebase DB Обёртка ---
     const DB = {
         listen(callback) { 
             if (!db || !currentUser) {
-                const local = localStorage.getItem('financeState_v13'); 
+                const local = localStorage.getItem('financeState_v14'); 
                 if (local) callback(JSON.parse(local));
                 return;
             }
@@ -389,7 +385,7 @@ const firebaseConfig = {
         },
         async save(stateToSave) { 
             if (!db || !currentUser) {
-                localStorage.setItem('financeState_v13', JSON.stringify(stateToSave));
+                localStorage.setItem('financeState_v14', JSON.stringify(stateToSave));
                 return;
             }
             try { 
@@ -485,7 +481,6 @@ const firebaseConfig = {
         if (auth) auth.signOut().then(() => window.location.reload());
     }
 
-    // --- ДИНАМИЧЕСКИЙ ТАЙМЛАЙН "С СЕНТЯБРЯ 2026" ---
     function getTimeline() {
         const startYear = 2026;
         const startMonth = 8; // Сентябрь (индекс 8)
@@ -507,7 +502,6 @@ const firebaseConfig = {
         return { labels, prefixes };
     }
 
-    // --- ВЫЧИСЛЕНИЕ ЖИВОЙ СТОИМОСТИ КРИПТО-ОПЕРАЦИИ ---
     function getTxRub(t) {
         if (t.accountDetails && t.accountDetails.type === 'crypto') {
             const rate = state.rates[t.accountDetails.coin] || 0;
@@ -636,6 +630,7 @@ const firebaseConfig = {
             
             renderAccounts();
             if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
+            if(document.getElementById('analytics').classList.contains('active')) updateAnalyticsCharts();
         } catch (e) {
             statusEl.className = 'live-status error';
             statusEl.innerHTML = `<div class="status-dot"></div> Ошибка сети`;
@@ -662,6 +657,7 @@ const firebaseConfig = {
         renderAccounts();
     }
 
+    // --- Обновление селекта счетов (Фиат сверху, Т-Банк по умолчанию, Крипта внизу) ---
     function updateOpAccounts() {
         const select = document.getElementById('op-account');
         if(!select) return;
@@ -669,17 +665,40 @@ const firebaseConfig = {
         
         if (state.accounts.length === 0) {
             select.innerHTML = '<option value="">Нет доступных счетов</option>';
-        } else {
-            state.accounts.forEach(acc => {
-                if (acc.type === 'fiat') {
-                    select.innerHTML += `<option value="fiat_${acc.id}">${escapeHTML(acc.name)}</option>`;
-                } else if (acc.type === 'crypto_wallet' && acc.tokens) {
-                    acc.tokens.forEach(t => {
-                        select.innerHTML += `<option value="crypto_${acc.id}_${t.id}" data-coin="${escapeHTML(t.coin)}">${escapeHTML(acc.name)} • ${escapeHTML(t.coin)}</option>`;
-                    });
-                }
-            });
+            return;
         }
+
+        let fiatOptions = '';
+        let cryptoOptions = '';
+        let defaultVal = '';
+
+        // 1. Фиатные счета сверху
+        state.accounts.filter(a => a.type === 'fiat').forEach(acc => {
+            const val = `fiat_${acc.id}`;
+            fiatOptions += `<option value="${val}">${escapeHTML(acc.name)} • ${acc.balance.toLocaleString('ru-RU')} ₽</option>`;
+            
+            // Если находим Т-Банк - запоминаем как дефолтный
+            if (!defaultVal || acc.name.toLowerCase().includes('т-банк') || acc.name.toLowerCase().includes('t-bank') || acc.name.toLowerCase().includes('тинькофф')) {
+                defaultVal = val;
+            }
+        });
+
+        // 2. Крипта снизу
+        state.accounts.filter(a => a.type === 'crypto_wallet').forEach(acc => {
+            (acc.tokens || []).forEach(t => {
+                const val = `crypto_${acc.id}_${t.id}`;
+                cryptoOptions += `<option value="${val}" data-coin="${escapeHTML(t.coin)}">${escapeHTML(acc.name)} • ${escapeHTML(t.coin)} (${t.balance})</option>`;
+                if (!defaultVal) defaultVal = val;
+            });
+        });
+
+        let html = '';
+        if (fiatOptions) html += `<optgroup label="Счета и Карты">${fiatOptions}</optgroup>`;
+        if (cryptoOptions) html += `<optgroup label="Криптокошельки">${cryptoOptions}</optgroup>`;
+
+        select.innerHTML = html;
+        if (defaultVal) select.value = defaultVal;
+        
         updateOpAmountPlaceholder();
     }
 
@@ -885,22 +904,38 @@ const firebaseConfig = {
             
             const expSelect = document.getElementById('analytics-exp-select');
             if(type === 'expense' && expSelect) {
+                const currentVal = expSelect.value;
                 expSelect.innerHTML = state.categories.expense.map(c => `<option value="cat_${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+                if (currentVal) expSelect.value = currentVal;
             }
             
             const incSelect = document.getElementById('analytics-inc-select');
             if(type === 'income' && incSelect) {
+                const currentVal = incSelect.value;
                 let html = `<optgroup label="Категории">`;
                 html += state.categories.income.map(c => `<option value="cat_${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
                 html += `</optgroup>`;
                 
-                const coins = [...new Set(state.transactions.filter(t => t.accountDetails?.type === 'crypto').map(t => t.accountDetails.coin))];
-                if(coins.length > 0) {
-                    html += `<optgroup label="Монеты">`;
-                    html += coins.map(c => `<option value="coin_${escapeHTML(c)}">🪙 ${escapeHTML(c)}</option>`).join('');
+                // Выводим все монеты из созданных кошельков
+                const allWalletCoins = new Set();
+                state.accounts.filter(a => a.type === 'crypto_wallet').forEach(w => {
+                    (w.tokens || []).forEach(t => allWalletCoins.add(t.coin));
+                });
+                state.transactions.filter(t => t.accountDetails?.type === 'crypto').forEach(t => {
+                    allWalletCoins.add(t.accountDetails.coin);
+                });
+
+                if(allWalletCoins.size > 0) {
+                    html += `<optgroup label="Крипта (Реальный PnL)">`;
+                    html += `<option value="coin_ALL">🪙 Все монеты (PnL)</option>`;
+                    allWalletCoins.forEach(coin => {
+                        html += `<option value="coin_${escapeHTML(coin)}">🪙 ${escapeHTML(coin)}</option>`;
+                    });
                     html += `</optgroup>`;
                 }
+                
                 incSelect.innerHTML = html;
+                if (currentVal) incSelect.value = currentVal;
             }
         };
         renderList('expense', 'exp-categories-list');
@@ -1188,8 +1223,13 @@ const firebaseConfig = {
         return tl.prefixes.map(prefix => {
             return state.transactions.filter(t => {
                 if (t.type !== type || !t.date.startsWith(prefix)) return false;
+                
                 if (selectValue.startsWith('coin_')) {
-                    return t.accountDetails?.coin === selectValue.replace('coin_', '');
+                    const targetCoin = selectValue.replace('coin_', '');
+                    if (targetCoin === 'ALL') {
+                        return t.accountDetails?.type === 'crypto';
+                    }
+                    return t.accountDetails?.coin === targetCoin;
                 } else {
                     return t.category === selectValue.replace('cat_', '');
                 }
@@ -1209,16 +1249,23 @@ const firebaseConfig = {
     function updateAnalyticsCharts() {
         const expCat = document.getElementById('analytics-exp-select').value;
         const incCat = document.getElementById('analytics-inc-select').value;
+        const tl = getTimeline();
 
         if(charts.expHistory && expCat) {
             charts.expHistory.data.datasets[0].data = generateHistoryData('expense', expCat);
-            charts.expHistory.data.labels = getTimeline().labels;
+            charts.expHistory.data.labels = tl.labels;
             charts.expHistory.update();
         }
         if(charts.incHistory && incCat) {
             charts.incHistory.data.datasets[0].data = generateHistoryData('income', incCat);
-            charts.incHistory.data.labels = getTimeline().labels;
+            charts.incHistory.data.labels = tl.labels;
             charts.incHistory.update();
+        }
+        if(charts.trend) {
+            charts.trend.data.datasets[0].data = generateTrendData('income');
+            charts.trend.data.datasets[1].data = generateTrendData('expense');
+            charts.trend.data.labels = tl.labels;
+            charts.trend.update();
         }
     }
 
@@ -1233,7 +1280,7 @@ const firebaseConfig = {
             data: { 
                 labels: tl.labels, 
                 datasets: [{ 
-                    data: generateHistoryData('expense', catExp), 
+                    data: catExp ? generateHistoryData('expense', catExp) : [0], 
                     borderColor: '#1c1c1e', pointBackgroundColor: '#1c1c1e', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 4, 
                     backgroundColor: 'rgba(28, 28, 30, 0.1)', fill: true 
                 }] 
@@ -1243,7 +1290,7 @@ const firebaseConfig = {
 
         if(charts.incHistory) charts.incHistory.destroy();
         const catInc = document.getElementById('analytics-inc-select').value || `cat_${state.categories.income[0]}`;
-        const incomeData = generateHistoryData('income', catInc);
+        const incomeData = catInc ? generateHistoryData('income', catInc) : [0];
         
         charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
             type: 'line',
