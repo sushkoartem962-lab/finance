@@ -398,15 +398,15 @@
     }
 
     // ВНИМАНИЕ: Оставьте свои ключи здесь
-const firebaseConfig = {
-  apiKey: "AIzaSyDjK2zlz5tF9EFS53aLhG4uTJlZKAEDXaM",
-  authDomain: "finance-tracker-44e2a.firebaseapp.com",
-  databaseURL: "https://finance-tracker-44e2a-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "finance-tracker-44e2a",
-  storageBucket: "finance-tracker-44e2a.firebasestorage.app",
-  messagingSenderId: "309538443227",
-  appId: "1:309538443227:web:2f11759258845c8e8421fe"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyDjK2zlz5tF9EFS53aLhG4uTJlZKAEDXaM",
+      authDomain: "finance-tracker-44e2a.firebaseapp.com",
+      databaseURL: "https://finance-tracker-44e2a-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "finance-tracker-44e2a",
+      storageBucket: "finance-tracker-44e2a.firebasestorage.app",
+      messagingSenderId: "309538443227",
+      appId: "1:309538443227:web:2f11759258845c8e8421fe"
+    };
 
     let db;
     let auth;
@@ -428,15 +428,23 @@ const firebaseConfig = {
         transfer: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3l4 4-4 4"></path><path d="M3 7h18"></path><path d="M7 21l-4-4 4-4"></path><path d="M21 17H3"></path></svg>`
     };
 
+    // --- ИСПРАВЛЕННАЯ ЛОГИКА ЗАГРУЗКИ И СОХРАНЕНИЯ ДАННЫХ ---
     const DB = {
         listen(callback) { 
             if (!db || !currentUser) {
                 const local = localStorage.getItem('financeState_v15'); 
+                // ИСПРАВЛЕНИЕ: Обязательно вызываем callback, даже если local пустой (первый вход)
                 if (local) callback(JSON.parse(local));
+                else callback(null); 
                 return;
             }
             db.ref(`users/${currentUser.uid}/financeState`).on('value', snapshot => {
-                if(snapshot.exists()) callback(snapshot.val());
+                // ИСПРАВЛЕНИЕ: Если в БД еще нет данных, передаем null, чтобы интерфейс загрузил стартовый шаблон
+                if(snapshot.exists()) {
+                    callback(snapshot.val());
+                } else {
+                    callback(null); 
+                }
             });
         },
         stopListen() {
@@ -445,11 +453,18 @@ const firebaseConfig = {
         async save(stateToSave) { 
             if (!db || !currentUser) {
                 localStorage.setItem('financeState_v15', JSON.stringify(stateToSave));
+                // ИСПРАВЛЕНИЕ: В локальном режиме нужно перерисовывать интерфейс вручную
+                renderAll();
+                if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
+                if(document.getElementById('analytics').classList.contains('active')) updateAnalyticsCharts();
                 return;
             }
             try { 
                 await db.ref(`users/${currentUser.uid}/financeState`).update(stateToSave); 
-            } catch (e) { console.error("Ошибка сохранения:", e); }
+            } catch (e) { 
+                console.error("Ошибка сохранения:", e); 
+                showAlert("Ошибка сохранения в Firebase. Проверьте права доступа (Rules) в базе данных.");
+            }
         }
     };
 
@@ -532,7 +547,6 @@ const firebaseConfig = {
         if (auth) auth.signOut().then(() => window.location.reload());
     }
 
-    // Динамический фильтр дат для аналитики
     function getTimeline(period = 'current_month') {
         const date = new Date();
         const labels = [];
@@ -559,7 +573,6 @@ const firebaseConfig = {
             }
         }
         else if (period === 'all') {
-            // Ищем самую раннюю транзакцию
             let startYear = date.getFullYear();
             let startMonth = date.getMonth();
             if (state.transactions.length > 0) {
@@ -739,7 +752,6 @@ const firebaseConfig = {
         renderAccounts();
     }
 
-    // --- Обновление логики формы операции ---
     function updateOpForm() {
         const type = document.getElementById('op-type').value;
         const catSelect = document.getElementById('op-category');
@@ -756,7 +768,6 @@ const firebaseConfig = {
             accTo.style.display = 'none';
             updateOpAccountsForm(accFrom, 'Счет');
             
-            // Обновляем категории
             const currentCat = catSelect.value; 
             catSelect.innerHTML = state.categories[type].map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
             if (currentCat && state.categories[type].includes(currentCat)) catSelect.value = currentCat;
@@ -819,7 +830,6 @@ const firebaseConfig = {
         }
     }
 
-    // --- Бюджеты (Настройки) ---
     function renderSettingsBudgets() {
         const select = document.getElementById('budget-cat-select');
         select.innerHTML = '<option value="">Выберите категорию...</option>' + 
@@ -863,7 +873,7 @@ const firebaseConfig = {
         const expMap = {};
 
         monthTransactions.forEach(t => {
-            if (t.type === 'transfer') return; // Игнорируем переводы
+            if (t.type === 'transfer') return;
             
             const liveRub = getTxRub(t);
             if (t.type === 'income') {
@@ -877,7 +887,6 @@ const firebaseConfig = {
         document.getElementById('month-income-total').innerText = `+ ${tInc.toLocaleString('ru-RU')} ₽`;
         document.getElementById('month-expense-total').innerText = `- ${tExp.toLocaleString('ru-RU')} ₽`;
 
-        // Рендер виджета бюджетов
         const budgetsContainer = document.getElementById('budgets-container');
         const budgetsList = document.getElementById('budgets-list');
         if(Object.keys(state.budgets).length > 0) {
@@ -1012,7 +1021,7 @@ const firebaseConfig = {
             modifyAccountBalance(accFromVal, -inputAmount);
             modifyAccountBalance(accToVal, inputAmount);
             
-            const rubEq = inputAmount; // Упрощенно для переводов храним сумму введенную
+            const rubEq = inputAmount; 
             
             state.transactions.push({ 
                 id: Date.now(), type, amount: rubEq, date, note,
@@ -1027,7 +1036,7 @@ const firebaseConfig = {
             if(!accVal) { showAlert('Сначала создайте счет в настройках'); return; }
             
             const accInfo = modifyAccountBalance(accVal, type === 'income' ? inputAmount : -inputAmount);
-            if (!accInfo) return; // Ошибка изменения баланса (например, курс не найден)
+            if (!accInfo) return; 
             
             const rubSnapshot = (accInfo.accType === 'crypto') 
                 ? inputAmount * (state.rates[accInfo.coin] || 1) * state.rates.USD 
@@ -1041,11 +1050,10 @@ const firebaseConfig = {
         
         document.getElementById('op-amount').value = '';
         document.getElementById('op-note').value = '';
-        document.activeElement.blur(); // Скрываем клавиатуру на мобильных
+        document.activeElement.blur(); 
         DB.save(state); 
     }
     
-    // Вспомогательная функция для обновления баланса (для добавления и отмены операций)
     function modifyAccountBalance(accVal, deltaAmount) {
         let accType, accId, tokenId, coin;
         if(accVal.startsWith('fiat_')) {
@@ -1085,7 +1093,6 @@ const firebaseConfig = {
                 if(!trans) return;
                 
                 if (trans.type === 'transfer') {
-                    // Обратный перевод
                     modifyAccountBalance(trans.transferDetails.from, trans.transferDetails.amount);
                     modifyAccountBalance(trans.transferDetails.to, -trans.transferDetails.amount);
                 } else if (trans.accountDetails) {
@@ -1184,7 +1191,7 @@ const firebaseConfig = {
                 state.categories[type].splice(index, 1);
                 state.transactions = state.transactions.filter(t => !(t.type === type && t.category === cat));
                 
-                if (state.budgets[cat]) delete state.budgets[cat]; // Очистка бюджета если удалили категорию
+                if (state.budgets[cat]) delete state.budgets[cat]; 
                 
                 DB.save(state);
             }
@@ -1228,7 +1235,6 @@ const firebaseConfig = {
                     const usdVal = t.balance * rate;
                     walletUsd += usdVal;
                     
-                    // Расчет PnL
                     let pnlHtml = '';
                     if (t.avgBuyPrice && t.avgBuyPrice > 0) {
                         const invested = t.balance * t.avgBuyPrice;
