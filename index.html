@@ -1351,7 +1351,7 @@
         
         showModal({
             title: 'Изменить баланс',
-            message: `Счет: ${escapeHTML(acc.name)}`,
+            message: `${escapeHTML(acc.name)}`,
             inputs: [{ id: 'new_bal', type: 'text', inputmode: 'decimal', placeholder: 'Новый баланс (₽)', value: acc.balance }],
             submitText: 'Сохранить',
             onSubmit: (data) => {
