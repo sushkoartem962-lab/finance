@@ -48,7 +48,6 @@
         .auth-card { background: var(--card-bg); width: 90%; max-width: 360px; border-radius: var(--radius); padding: 40px 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); text-align: center; }
         .auth-logo { width: 64px; height: 64px; background: var(--primary); color: #fff; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,122,255,0.3); }
 
-        /* ИСПРАВЛЕННОЕ МЕНЮ (ОСТРОВКИ) */
         .nav { display: flex; gap: 10px; margin-bottom: var(--spacing); justify-content: space-between; align-items: center; }
         .nav-island { display: flex; gap: 10px; align-items: center; }
         .nav-btn { background: var(--card-bg); border: none; padding: 12px 20px; border-radius: 100px; font-size: 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.03); width: auto; margin-bottom: 0; }
@@ -65,59 +64,23 @@
         
         @media (max-width: 767px) {
             .container { padding-bottom: 120px; } 
-            
             .nav { 
-                position: fixed; 
-                bottom: calc(env(safe-area-inset-bottom, 10px) + 15px); 
-                left: 15px; 
-                right: 15px; 
-                margin: 0; 
-                padding: 0; 
-                justify-content: space-between; 
-                gap: 10px; 
-                z-index: 1000; 
-                pointer-events: none; /* Пропускает клики вне островов (по пустому фону) */
+                position: fixed; bottom: calc(env(safe-area-inset-bottom, 10px) + 15px); left: 15px; right: 15px; 
+                margin: 0; padding: 0; justify-content: space-between; gap: 10px; z-index: 1000; pointer-events: none; 
             }
-            
             .nav-island { 
-                pointer-events: auto; /* Острова остаются кликабельными */
-                background: rgba(255, 255, 255, 0.85); 
-                backdrop-filter: blur(15px); 
-                -webkit-backdrop-filter: blur(15px); 
-                border-radius: 100px; 
-                padding: 6px; 
-                box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
-                gap: 4px; 
+                pointer-events: auto; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); 
+                -webkit-backdrop-filter: blur(15px); border-radius: 100px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); gap: 4px; 
             }
-            
             .main-island { flex: 1; justify-content: space-between; overflow: hidden; }
             .settings-island { flex-shrink: 0; }
-            
-            .nav-btn { 
-                font-size: 14px; 
-                padding: 10px 5px; 
-                background: transparent; 
-                box-shadow: none; 
-                flex: 1; 
-                text-align: center; 
-            }
-            
-            .nav-btn.active { 
-                background: var(--primary); 
-                color: #fff; 
-                box-shadow: 0 4px 12px rgba(0,122,255,0.3); 
-            }
-            
-            .icon-btn { 
-                padding: 0; 
-                width: 42px; 
-                height: 42px; 
-                background: transparent; 
-            }
+            .nav-btn { font-size: 14px; padding: 10px 5px; background: transparent; box-shadow: none; flex: 1; text-align: center; }
+            .nav-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
+            .icon-btn { padding: 0; width: 42px; height: 42px; background: transparent; }
         }
 
         h2 { font-size: 20px; margin-bottom: 15px; font-weight: 600; }
-        .amount { font-size: 32px; font-weight: 700; margin-bottom: 5px; white-space: nowrap; }
+        .amount { font-size: 32px; font-weight: 700; margin-bottom: 5px; white-space: nowrap; transition: color 0.3s ease; }
         .amount.income { color: var(--success); }
         .amount.expense { color: var(--text-main); }
         .amount.transfer { color: var(--text-muted); }
@@ -187,7 +150,6 @@
         .analytics-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .analytics-controls select { margin-bottom: 0; width: auto; flex-grow: 1; max-width: 300px; }
         
-        /* Modal & Progress bar */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.25s ease; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-box { background: var(--card-bg); width: 90%; max-width: 340px; border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transform: scale(0.95); transition: transform 0.25s ease; }
@@ -226,7 +188,6 @@
 
 <div class="container" id="app-container" style="display: none;">
     
-    <!-- ОБНОВЛЕННАЯ СТРУКТУРА МЕНЮ (Два островка) -->
     <div class="nav">
         <div class="nav-island main-island">
             <button class="nav-btn active" onclick="switchTab('month')" id="tab-month-btn">Месяц</button>
@@ -235,7 +196,7 @@
         </div>
         <div class="nav-island settings-island">
             <button class="nav-btn icon-btn" aria-label="Настройки" onclick="switchTab('settings')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
         </div>
     </div>
@@ -245,10 +206,24 @@
         <div class="bento-grid">
             <div class="bento-card">
                 <h2 id="month-title-text">Баланс</h2>
-                <div class="amount income" id="month-income-total">+ 0 ₽</div>
-                <div class="subtitle">Доходы</div>
-                <div class="amount expense" id="month-expense-total" style="margin-top: 15px;">- 0 ₽</div>
-                <div class="subtitle">Расходы</div>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <!-- Разница (Остаток/Прибыль) -->
+                    <div style="background: var(--bg-color); padding: 15px; border-radius: 16px; text-align: center;">
+                        <div class="subtitle" style="margin-bottom: 5px;">Разница (Остаток)</div>
+                        <div class="amount" id="month-net-total" style="margin: 0; font-size: 28px;">0 ₽</div>
+                    </div>
+                    <!-- Доходы и Расходы -->
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex: 1; background: rgba(52, 199, 89, 0.1); padding: 12px; border-radius: 16px;">
+                            <div class="subtitle" style="color: var(--success); font-size: 12px; margin-bottom: 4px;">Доходы</div>
+                            <div class="amount income" id="month-income-total" style="font-size: 18px; margin: 0;">+ 0 ₽</div>
+                        </div>
+                        <div style="flex: 1; background: rgba(255, 59, 48, 0.1); padding: 12px; border-radius: 16px;">
+                            <div class="subtitle" style="color: var(--danger); font-size: 12px; margin-bottom: 4px;">Расходы</div>
+                            <div class="amount expense" id="month-expense-total" style="font-size: 18px; margin: 0; color: var(--danger);">- 0 ₽</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="bento-card">
@@ -328,6 +303,12 @@
                     </select>
                 </div>
             </div>
+            
+            <!-- НОВЫЙ ГРАФИК: Остаток и % расходов -->
+            <div class="bento-card span-full">
+                <h2>Остаток и % расходов</h2>
+                <div class="chart-container"><canvas id="chartNetAndPercent"></canvas></div>
+            </div>
 
             <div class="bento-card span-full">
                 <div class="analytics-controls">
@@ -371,7 +352,6 @@
                     <option value="crypto_wallet">Крипто-кошелек</option>
                 </select>
 
-                <!-- Чекбокс кредитки -->
                 <label id="credit-checkbox-label" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; cursor: pointer;">
                     <input type="checkbox" id="new-acc-is-credit" style="width: auto; margin: 0; cursor: pointer;" onchange="updateBalancePlaceholder()">
                     Это кредитная карта
@@ -424,7 +404,6 @@
     </div>
 </div>
 
-<!-- Dummy Service Worker for PWA installation -->
 <script>
     if ('serviceWorker' in navigator) {
         const swCode = `self.addEventListener('fetch', (e) => {});`;
@@ -436,12 +415,7 @@
 <script>
     function escapeHTML(str) {
         if (str == null) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
     function getLocalDate() {
@@ -451,6 +425,7 @@
 
     function parseNum(val) {
         if (val === null || val === undefined || val === '') return NaN;
+        // Заменяем запятую на точку, убираем пробелы. Знак минуса сохраняется!
         return Number(String(val).replace(',', '.').replace(/\s/g, ''));
     }
 
@@ -464,8 +439,7 @@
       appId: "1:309538443227:web:2f11759258845c8e8421fe"
     };
 
-    let db;
-    let auth;
+    let db, auth;
     let currentUser = null;
     let isAppInitialized = false;
 
@@ -493,11 +467,8 @@
                 return;
             }
             db.ref(`users/${currentUser.uid}/financeState`).on('value', snapshot => {
-                if(snapshot.exists()) {
-                    callback(snapshot.val());
-                } else {
-                    callback(null); 
-                }
+                if(snapshot.exists()) callback(snapshot.val());
+                else callback(null); 
             });
         },
         stopListen() {
@@ -505,7 +476,6 @@
         },
         async save(stateToSave) { 
             const cleanState = JSON.parse(JSON.stringify(stateToSave));
-            
             if (!db || !currentUser) {
                 localStorage.setItem('financeState_v15', JSON.stringify(cleanState));
                 renderAll();
@@ -517,47 +487,28 @@
                 renderAll();
                 if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
                 if(document.getElementById('analytics').classList.contains('active')) updateAnalyticsCharts();
-
                 await db.ref(`users/${currentUser.uid}/financeState`).set(cleanState); 
-            } catch (e) { 
-                console.error("Ошибка сохранения:", e); 
-            }
+            } catch (e) { console.error("Ошибка сохранения:", e); }
         }
     };
 
-    let state = {
-        rates: { USD: 95 },
-        categories: { expense: ['Еда', 'Транспорт'], income: ['Зарплата'] },
-        accounts: [],       
-        transactions: [],
-        budgets: {}
-    };
-
+    let state = { rates: { USD: 95 }, categories: { expense: ['Еда', 'Транспорт'], income: ['Зарплата'] }, accounts: [], transactions: [], budgets: {} };
     let charts = {}; 
 
     Chart.defaults.scale.grid.display = false;
     Chart.defaults.scale.border.display = false;
-    
-    const chartColors = [
-        '#ff3b30', '#ff9500', '#ffcc00', '#ff2d55', '#af52de', '#a2845e', '#8e8e93',
-        '#34c759', '#32ade6', '#007aff', '#5856d6', '#ff2d55'
-    ];
+    const chartColors = ['#ff3b30', '#ff9500', '#ffcc00', '#ff2d55', '#af52de', '#a2845e', '#8e8e93', '#34c759', '#32ade6', '#007aff', '#5856d6', '#ff2d55'];
 
     function hideLoader() {
         const loader = document.getElementById('global-loader');
-        if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 300);
-        }
+        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 300); }
     }
 
     function initAuth() {
         if (!auth) {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-container').style.display = 'block';
-            hideLoader();
-            initApp();
-            return;
+            hideLoader(); initApp(); return;
         }
 
         auth.onAuthStateChanged(user => {
@@ -567,15 +518,9 @@
                 document.getElementById('app-container').style.display = 'block';
                 document.getElementById('profile-card').style.display = 'block';
                 document.getElementById('user-email').innerText = user.email;
-                
-                DB.stopListen(); 
-                initApp();
-                hideLoader();
+                DB.stopListen(); initApp(); hideLoader();
             } else {
-                currentUser = null;
-                isAppInitialized = false;
-                DB.stopListen();
-                hideLoader();
+                currentUser = null; isAppInitialized = false; DB.stopListen(); hideLoader();
                 document.getElementById('auth-screen').classList.remove('hidden');
                 document.getElementById('app-container').style.display = 'none';
                 document.getElementById('profile-card').style.display = 'none';
@@ -584,36 +529,28 @@
     }
 
     let isLoggingIn = false; 
-
     function loginWithGoogle() {
         if (!auth) return showAlert("Пожалуйста, добавьте ключи Firebase.");
         if (isLoggingIn) return; 
         isLoggingIn = true;
-        
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).then(() => {
-            isLoggingIn = false;
-        }).catch(error => {
+        auth.signInWithPopup(provider).then(() => { isLoggingIn = false; }).catch(error => {
             isLoggingIn = false;
             if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') return; 
             showAlert("Ошибка входа: " + error.message);
         });
     }
 
-    function logout() {
-        if (auth) auth.signOut().then(() => window.location.reload());
-    }
+    function logout() { if (auth) auth.signOut().then(() => window.location.reload()); }
 
     function getTimeline(period = 'current_month') {
         const date = new Date();
-        const labels = [];
-        const prefixes = [];
+        const labels = []; const prefixes = [];
         
         if (period === 'current_month' || period === 'last_month') {
             const targetMonth = period === 'current_month' ? date.getMonth() : date.getMonth() - 1;
             const targetYear = period === 'current_month' ? date.getFullYear() : (targetMonth < 0 ? date.getFullYear() - 1 : date.getFullYear());
             const realMonth = targetMonth < 0 ? 11 : targetMonth;
-            
             const daysInMonth = new Date(targetYear, realMonth + 1, 0).getDate();
             for (let i = 1; i <= daysInMonth; i++) {
                 labels.push(`${i}`);
@@ -638,7 +575,6 @@
                 startYear = firstDate.getFullYear();
                 startMonth = firstDate.getMonth();
             }
-            
             let total = (date.getFullYear() - startYear) * 12 + (date.getMonth() - startMonth) + 1;
             if (total < 1) total = 1; 
             
@@ -678,16 +614,12 @@
                 state.transactions = loaded.transactions || [];
                 state.budgets = loaded.budgets || {};
             }
-            
             renderAll();
-            
             if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
             if(document.getElementById('analytics').classList.contains('active')) initAnalyticsCharts();
 
             if (!isAppInitialized) {
-                initLongPress();
-                fetchLiveRates();
-                isAppInitialized = true;
+                initLongPress(); fetchLiveRates(); isAppInitialized = true;
             }
         });
     }
@@ -695,28 +627,20 @@
     function showModal({ title, message, inputs, submitText, cancelText, isDanger, onSubmit }) {
         document.getElementById('modal-title').innerText = title || '';
         const msgEl = document.getElementById('modal-message');
-        msgEl.innerHTML = message || ''; 
-        msgEl.style.display = message ? 'block' : 'none';
+        msgEl.innerHTML = message || ''; msgEl.style.display = message ? 'block' : 'none';
 
-        const bodyEl = document.getElementById('modal-body');
-        bodyEl.innerHTML = '';
+        const bodyEl = document.getElementById('modal-body'); bodyEl.innerHTML = '';
         if (inputs) {
             inputs.forEach(inp => {
-                const el = document.createElement('input');
-                el.type = inp.type || 'text';
+                const el = document.createElement('input'); el.type = inp.type || 'text';
                 if (inp.inputmode) el.inputMode = inp.inputmode; 
-                el.placeholder = inp.placeholder || '';
-                el.value = inp.value || '';
-                el.id = `modal-inp-${inp.id}`;
+                el.placeholder = inp.placeholder || ''; el.value = inp.value || ''; el.id = `modal-inp-${inp.id}`;
                 bodyEl.appendChild(el);
             });
         }
-
         const submitBtn = document.getElementById('modal-submit');
-        submitBtn.innerText = submitText || 'ОК';
-        submitBtn.style.display = onSubmit ? 'block' : 'none';
+        submitBtn.innerText = submitText || 'ОК'; submitBtn.style.display = onSubmit ? 'block' : 'none';
         if(isDanger) submitBtn.classList.add('btn-danger'); else submitBtn.classList.remove('btn-danger');
-        
         document.getElementById('modal-cancel').innerText = cancelText || 'Отмена';
 
         submitBtn.onclick = () => {
@@ -802,11 +726,7 @@
     }
 
     function renderAll() {
-        renderCategories();
-        updateOpForm();
-        renderSettingsBudgets();
-        renderMonthTab();
-        renderAccounts();
+        renderCategories(); updateOpForm(); renderSettingsBudgets(); renderMonthTab(); renderAccounts();
     }
 
     function updateOpForm() {
@@ -816,15 +736,11 @@
         const accTo = document.getElementById('op-account-to');
         
         if (type === 'transfer') {
-            catSelect.style.display = 'none';
-            accTo.style.display = 'block';
-            updateOpAccountsForm(accFrom, 'Откуда (списание)');
-            updateOpAccountsForm(accTo, 'Куда (зачисление)');
+            catSelect.style.display = 'none'; accTo.style.display = 'block';
+            updateOpAccountsForm(accFrom, 'Откуда (списание)'); updateOpAccountsForm(accTo, 'Куда (зачисление)');
         } else {
-            catSelect.style.display = 'block';
-            accTo.style.display = 'none';
+            catSelect.style.display = 'block'; accTo.style.display = 'none';
             updateOpAccountsForm(accFrom, 'Счет');
-            
             const currentCat = catSelect.value; 
             catSelect.innerHTML = state.categories[type].map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
             if (currentCat && state.categories[type].includes(currentCat)) catSelect.value = currentCat;
@@ -834,30 +750,17 @@
 
     function updateOpAccountsForm(selectEl, labelText = '') {
         if(!selectEl) return;
-        const currentVal = selectEl.value;
-        selectEl.innerHTML = '';
-        
-        if (state.accounts.length === 0) {
-            selectEl.innerHTML = '<option value="">Нет доступных счетов</option>';
-            return;
-        }
+        const currentVal = selectEl.value; selectEl.innerHTML = '';
+        if (state.accounts.length === 0) { selectEl.innerHTML = '<option value="">Нет доступных счетов</option>'; return; }
 
-        let fiatOptions = '';
-        let cryptoOptions = '';
-        let defaultVal = '';
-
+        let fiatOptions = ''; let cryptoOptions = ''; let defaultVal = '';
         state.accounts.filter(a => a.type === 'fiat').forEach(acc => {
             const val = `fiat_${acc.id}`;
             let displayBalance = `${acc.balance.toLocaleString('ru-RU')} ₽`;
-            
-            if (acc.isCredit) {
-                displayBalance = acc.balance < 0 ? `Долг ${Math.abs(acc.balance).toLocaleString('ru-RU')} ₽` : `${acc.balance} ₽`;
-            }
-            
+            if (acc.isCredit) displayBalance = acc.balance < 0 ? `Долг ${Math.abs(acc.balance).toLocaleString('ru-RU')} ₽` : `${acc.balance} ₽`;
             fiatOptions += `<option value="${val}">${labelText ? labelText+': ' : ''}${escapeHTML(acc.name)} • ${displayBalance}</option>`;
             if (!defaultVal || acc.name.toLowerCase().includes('т-банк')) defaultVal = val;
         });
-
         state.accounts.filter(a => a.type === 'crypto_wallet').forEach(acc => {
             (acc.tokens || []).forEach(t => {
                 const val = `crypto_${acc.id}_${t.id}`;
@@ -869,20 +772,15 @@
         let html = '';
         if (fiatOptions) html += `<optgroup label="Счета и Карты">${fiatOptions}</optgroup>`;
         if (cryptoOptions) html += `<optgroup label="Криптокошельки">${cryptoOptions}</optgroup>`;
-
         selectEl.innerHTML = html;
-        if (currentVal && selectEl.querySelector(`option[value="${currentVal}"]`)) {
-            selectEl.value = currentVal;
-        } else if (defaultVal) {
-            selectEl.value = defaultVal;
-        }
+        if (currentVal && selectEl.querySelector(`option[value="${currentVal}"]`)) selectEl.value = currentVal;
+        else if (defaultVal) selectEl.value = defaultVal;
     }
 
     function updateOpAmountPlaceholder() {
         const type = document.getElementById('op-type').value;
         const select = document.getElementById('op-account');
         const amountInput = document.getElementById('op-amount');
-        
         if(!select || !select.value) { amountInput.placeholder = "Сумма"; return; }
         
         if(select.value.startsWith('fiat')) {
@@ -895,18 +793,14 @@
 
     function renderSettingsBudgets() {
         const select = document.getElementById('budget-cat-select');
-        select.innerHTML = '<option value="">Выберите категорию...</option>' + 
-            state.categories.expense.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
-            
+        select.innerHTML = '<option value="">Выберите категорию...</option>' + state.categories.expense.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
         const list = document.getElementById('settings-budgets-list');
         list.innerHTML = Object.keys(state.budgets).map(cat => `
             <div class="list-item" style="padding: 8px 0;">
                 <span class="list-item-title">${escapeHTML(cat)}</span>
                 <div class="list-item-right">
                     <span style="font-size: 14px; font-weight: 500;">${state.budgets[cat].toLocaleString('ru-RU')} ₽</span>
-                    <div class="actions">
-                        <button class="action-btn" aria-label="Удалить" onclick="removeBudget('${escapeHTML(cat)}')">${icons.delete}</button>
-                    </div>
+                    <div class="actions"><button class="action-btn" aria-label="Удалить" onclick="removeBudget('${escapeHTML(cat)}')">${icons.delete}</button></div>
                 </div>
             </div>
         `).join('');
@@ -917,73 +811,60 @@
         const limit = parseNum(document.getElementById('budget-limit').value);
         if(!cat) return showAlert('Выберите категорию');
         if(isNaN(limit) || limit <= 0) return showAlert('Введите корректный лимит');
-        
-        state.budgets[cat] = limit;
-        DB.save(state);
-        document.getElementById('budget-limit').value = '';
-        renderSettingsBudgets();
+        state.budgets[cat] = limit; DB.save(state);
+        document.getElementById('budget-limit').value = ''; renderSettingsBudgets();
     }
     
-    function removeBudget(cat) {
-        delete state.budgets[cat];
-        DB.save(state);
-        renderSettingsBudgets();
-    }
+    function removeBudget(cat) { delete state.budgets[cat]; DB.save(state); renderSettingsBudgets(); }
 
     function renderMonthTab() {
         const currentMonthPrefix = document.getElementById('op-date').value.slice(0, 7) || getLocalDate().slice(0, 7);
         const monthTransactions = state.transactions.filter(t => t.date.startsWith(currentMonthPrefix));
 
-        let tInc = 0, tExp = 0;
-        const expMap = {};
+        let tInc = 0, tExp = 0; const expMap = {};
 
         monthTransactions.forEach(t => {
             if (t.type === 'transfer') return;
-            
             const liveRub = getTxRub(t);
-            if (t.type === 'income') {
-                tInc += liveRub;
-            } else if (t.type === 'expense') {
-                tExp += liveRub;
-                expMap[t.category] = (expMap[t.category] || 0) + liveRub;
-            }
+            if (t.type === 'income') { tInc += liveRub; } 
+            else if (t.type === 'expense') { tExp += liveRub; expMap[t.category] = (expMap[t.category] || 0) + liveRub; }
         });
         
-        document.getElementById('month-income-total').innerText = `+ ${tInc.toLocaleString('ru-RU')} ₽`;
-        document.getElementById('month-expense-total').innerText = `- ${tExp.toLocaleString('ru-RU')} ₽`;
+        // Отрисовка разницы (Остаток) и сумм
+        const netAmount = tInc - tExp;
+        const netSign = netAmount > 0 ? '+' : '';
+        const netColor = netAmount > 0 ? 'var(--success)' : (netAmount < 0 ? 'var(--danger)' : 'var(--text-main)');
+        const netEl = document.getElementById('month-net-total');
+        netEl.innerText = `${netSign} ${netAmount.toLocaleString('ru-RU')} ₽`;
+        netEl.style.color = netColor;
+
+        document.getElementById('month-income-total').innerText = `${tInc >= 0 ? '+' : '-'} ${Math.abs(tInc).toLocaleString('ru-RU')} ₽`;
+        document.getElementById('month-expense-total').innerText = `${tExp >= 0 ? '-' : '+'} ${Math.abs(tExp).toLocaleString('ru-RU')} ₽`;
 
         const budgetsContainer = document.getElementById('budgets-container');
         const budgetsList = document.getElementById('budgets-list');
         if(Object.keys(state.budgets).length > 0) {
             budgetsContainer.style.display = 'flex';
             budgetsList.innerHTML = Object.keys(state.budgets).map(cat => {
-                const limit = state.budgets[cat];
-                const spent = expMap[cat] || 0;
+                const limit = state.budgets[cat]; const spent = expMap[cat] || 0;
                 const percent = Math.min((spent / limit) * 100, 100);
                 const color = percent >= 100 ? 'var(--danger)' : percent > 75 ? 'var(--warning)' : 'var(--success)';
-                
                 return `
                     <div style="margin-bottom: 12px;">
                         <div style="display:flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
-                            <span style="font-weight: 500;">${escapeHTML(cat)}</span>
-                            <span>${spent.toLocaleString('ru-RU')} / ${limit.toLocaleString('ru-RU')} ₽</span>
+                            <span style="font-weight: 500;">${escapeHTML(cat)}</span><span>${spent.toLocaleString('ru-RU')} / ${limit.toLocaleString('ru-RU')} ₽</span>
                         </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-fill" style="width: ${percent}%; background-color: ${color};"></div>
-                        </div>
+                        <div class="progress-bar-container"><div class="progress-bar-fill" style="width: ${percent}%; background-color: ${color};"></div></div>
                     </div>
                 `;
             }).join('');
-        } else {
-            budgetsContainer.style.display = 'none';
-        }
+        } else { budgetsContainer.style.display = 'none'; }
 
         let expensesArr = Object.keys(expMap).map(k => ({name: k, val: expMap[k]})).sort((a,b) => b.val - a.val);
 
         document.getElementById('current-month-expenses-list').innerHTML = expensesArr.map(e => `
             <div class="list-item" style="padding: 8px 0;">
-                <span class="list-item-title">${escapeHTML(e.name)}</span>
-                <span>${e.val.toLocaleString('ru-RU')} ₽</span>
+                <span class="list-item-title">${escapeHTML(e.name)}</span><span>${e.val.toLocaleString('ru-RU')} ₽</span>
             </div>
         `).join('');
 
@@ -1004,20 +885,26 @@
                 const dateObj = new Date(t.date);
                 const dateStr = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
                 
-                let titleHTML = '';
-                let amountHTML = '';
-                let accInfo = '';
+                let titleHTML = ''; let amountHTML = ''; let accInfo = '';
                 
                 if (t.type === 'transfer') {
                     titleHTML = `<span class="list-item-category">Перевод</span>`;
                     accInfo = `<span class="account-badge">${icons.transfer} Счета</span>`;
                     amountHTML = `<span class="amount transfer" style="font-size:16px; margin:0; white-space: nowrap;">${t.amount.toLocaleString('ru-RU')} ₽</span>`;
                 } else {
-                    const sign = t.type === 'income' ? '+' : '-';
-                    const colorClass = t.type === 'income' ? 'income' : '';
                     const liveRub = getTxRub(t);
+                    let displayColorClass = ''; let displaySign = '';
+                    
+                    if (t.type === 'income') {
+                        displaySign = liveRub >= 0 ? '+' : '-';
+                        displayColorClass = liveRub >= 0 ? 'income' : 'expense';
+                    } else { // expense
+                        displaySign = liveRub >= 0 ? '-' : '+';
+                        displayColorClass = liveRub >= 0 ? 'expense' : 'income'; // Отрицательный расход (возврат) зеленым
+                    }
+                    
                     titleHTML = `<span class="list-item-category">${escapeHTML(t.category)}</span>`;
-                    amountHTML = `<span class="amount ${colorClass}" style="font-size:16px; margin:0; white-space: nowrap;">${sign} ${liveRub.toLocaleString('ru-RU')} ₽</span>`;
+                    amountHTML = `<span class="amount ${displayColorClass}" style="font-size:16px; margin:0; white-space: nowrap;">${displaySign} ${Math.abs(liveRub).toLocaleString('ru-RU')} ₽</span>`;
                     
                     if(t.accountDetails) {
                         const icon = t.accountDetails.type === 'fiat' ? icons.card : icons.crypto;
@@ -1030,18 +917,12 @@
                 return `
                     <div class="list-item" style="flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 0;">
-                            <div class="list-item-title">
-                                <span class="date-badge">${dateStr}</span> 
-                                ${titleHTML}
-                                ${accInfo}
-                            </div>
+                            <div class="list-item-title"><span class="date-badge">${dateStr}</span>${titleHTML}${accInfo}</div>
                             ${noteHTML}
                         </div>
                         <div class="list-item-right">
                             ${amountHTML}
-                            <div class="actions">
-                                <button class="action-btn" aria-label="Удалить" onclick="confirmDeleteTransaction(${t.id})">${icons.delete}</button>
-                            </div>
+                            <div class="actions"><button class="action-btn" aria-label="Удалить" onclick="confirmDeleteTransaction(${t.id})">${icons.delete}</button></div>
                         </div>
                     </div>
                 `;
@@ -1050,15 +931,12 @@
 
         if(charts.dailyExpenses) charts.dailyExpenses.destroy();
         const dailyAgg = {};
-        monthTransactions.filter(t => t.type === 'expense').forEach(t => {
-            dailyAgg[t.date] = (dailyAgg[t.date] || 0) + getTxRub(t);
-        });
+        monthTransactions.filter(t => t.type === 'expense').forEach(t => { dailyAgg[t.date] = (dailyAgg[t.date] || 0) + getTxRub(t); });
         
         const sortedDailyKeys = Object.keys(dailyAgg).sort();
         const dailyData = sortedDailyKeys.map(k => dailyAgg[k]);
         const dailyLabels = sortedDailyKeys.map(k => {
-            const dateObj = new Date(k);
-            return dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+            const dateObj = new Date(k); return dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
         });
 
         charts.dailyExpenses = new Chart(document.getElementById('dailyExpensesChart').getContext('2d'), {
@@ -1074,7 +952,9 @@
         const inputAmount = parseNum(document.getElementById('op-amount').value);
         const note = document.getElementById('op-note').value.trim();
         
-        if(isNaN(inputAmount) || inputAmount <= 0) { showAlert('Укажите корректную сумму больше нуля'); return; }
+        // Разрешаем отрицательные числа для инвестиций (исключаем только полный 0)
+        if(isNaN(inputAmount) || inputAmount === 0) { showAlert('Укажите корректную сумму'); return; }
+        if(type === 'transfer' && inputAmount < 0) { showAlert('Сумма перевода не может быть отрицательной'); return; }
         
         if (type === 'transfer') {
             const accFromVal = document.getElementById('op-account').value;
@@ -1083,13 +963,10 @@
             if(!accFromVal || !accToVal) { showAlert('Укажите оба счета для перевода'); return; }
             if(accFromVal === accToVal) { showAlert('Нельзя перевести на тот же счет'); return; }
             
-            modifyAccountBalance(accFromVal, -inputAmount);
-            modifyAccountBalance(accToVal, inputAmount);
-            
-            const rubEq = inputAmount; 
+            modifyAccountBalance(accFromVal, -inputAmount); modifyAccountBalance(accToVal, inputAmount);
             
             state.transactions.push({ 
-                id: Date.now(), type, amount: rubEq, date, note,
+                id: Date.now(), type, amount: inputAmount, date, note,
                 transferDetails: { from: accFromVal, to: accToVal, amount: inputAmount }
             });
             
@@ -1104,8 +981,7 @@
             if (!accInfo) return; 
             
             const rubSnapshot = (accInfo.accType === 'crypto') 
-                ? inputAmount * (state.rates[accInfo.coin] || 1) * state.rates.USD 
-                : inputAmount;
+                ? inputAmount * (state.rates[accInfo.coin] || 1) * state.rates.USD : inputAmount;
 
             state.transactions.push({ 
                 id: Date.now(), type, category: cat, amount: rubSnapshot, date, note,
@@ -1113,33 +989,24 @@
             });
         }
         
-        document.getElementById('op-amount').value = '';
-        document.getElementById('op-note').value = '';
-        document.activeElement.blur(); 
-        DB.save(state); 
+        document.getElementById('op-amount').value = ''; document.getElementById('op-note').value = '';
+        document.activeElement.blur(); DB.save(state); 
     }
     
     function modifyAccountBalance(accVal, deltaAmount) {
         let accType, accId, tokenId, coin;
         if(accVal.startsWith('fiat_')) {
-            accType = 'fiat';
-            accId = parseInt(accVal.split('_')[1]);
+            accType = 'fiat'; accId = parseInt(accVal.split('_')[1]);
             const acc = state.accounts.find(a => a.id === accId);
             if (acc) acc.balance += deltaAmount;
         } else if(accVal.startsWith('crypto_')) {
-            accType = 'crypto';
-            accId = parseInt(accVal.split('_')[1]);
-            tokenId = parseInt(accVal.split('_')[2]);
+            accType = 'crypto'; accId = parseInt(accVal.split('_')[1]); tokenId = parseInt(accVal.split('_')[2]);
             const wallet = state.accounts.find(a => a.id === accId);
             if(wallet) {
                 const token = wallet.tokens.find(t => t.id === tokenId);
                 if(token) {
-                    coin = token.coin;
-                    const rate = state.rates[coin];
-                    if (!rate && coin !== 'USDT') {
-                        showAlert(`Не удалось найти курс для ${escapeHTML(coin)}.`);
-                        return null;
-                    }
+                    coin = token.coin; const rate = state.rates[coin];
+                    if (!rate && coin !== 'USDT') { showAlert(`Не удалось найти курс для ${escapeHTML(coin)}.`); return null; }
                     token.balance += deltaAmount; 
                 }
             }
@@ -1156,7 +1023,6 @@
             onSubmit: () => {
                 const trans = state.transactions.find(t => t.id === id);
                 if(!trans) return;
-                
                 if (trans.type === 'transfer') {
                     modifyAccountBalance(trans.transferDetails.from, trans.transferDetails.amount);
                     modifyAccountBalance(trans.transferDetails.to, -trans.transferDetails.amount);
@@ -1165,9 +1031,7 @@
                     const valKey = ad.type === 'fiat' ? `fiat_${ad.accId}` : `crypto_${ad.accId}_${ad.tokenId}`;
                     modifyAccountBalance(valKey, trans.type === 'income' ? -ad.amount : ad.amount);
                 }
-                
-                state.transactions = state.transactions.filter(t => t.id !== id);
-                DB.save(state);
+                state.transactions = state.transactions.filter(t => t.id !== id); DB.save(state);
             }
         });
     }
@@ -1176,12 +1040,7 @@
         const renderList = (type, listId) => {
             const list = document.getElementById(listId);
             list.innerHTML = state.categories[type].map((cat, idx) => `
-                <div class="category-tag">
-                    <span>${escapeHTML(cat)}</span>
-                    <div class="actions">
-                        <button class="action-btn" aria-label="Удалить" onclick="confirmDeleteCategory('${type}', ${idx})">${icons.delete}</button>
-                    </div>
-                </div>
+                <div class="category-tag"><span>${escapeHTML(cat)}</span><div class="actions"><button class="action-btn" aria-label="Удалить" onclick="confirmDeleteCategory('${type}', ${idx})">${icons.delete}</button></div></div>
             `).join('');
             
             const expSelect = document.getElementById('analytics-exp-select');
@@ -1190,7 +1049,6 @@
                 expSelect.innerHTML = state.categories.expense.map(c => `<option value="cat_${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
                 if (currentVal) expSelect.value = currentVal;
             }
-            
             const incSelect = document.getElementById('analytics-inc-select');
             if(type === 'income' && incSelect) {
                 const currentVal = incSelect.value;
@@ -1199,50 +1057,33 @@
                 html += `</optgroup>`;
                 
                 const allWalletCoins = new Set();
-                state.accounts.filter(a => a.type === 'crypto_wallet').forEach(w => {
-                    (w.tokens || []).forEach(t => allWalletCoins.add(t.coin));
-                });
-                state.transactions.filter(t => t.accountDetails?.type === 'crypto').forEach(t => {
-                    allWalletCoins.add(t.accountDetails.coin);
-                });
+                state.accounts.filter(a => a.type === 'crypto_wallet').forEach(w => { (w.tokens || []).forEach(t => allWalletCoins.add(t.coin)); });
+                state.transactions.filter(t => t.accountDetails?.type === 'crypto').forEach(t => { allWalletCoins.add(t.accountDetails.coin); });
 
                 if(allWalletCoins.size > 0) {
-                    html += `<optgroup label="Крипта (PnL)">`;
-                    html += `<option value="coin_ALL">Все монеты</option>`;
-                    allWalletCoins.forEach(coin => {
-                        html += `<option value="coin_${escapeHTML(coin)}">${escapeHTML(coin)}</option>`;
-                    });
+                    html += `<optgroup label="Крипта (PnL)">`; html += `<option value="coin_ALL">Все монеты</option>`;
+                    allWalletCoins.forEach(coin => { html += `<option value="coin_${escapeHTML(coin)}">${escapeHTML(coin)}</option>`; });
                     html += `</optgroup>`;
                 }
-                
                 incSelect.innerHTML = html;
                 if (currentVal) incSelect.value = currentVal;
             }
         };
-        renderList('expense', 'exp-categories-list');
-        renderList('income', 'inc-categories-list');
+        renderList('expense', 'exp-categories-list'); renderList('income', 'inc-categories-list');
     }
 
     function addCategory() {
-        const type = document.getElementById('new-cat-type').value;
-        const input = document.getElementById('new-cat-name');
-        const val = input.value.trim();
-        if(val && !state.categories[type].includes(val)) {
-            state.categories[type].push(val);
-            input.value = '';
-            DB.save(state);
-        }
+        const type = document.getElementById('new-cat-type').value; const input = document.getElementById('new-cat-name'); const val = input.value.trim();
+        if(val && !state.categories[type].includes(val)) { state.categories[type].push(val); input.value = ''; DB.save(state); }
     }
 
     function confirmDeleteCategory(type, index) {
         const cat = state.categories[type][index];
         const relatedCount = state.transactions.filter(t => t.type === type && t.category === cat).length;
-        
         showModal({
             title: 'Удаление категории',
             message: `Удалить категорию "${escapeHTML(cat)}"? Связанных операций: ${relatedCount}. Они будут удалены, а баланс счетов восстановлен.`,
-            submitText: 'Удалить всё',
-            isDanger: true,
+            submitText: 'Удалить всё', isDanger: true,
             onSubmit: () => {
                 const toDelete = state.transactions.filter(t => t.type === type && t.category === cat);
                 toDelete.forEach(trans => {
@@ -1252,13 +1093,9 @@
                         modifyAccountBalance(valKey, trans.type === 'income' ? -ad.amount : ad.amount);
                     }
                 });
-
                 state.categories[type].splice(index, 1);
                 state.transactions = state.transactions.filter(t => !(t.type === type && t.category === cat));
-                
-                if (state.budgets[cat]) delete state.budgets[cat]; 
-                
-                DB.save(state);
+                if (state.budgets[cat]) delete state.budgets[cat]; DB.save(state);
             }
         });
     }
@@ -1276,30 +1113,19 @@
     }
 
     function renderAccounts() {
-        let totalRub = 0;
-        const list = document.getElementById('accounts-list');
-        list.innerHTML = '';
-
-        if (state.accounts.length === 0) {
-            list.innerHTML = '<div class="subtitle" style="text-align:center; padding: 20px;">Нет счетов. Добавьте их в настройках.</div>';
-        }
+        let totalRub = 0; const list = document.getElementById('accounts-list'); list.innerHTML = '';
+        if (state.accounts.length === 0) list.innerHTML = '<div class="subtitle" style="text-align:center; padding: 20px;">Нет счетов. Добавьте их в настройках.</div>';
 
         state.accounts.forEach(acc => {
             if (acc.type === 'fiat') {
                 totalRub += acc.balance;
-
-                let displayBalance = `${acc.balance.toLocaleString('ru-RU')} ₽`;
-                let badgeHTML = '';
+                let displayBalance = `${acc.balance.toLocaleString('ru-RU')} ₽`; let badgeHTML = '';
 
                 if (acc.isCredit) {
                     badgeHTML = `<span style="font-size:10px; background:rgba(255,149,0,0.15); color:var(--warning); padding:2px 6px; border-radius:4px; margin-left:6px;">КРЕДИТКА</span>`;
-                    if (acc.balance < 0) {
-                        displayBalance = `<span style="color: var(--danger); font-weight: 600;">Долг: ${Math.abs(acc.balance).toLocaleString('ru-RU')} ₽</span>`;
-                    } else if (acc.balance === 0) {
-                        displayBalance = `<span style="color: var(--success);">Долгов нет</span>`;
-                    } else {
-                        displayBalance = `<span style="color: var(--success);">Свои средства: ${acc.balance.toLocaleString('ru-RU')} ₽</span>`;
-                    }
+                    if (acc.balance < 0) { displayBalance = `<span style="color: var(--danger); font-weight: 600;">Долг: ${Math.abs(acc.balance).toLocaleString('ru-RU')} ₽</span>`; } 
+                    else if (acc.balance === 0) { displayBalance = `<span style="color: var(--success);">Долгов нет</span>`; } 
+                    else { displayBalance = `<span style="color: var(--success);">Свои средства: ${acc.balance.toLocaleString('ru-RU')} ₽</span>`; }
                 }
 
                 list.innerHTML += `
@@ -1308,53 +1134,33 @@
                             <div class="list-item-title">${escapeHTML(acc.name)} ${badgeHTML}</div>
                             <div class="subtitle">${displayBalance}</div>
                         </div>
-                        <div class="actions">
-                            <button class="action-btn edit-btn" aria-label="Изменить баланс" onclick="editFiatBalance(${acc.id})">${icons.edit}</button>
-                            <button class="action-btn" aria-label="Удалить счет" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button>
-                        </div>
+                        <div class="actions"><button class="action-btn edit-btn" aria-label="Изменить баланс" onclick="editFiatBalance(${acc.id})">${icons.edit}</button><button class="action-btn" aria-label="Удалить счет" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button></div>
                     </div>
                 `;
             } else if (acc.type === 'crypto_wallet') {
                 let walletRub = 0, walletUsd = 0;
-                
                 const tokensHTML = (acc.tokens || []).map(t => {
-                    const rate = state.rates[t.coin] || 0;
-                    const usdVal = t.balance * rate;
-                    walletUsd += usdVal;
-                    
+                    const rate = state.rates[t.coin] || 0; const usdVal = t.balance * rate; walletUsd += usdVal;
                     let pnlHtml = '';
                     if (t.avgBuyPrice && t.avgBuyPrice > 0) {
-                        const invested = t.balance * t.avgBuyPrice;
-                        const pnlVal = usdVal - invested;
-                        const pnlPercent = (rate / t.avgBuyPrice - 1) * 100;
+                        const invested = t.balance * t.avgBuyPrice; const pnlVal = usdVal - invested; const pnlPercent = (rate / t.avgBuyPrice - 1) * 100;
                         if (Math.abs(pnlVal) > 0.01) {
-                            const isPos = pnlVal >= 0;
-                            const sign = isPos ? '+' : '';
-                            const pnlClass = isPos ? 'pnl-positive' : 'pnl-negative';
+                            const isPos = pnlVal >= 0; const sign = isPos ? '+' : ''; const pnlClass = isPos ? 'pnl-positive' : 'pnl-negative';
                             pnlHtml = `<div class="pnl-badge ${pnlClass}">${sign}$${Math.abs(pnlVal).toFixed(1)} (${sign}${pnlPercent.toFixed(1)}%)</div>`;
                         }
                     }
-                    
                     return `
                         <div class="token-item" style="flex-wrap: wrap;">
-                            <div style="display:flex; align-items:center; gap: 8px;">
-                                <span style="font-size: 14px; font-weight: 500;">${t.balance} ${escapeHTML(t.coin)}</span>
-                                ${pnlHtml}
-                            </div>
+                            <div style="display:flex; align-items:center; gap: 8px;"><span style="font-size: 14px; font-weight: 500;">${t.balance} ${escapeHTML(t.coin)}</span>${pnlHtml}</div>
                             <div style="display:flex; align-items:center; gap: 8px;">
                                 <span style="font-size: 13px; color: var(--text-muted);">$${usdVal.toLocaleString('en-US',{maximumFractionDigits:2})}</span>
-                                <div class="actions">
-                                    <button class="action-btn edit-btn" aria-label="Изменить" onclick="editTokenBalance(${acc.id}, ${t.id})">${icons.edit}</button>
-                                    <button class="action-btn" aria-label="Удалить" onclick="confirmDeleteToken(${acc.id}, ${t.id})">${icons.minus}</button>
-                                </div>
+                                <div class="actions"><button class="action-btn edit-btn" aria-label="Изменить" onclick="editTokenBalance(${acc.id}, ${t.id})">${icons.edit}</button><button class="action-btn" aria-label="Удалить" onclick="confirmDeleteToken(${acc.id}, ${t.id})">${icons.minus}</button></div>
                             </div>
                         </div>
                     `;
                 }).join('');
 
-                walletRub = walletUsd * state.rates.USD;
-                totalRub += walletRub;
-
+                walletRub = walletUsd * state.rates.USD; totalRub += walletRub;
                 list.innerHTML += `
                     <div style="background: #fafafa; padding: 12px; border-radius: 16px; margin-bottom: 10px;">
                         <div class="list-item" style="border-bottom: none; padding: 0 0 4px 0;">
@@ -1364,9 +1170,7 @@
                             </div>
                             <div style="display:flex; gap: 6px; align-items: center;">
                                 <button class="add-token-btn" onclick="addTokenToWallet(${acc.id})">+ Токен</button>
-                                <div class="actions">
-                                    <button class="action-btn" aria-label="Удалить счет" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button>
-                                </div>
+                                <div class="actions"><button class="action-btn" aria-label="Удалить счет" onclick="confirmDeleteAccount(${acc.id})">${icons.delete}</button></div>
                             </div>
                         </div>
                         <div style="margin-top: 8px;">${tokensHTML}</div>
@@ -1374,7 +1178,6 @@
                 `;
             }
         });
-
         document.getElementById('total-capital').innerText = Math.round(totalRub).toLocaleString('ru-RU') + ' ₽';
         updateOpForm(); 
     }
@@ -1383,172 +1186,95 @@
         const name = document.getElementById('new-acc-name').value;
         const type = document.getElementById('new-acc-type').value;
         const isCredit = document.getElementById('new-acc-is-credit').checked;
-        
         if(!name) { showAlert('Введите название счета'); return; }
 
         if (type === 'fiat') {
             let balance = parseNum(document.getElementById('new-acc-balance').value) || 0;
             if (isCredit) balance = -Math.abs(balance);
-            
             state.accounts.push({ id: Date.now(), name, type, balance, isCredit });
-        } else {
-            state.accounts.push({ id: Date.now(), name, type, tokens: [] });
-        }
+        } else { state.accounts.push({ id: Date.now(), name, type, tokens: [] }); }
         
-        document.getElementById('new-acc-name').value = '';
-        document.getElementById('new-acc-balance').value = '';
-        document.getElementById('new-acc-is-credit').checked = false;
-        updateBalancePlaceholder();
-        DB.save(state);
+        document.getElementById('new-acc-name').value = ''; document.getElementById('new-acc-balance').value = ''; document.getElementById('new-acc-is-credit').checked = false;
+        updateBalancePlaceholder(); DB.save(state);
     }
 
     function confirmDeleteAccount(id) {
-        showModal({
-            title: 'Удаление счета',
-            message: 'Вы точно хотите удалить этот счет/кошелек со всеми данными?',
-            submitText: 'Удалить',
-            isDanger: true,
-            onSubmit: () => {
-                state.accounts = state.accounts.filter(a => a.id !== id);
-                DB.save(state);
-            }
+        showModal({ title: 'Удаление счета', message: 'Вы точно хотите удалить этот счет/кошелек со всеми данными?', submitText: 'Удалить', isDanger: true,
+            onSubmit: () => { state.accounts = state.accounts.filter(a => a.id !== id); DB.save(state); }
         });
     }
 
     function editFiatBalance(id) {
-        const acc = state.accounts.find(a => a.id === id);
-        if(!acc || acc.type !== 'fiat') return;
-        
+        const acc = state.accounts.find(a => a.id === id); if(!acc || acc.type !== 'fiat') return;
         const currentVal = acc.isCredit ? (acc.balance <= 0 ? Math.abs(acc.balance) : -acc.balance) : acc.balance;
         const placeholder = acc.isCredit ? 'Сумма долга (₽)' : 'Новый баланс (₽)';
 
-        showModal({
-            title: acc.isCredit ? 'Изменить долг' : 'Изменить баланс',
-            message: `Счет: ${escapeHTML(acc.name)}`,
+        showModal({ title: acc.isCredit ? 'Изменить долг' : 'Изменить баланс', message: `Счет: ${escapeHTML(acc.name)}`,
             inputs: [{ id: 'new_bal', type: 'text', inputmode: 'decimal', placeholder: placeholder, value: currentVal }],
             submitText: 'Сохранить',
             onSubmit: (data) => {
                 let nb = parseNum(data.new_bal);
-                if(!isNaN(nb)) {
-                    if (acc.isCredit) nb = -nb; 
-                    acc.balance = nb;
-                    DB.save(state);
-                } else {
-                    showAlert('Введено некорректное число');
-                    return false; 
-                }
+                if(!isNaN(nb)) { if (acc.isCredit) nb = -nb; acc.balance = nb; DB.save(state); } 
+                else { showAlert('Введено некорректное число'); return false; }
             }
         });
     }
 
     function addTokenToWallet(walletId) {
-        const wallet = state.accounts.find(a => a.id === walletId);
-        if(!wallet) return;
-        
-        showModal({
-            title: 'Добавить токен',
-            message: `Кошелек: ${escapeHTML(wallet.name)}`,
+        const wallet = state.accounts.find(a => a.id === walletId); if(!wallet) return;
+        showModal({ title: 'Добавить токен', message: `Кошелек: ${escapeHTML(wallet.name)}`,
             inputs: [
                 { id: 'coin_name', type: 'text', placeholder: 'Тикер (USDT, BTC, SOL...)' },
                 { id: 'coin_bal', type: 'text', inputmode: 'decimal', placeholder: 'Количество' },
                 { id: 'coin_avg', type: 'text', inputmode: 'decimal', placeholder: 'Ср. цена покупки в $ (необязательно)' }
-            ],
-            submitText: 'Добавить',
+            ], submitText: 'Добавить',
             onSubmit: (data) => {
-                const coin = data.coin_name.trim().toUpperCase();
-                const bal = parseNum(data.coin_bal);
-                const avgPrice = parseNum(data.coin_avg);
-                
+                const coin = data.coin_name.trim().toUpperCase(); const bal = parseNum(data.coin_bal); const avgPrice = parseNum(data.coin_avg);
                 if(coin && !isNaN(bal)) {
                     const rate = state.rates[coin];
-                    if (!rate && coin !== 'USDT') {
-                        showAlert(`Токен ${escapeHTML(coin)} не найден на бирже.`);
-                        return false;
-                    }
-                    wallet.tokens = wallet.tokens || [];
-                    wallet.tokens.push({ id: Date.now(), coin, balance: bal, avgBuyPrice: isNaN(avgPrice) ? null : avgPrice });
-                    DB.save(state);
-                    fetchLiveRates();
-                } else {
-                    showAlert('Заполните данные корректно');
-                    return false;
-                }
+                    if (!rate && coin !== 'USDT') { showAlert(`Токен ${escapeHTML(coin)} не найден на бирже.`); return false; }
+                    wallet.tokens = wallet.tokens || []; wallet.tokens.push({ id: Date.now(), coin, balance: bal, avgBuyPrice: isNaN(avgPrice) ? null : avgPrice });
+                    DB.save(state); fetchLiveRates();
+                } else { showAlert('Заполните данные корректно'); return false; }
             }
         });
     }
 
     function editTokenBalance(walletId, tokenId) {
-        const wallet = state.accounts.find(a => a.id === walletId);
-        if(!wallet) return;
-        const token = wallet.tokens.find(t => t.id === tokenId);
-        if(!token) return;
-
-        showModal({
-            title: 'Редактировать токен',
-            message: `Монета: ${escapeHTML(token.coin)}`,
+        const wallet = state.accounts.find(a => a.id === walletId); if(!wallet) return;
+        const token = wallet.tokens.find(t => t.id === tokenId); if(!token) return;
+        showModal({ title: 'Редактировать токен', message: `Монета: ${escapeHTML(token.coin)}`,
             inputs: [
                 { id: 'new_bal', type: 'text', inputmode: 'decimal', placeholder: 'Количество', value: token.balance },
                 { id: 'new_avg', type: 'text', inputmode: 'decimal', placeholder: 'Ср. цена покупки ($)', value: token.avgBuyPrice || '' }
-            ],
-            submitText: 'Сохранить',
+            ], submitText: 'Сохранить',
             onSubmit: (data) => {
-                const nb = parseNum(data.new_bal);
-                const na = parseNum(data.new_avg);
-                if(!isNaN(nb)) {
-                    token.balance = nb;
-                    token.avgBuyPrice = isNaN(na) ? null : na;
-                    DB.save(state);
-                } else {
-                    showAlert('Введено некорректное число');
-                    return false;
-                }
+                const nb = parseNum(data.new_bal); const na = parseNum(data.new_avg);
+                if(!isNaN(nb)) { token.balance = nb; token.avgBuyPrice = isNaN(na) ? null : na; DB.save(state); } 
+                else { showAlert('Введено некорректное число'); return false; }
             }
         });
     }
 
     function confirmDeleteToken(walletId, tokenId) {
-        showModal({
-            title: 'Удалить монету',
-            message: 'Удалить эту монету из кошелька?',
-            submitText: 'Удалить',
-            isDanger: true,
-            onSubmit: () => {
-                const wallet = state.accounts.find(a => a.id === walletId);
-                if(!wallet) return;
-                wallet.tokens = wallet.tokens.filter(t => t.id !== tokenId);
-                DB.save(state);
-            }
+        showModal({ title: 'Удалить монету', message: 'Удалить эту монету из кошелька?', submitText: 'Удалить', isDanger: true,
+            onSubmit: () => { const wallet = state.accounts.find(a => a.id === walletId); if(!wallet) return; wallet.tokens = wallet.tokens.filter(t => t.id !== tokenId); DB.save(state); }
         });
     }
 
     function initAccountsChart() {
         if(charts.accounts) charts.accounts.destroy();
         const ctx = document.getElementById('accountsChart').getContext('2d');
-        
-        const data = [];
-        const labels = [];
-
+        const data = []; const labels = [];
         state.accounts.forEach(acc => {
             if (acc.type === 'fiat') {
-                if (acc.balance > 0) { 
-                    data.push(acc.balance);
-                    labels.push(escapeHTML(acc.name));
-                }
+                if (acc.balance > 0) { data.push(acc.balance); labels.push(escapeHTML(acc.name)); }
             } else if (acc.type === 'crypto_wallet') {
-                let walletRub = 0;
-                (acc.tokens || []).forEach(t => walletRub += (t.balance * (state.rates[t.coin] || 0) * state.rates.USD));
-                if (walletRub > 0) {
-                    data.push(walletRub);
-                    labels.push(escapeHTML(acc.name));
-                }
+                let walletRub = 0; (acc.tokens || []).forEach(t => walletRub += (t.balance * (state.rates[t.coin] || 0) * state.rates.USD));
+                if (walletRub > 0) { data.push(walletRub); labels.push(escapeHTML(acc.name)); }
             }
         });
-
-        charts.accounts = new Chart(ctx, {
-            type: 'doughnut',
-            data: { labels: labels, datasets: [{ data, backgroundColor: chartColors, borderWidth: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-        });
+        charts.accounts = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data, backgroundColor: chartColors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
     }
 
     function generateHistoryData(type, selectValue, period) {
@@ -1556,16 +1282,11 @@
         return tl.prefixes.map(prefix => {
             return state.transactions.filter(t => {
                 if (t.type !== type || !t.date.startsWith(prefix)) return false;
-                
                 if (selectValue.startsWith('coin_')) {
                     const targetCoin = selectValue.replace('coin_', '');
-                    if (targetCoin === 'ALL') {
-                        return t.accountDetails?.type === 'crypto';
-                    }
+                    if (targetCoin === 'ALL') { return t.accountDetails?.type === 'crypto'; }
                     return t.accountDetails?.coin === targetCoin;
-                } else {
-                    return t.category === selectValue.replace('cat_', '');
-                }
+                } else { return t.category === selectValue.replace('cat_', ''); }
             }).reduce((sum, t) => sum + getTxRub(t), 0);
         });
     }
@@ -1573,9 +1294,26 @@
     function generateTrendData(type, period) {
          const tl = getTimeline(period);
          return tl.prefixes.map(prefix => {
-             return state.transactions
-                .filter(t => t.type === type && t.date.startsWith(prefix))
-                .reduce((sum, t) => sum + getTxRub(t), 0);
+             return state.transactions.filter(t => t.type === type && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
+         });
+    }
+
+    function generateNetData(period) {
+         const tl = getTimeline(period);
+         return tl.prefixes.map(prefix => {
+             const inc = state.transactions.filter(t => t.type === 'income' && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
+             const exp = state.transactions.filter(t => t.type === 'expense' && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
+             return inc - exp;
+         });
+    }
+
+    function generatePercentData(period) {
+         const tl = getTimeline(period);
+         return tl.prefixes.map(prefix => {
+             const inc = state.transactions.filter(t => t.type === 'income' && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
+             const exp = state.transactions.filter(t => t.type === 'expense' && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
+             if (inc <= 0) return 0; 
+             return Math.round((exp / inc) * 100);
          });
     }
 
@@ -1584,6 +1322,13 @@
         const expCat = document.getElementById('analytics-exp-select').value;
         const incCat = document.getElementById('analytics-inc-select').value;
         const tl = getTimeline(period);
+
+        if(charts.netAndPercent) {
+            charts.netAndPercent.data.datasets[0].data = generatePercentData(period);
+            charts.netAndPercent.data.datasets[1].data = generateNetData(period);
+            charts.netAndPercent.data.labels = tl.labels;
+            charts.netAndPercent.update();
+        }
 
         if(charts.expHistory && expCat) {
             charts.expHistory.data.datasets[0].data = generateHistoryData('expense', expCat, period);
@@ -1608,18 +1353,30 @@
         const period = document.getElementById('analytics-period').value;
         const tl = getTimeline(period);
 
+        if(charts.netAndPercent) charts.netAndPercent.destroy();
+        charts.netAndPercent = new Chart(document.getElementById('chartNetAndPercent'), {
+            type: 'bar',
+            data: { 
+                labels: tl.labels, 
+                datasets: [ 
+                    { type: 'line', label: '% Расходов', data: generatePercentData(period), borderColor: '#007aff', backgroundColor: '#007aff', borderWidth: 2, pointRadius: 4, yAxisID: 'y1', tension: 0.4 },
+                    { type: 'bar', label: 'Остаток (₽)', data: generateNetData(period), backgroundColor: ctx => ctx.raw >= 0 ? '#34c759' : '#ff3b30', borderRadius: 6, yAxisID: 'y' }
+                ] 
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { type: 'linear', display: true, position: 'left', grid: { display: false } },
+                    y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, min: 0 }
+                }
+            }
+        });
+
         if(charts.expHistory) charts.expHistory.destroy();
         const catExp = document.getElementById('analytics-exp-select').value || `cat_${state.categories.expense[0]}`;
         charts.expHistory = new Chart(document.getElementById('chartExpHistory'), {
-            type: 'line',
-            data: { 
-                labels: tl.labels, 
-                datasets: [{ 
-                    data: catExp ? generateHistoryData('expense', catExp, period) : [0], 
-                    borderColor: '#1c1c1e', pointBackgroundColor: '#1c1c1e', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 4, 
-                    backgroundColor: 'rgba(28, 28, 30, 0.1)', fill: true 
-                }] 
-            },
+            type: 'line', data: { labels: tl.labels, datasets: [{ data: catExp ? generateHistoryData('expense', catExp, period) : [0], borderColor: '#1c1c1e', pointBackgroundColor: '#1c1c1e', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 4, backgroundColor: 'rgba(28, 28, 30, 0.1)', fill: true }] },
             options: commonLineOptions
         });
 
@@ -1628,24 +1385,13 @@
         const incomeData = catInc ? generateHistoryData('income', catInc, period) : [0];
         
         charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
-            type: 'line',
-            data: { 
-                labels: tl.labels, 
-                datasets: [{ 
-                    data: incomeData,
-                    segment: { borderColor: ctx => (ctx.p0.parsed.y < 0 || ctx.p1.parsed.y < 0) ? '#ff3b30' : '#34c759' },
-                    pointBackgroundColor: ctx => ctx.raw < 0 ? '#ff3b30' : '#34c759',
-                    pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 4,
-                    fill: { target: 'origin', above: 'rgba(52, 199, 89, 0.2)', below: 'rgba(255, 59, 48, 0.2)' }
-                }] 
-            },
+            type: 'line', data: { labels: tl.labels, datasets: [{ data: incomeData, segment: { borderColor: ctx => (ctx.p0.parsed.y < 0 || ctx.p1.parsed.y < 0) ? '#ff3b30' : '#34c759' }, pointBackgroundColor: ctx => ctx.raw < 0 ? '#ff3b30' : '#34c759', pointBorderColor: '#ffffff', pointBorderWidth: 2, pointRadius: 4, fill: { target: 'origin', above: 'rgba(52, 199, 89, 0.2)', below: 'rgba(255, 59, 48, 0.2)' } }] },
             options: commonLineOptions
         });
 
         if(charts.trend) charts.trend.destroy();
         charts.trend = new Chart(document.getElementById('chartTrend'), {
-            type: 'bar',
-            data: { labels: tl.labels, datasets: [ { label: 'Доходы', data: generateTrendData('income', period), backgroundColor: '#34c759', borderRadius: 6 }, { label: 'Расходы', data: generateTrendData('expense', period), backgroundColor: '#1c1c1e', borderRadius: 6 } ] },
+            type: 'bar', data: { labels: tl.labels, datasets: [ { label: 'Доходы', data: generateTrendData('income', period), backgroundColor: '#34c759', borderRadius: 6 }, { label: 'Расходы', data: generateTrendData('expense', period), backgroundColor: '#1c1c1e', borderRadius: 6 } ] },
             options: { responsive: true, maintainAspectRatio: false }
         });
     }
