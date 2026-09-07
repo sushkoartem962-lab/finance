@@ -196,7 +196,7 @@
         </div>
         <div class="nav-island settings-island">
             <button class="nav-btn icon-btn" aria-label="Настройки" onclick="switchTab('settings')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
         </div>
     </div>
@@ -222,11 +222,6 @@
                             <div class="subtitle" style="color: var(--danger); font-size: 12px; margin-bottom: 4px;">Расходы</div>
                             <div class="amount expense" id="month-expense-total" style="font-size: 18px; margin: 0; color: var(--danger);">- 0 ₽</div>
                         </div>
-                    </div>
-                    <!-- Доход от Крипты (PnL) -->
-                    <div id="crypto-pnl-container" style="display: none; padding: 12px; border-radius: 16px; margin-top: 10px; text-align: center;">
-                        <div class="subtitle" id="crypto-pnl-title" style="font-size: 12px; margin-bottom: 4px;">Нереализованный PnL (Крипта)</div>
-                        <div class="amount" id="crypto-pnl-total" style="font-size: 18px; margin: 0;">0 ₽</div>
                     </div>
                 </div>
             </div>
@@ -309,7 +304,6 @@
                 </div>
             </div>
             
-            <!-- НОВЫЙ ГРАФИК: Остаток и % расходов -->
             <div class="bento-card span-full">
                 <h2>Остаток и % расходов</h2>
                 <div class="chart-container"><canvas id="chartNetAndPercent"></canvas></div>
@@ -430,7 +424,6 @@
 
     function parseNum(val) {
         if (val === null || val === undefined || val === '') return NaN;
-        // Заменяем запятую на точку, убираем пробелы. Знак минуса сохраняется!
         return Number(String(val).replace(',', '.').replace(/\s/g, ''));
     }
 
@@ -686,6 +679,69 @@
         });
     }
 
+    // Хелпер для поиска цены на нужный период (день или месяц)
+    function getHistoricalPrice(coin, prefix, point) {
+        const rates = state.historyRates[coin];
+        if (!rates) return null;
+        const dates = Object.keys(rates).sort();
+        if (dates.length === 0) return null;
+
+        if (prefix.length === 10) { // Ищем конкретный день YYYY-MM-DD
+            const currIdx = dates.indexOf(prefix);
+            if (currIdx === -1) {
+                let closest = dates[0];
+                for (let d of dates) { if (d <= prefix) closest = d; else break; }
+                if (point === 'end') return rates[closest];
+                let startIdx = dates.indexOf(closest) - 1;
+                return startIdx >= 0 ? rates[dates[startIdx]] : rates[closest]; 
+            }
+            if (point === 'end') return rates[prefix];
+            return currIdx > 0 ? rates[dates[currIdx - 1]] : rates[prefix];
+        } else if (prefix.length === 7) { // Ищем месяц YYYY-MM
+            const monthDates = dates.filter(d => d.startsWith(prefix));
+            if (monthDates.length === 0) {
+                 let closest = dates[0];
+                 for (let d of dates) { if (d < prefix) closest = d; else break; }
+                 return rates[closest];
+            }
+            if (point === 'end') return rates[monthDates[monthDates.length - 1]];
+            const firstDateInMonthIdx = dates.indexOf(monthDates[0]);
+            return firstDateInMonthIdx > 0 ? rates[dates[firstDateInMonthIdx - 1]] : rates[monthDates[0]];
+        }
+        return null;
+    }
+
+    async function fetchCryptoHistory() {
+        const coins = new Set();
+        state.accounts.forEach(a => {
+            if (a.type === 'crypto_wallet') {
+                (a.tokens || []).forEach(t => coins.add(t.coin));
+            }
+        });
+        
+        state.historyRates = {};
+        
+        // Получаем историю строго с 31 августа текущего года (чтобы иметь точку отсчета для 1 сентября)
+        const currentYear = new Date().getFullYear();
+        const startOfHistory = new Date(currentYear, 7, 31).getTime(); // Месяц 7 это Август
+
+        const promises = Array.from(coins).filter(c => c !== 'USDT').map(async (coin) => {
+            try {
+                const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&startTime=${startOfHistory}`);
+                const data = await res.json();
+                state.historyRates[coin] = {};
+                data.forEach(candle => {
+                    const date = new Date(candle[0]);
+                    const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                    state.historyRates[coin][dateStr] = parseFloat(candle[4]); // Close price
+                });
+            } catch (e) { console.error('Ошибка загрузки истории для', coin); }
+        });
+        
+        await Promise.all(promises);
+        if(document.getElementById('analytics').classList.contains('active')) updateAnalyticsCharts();
+    }
+
     async function fetchLiveRates() {
         const statusEl = document.getElementById('rates-status');
         try {
@@ -712,6 +768,9 @@
             renderAccounts();
             if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
             if(document.getElementById('analytics').classList.contains('active')) updateAnalyticsCharts();
+            
+            // Запускаем подгрузку истории графиков
+            fetchCryptoHistory();
         } catch (e) {
             statusEl.className = 'live-status error';
             statusEl.innerHTML = `<div class="status-dot"></div> Ошибка сети`;
@@ -846,41 +905,6 @@
         document.getElementById('month-income-total').innerText = `${tInc >= 0 ? '+' : '-'} ${Math.abs(tInc).toLocaleString('ru-RU')} ₽`;
         document.getElementById('month-expense-total').innerText = `${tExp >= 0 ? '-' : '+'} ${Math.abs(tExp).toLocaleString('ru-RU')} ₽`;
 
-        // Подсчет PnL по крипте (на основе котировок онлайн)
-        let cryptoPnlUsd = 0;
-        let hasCrypto = false;
-        state.accounts.forEach(acc => {
-            if (acc.type === 'crypto_wallet') {
-                (acc.tokens || []).forEach(t => {
-                    if (t.avgBuyPrice && t.avgBuyPrice > 0) {
-                        hasCrypto = true;
-                        const rate = state.rates[t.coin] || 0;
-                        const usdVal = t.balance * rate;
-                        const invested = t.balance * t.avgBuyPrice;
-                        cryptoPnlUsd += (usdVal - invested);
-                    }
-                });
-            }
-        });
-        
-        const pnlContainer = document.getElementById('crypto-pnl-container');
-        if (hasCrypto && pnlContainer) {
-            const cryptoPnlRub = cryptoPnlUsd * state.rates.USD;
-            pnlContainer.style.display = 'block';
-            const isPos = cryptoPnlRub >= 0;
-            const sign = isPos ? '+' : '';
-            const color = isPos ? 'var(--success)' : 'var(--danger)';
-            const bg = isPos ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)';
-            pnlContainer.style.background = bg;
-            document.getElementById('crypto-pnl-title').style.color = color;
-            
-            const pnlEl = document.getElementById('crypto-pnl-total');
-            pnlEl.innerText = `${sign} ${Math.abs(cryptoPnlRub).toLocaleString('ru-RU', {maximumFractionDigits: 0})} ₽`;
-            pnlEl.style.color = color;
-        } else if (pnlContainer) {
-            pnlContainer.style.display = 'none';
-        }
-
         const budgetsContainer = document.getElementById('budgets-container');
         const budgetsList = document.getElementById('budgets-list');
         if(Object.keys(state.budgets).length > 0) {
@@ -992,19 +1016,18 @@
         });
     }
 
-    let isAddingTransaction = false; // Флаг для защиты от двойных кликов
+    let isAddingTransaction = false;
 
     function addTransaction() {
-        if (isAddingTransaction) return; // Блокируем, если уже сохраняем
+        if (isAddingTransaction) return;
         isAddingTransaction = true;
-        setTimeout(() => { isAddingTransaction = false; }, 600); // Снимаем блок через 0.6 сек
+        setTimeout(() => { isAddingTransaction = false; }, 600);
 
         const type = document.getElementById('op-type').value;
         const date = document.getElementById('op-date').value || getLocalDate();
         const inputAmount = parseNum(document.getElementById('op-amount').value);
         const note = document.getElementById('op-note').value.trim();
         
-        // Разрешаем отрицательные числа для инвестиций (исключаем только полный 0)
         if(isNaN(inputAmount) || inputAmount === 0) { showAlert('Укажите корректную сумму'); return; }
         if(type === 'transfer' && inputAmount < 0) { showAlert('Сумма перевода не может быть отрицательной'); return; }
         
@@ -1332,14 +1355,39 @@
     function generateHistoryData(type, selectValue, period) {
         const tl = getTimeline(period);
         return tl.prefixes.map(prefix => {
-            return state.transactions.filter(t => {
+            // 1. Обычные записанные операции
+            let sum = state.transactions.filter(t => {
                 if (t.type !== type || !t.date.startsWith(prefix)) return false;
                 if (selectValue.startsWith('coin_')) {
                     const targetCoin = selectValue.replace('coin_', '');
-                    if (targetCoin === 'ALL') { return t.accountDetails?.type === 'crypto'; }
+                    if (targetCoin === 'ALL') return t.accountDetails?.type === 'crypto';
                     return t.accountDetails?.coin === targetCoin;
                 } else { return t.category === selectValue.replace('cat_', ''); }
-            }).reduce((sum, t) => sum + getTxRub(t), 0);
+            }).reduce((acc, t) => acc + getTxRub(t), 0);
+
+            // 2. Автоматический расчет профита (Крипта) по истории
+            if (type === 'income' && selectValue.startsWith('coin_')) {
+                const targetCoin = selectValue.replace('coin_', '');
+                let cryptoDelta = 0;
+                
+                state.accounts.filter(a => a.type === 'crypto_wallet').forEach(acc => {
+                    (acc.tokens || []).forEach(t => {
+                        if (targetCoin === 'ALL' || t.coin === targetCoin) {
+                            if (t.coin !== 'USDT' && state.historyRates && state.historyRates[t.coin]) {
+                                const priceEnd = getHistoricalPrice(t.coin, prefix, 'end');
+                                const priceStart = getHistoricalPrice(t.coin, prefix, 'start');
+                                if (priceEnd !== null && priceStart !== null) {
+                                    cryptoDelta += (priceEnd - priceStart) * t.balance * state.rates.USD;
+                                }
+                            }
+                        }
+                    });
+                });
+                
+                sum += cryptoDelta;
+            }
+            
+            return sum;
         });
     }
 
