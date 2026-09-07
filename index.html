@@ -223,6 +223,11 @@
                             <div class="amount expense" id="month-expense-total" style="font-size: 18px; margin: 0; color: var(--danger);">- 0 ₽</div>
                         </div>
                     </div>
+                    <!-- Доход от Крипты (PnL) -->
+                    <div id="crypto-pnl-container" style="display: none; padding: 12px; border-radius: 16px; margin-top: 10px; text-align: center;">
+                        <div class="subtitle" id="crypto-pnl-title" style="font-size: 12px; margin-bottom: 4px;">Нереализованный PnL (Крипта)</div>
+                        <div class="amount" id="crypto-pnl-total" style="font-size: 18px; margin: 0;">0 ₽</div>
+                    </div>
                 </div>
             </div>
 
@@ -841,6 +846,41 @@
         document.getElementById('month-income-total').innerText = `${tInc >= 0 ? '+' : '-'} ${Math.abs(tInc).toLocaleString('ru-RU')} ₽`;
         document.getElementById('month-expense-total').innerText = `${tExp >= 0 ? '-' : '+'} ${Math.abs(tExp).toLocaleString('ru-RU')} ₽`;
 
+        // Подсчет PnL по крипте (на основе котировок онлайн)
+        let cryptoPnlUsd = 0;
+        let hasCrypto = false;
+        state.accounts.forEach(acc => {
+            if (acc.type === 'crypto_wallet') {
+                (acc.tokens || []).forEach(t => {
+                    if (t.avgBuyPrice && t.avgBuyPrice > 0) {
+                        hasCrypto = true;
+                        const rate = state.rates[t.coin] || 0;
+                        const usdVal = t.balance * rate;
+                        const invested = t.balance * t.avgBuyPrice;
+                        cryptoPnlUsd += (usdVal - invested);
+                    }
+                });
+            }
+        });
+        
+        const pnlContainer = document.getElementById('crypto-pnl-container');
+        if (hasCrypto && pnlContainer) {
+            const cryptoPnlRub = cryptoPnlUsd * state.rates.USD;
+            pnlContainer.style.display = 'block';
+            const isPos = cryptoPnlRub >= 0;
+            const sign = isPos ? '+' : '';
+            const color = isPos ? 'var(--success)' : 'var(--danger)';
+            const bg = isPos ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)';
+            pnlContainer.style.background = bg;
+            document.getElementById('crypto-pnl-title').style.color = color;
+            
+            const pnlEl = document.getElementById('crypto-pnl-total');
+            pnlEl.innerText = `${sign} ${Math.abs(cryptoPnlRub).toLocaleString('ru-RU', {maximumFractionDigits: 0})} ₽`;
+            pnlEl.style.color = color;
+        } else if (pnlContainer) {
+            pnlContainer.style.display = 'none';
+        }
+
         const budgetsContainer = document.getElementById('budgets-container');
         const budgetsList = document.getElementById('budgets-list');
         if(Object.keys(state.budgets).length > 0) {
@@ -876,7 +916,13 @@
         });
 
         const dailyListEl = document.getElementById('daily-transactions-list');
-        const sortedTrans = [...monthTransactions].sort((a, b) => new Date(b.date) - new Date(a.date)); 
+        
+        // Сортировка: сначала по дате, а если день одинаковый — по времени добавления (которое хранится в id)
+        const sortedTrans = [...monthTransactions].sort((a, b) => {
+            const dateDiff = new Date(b.date) - new Date(a.date);
+            if (dateDiff !== 0) return dateDiff;
+            return b.id - a.id; 
+        });
         
         if (sortedTrans.length === 0) {
              dailyListEl.innerHTML = '<div class="subtitle" style="text-align:center; padding: 20px;">Нет операций</div>';
@@ -946,7 +992,13 @@
         });
     }
 
+    let isAddingTransaction = false; // Флаг для защиты от двойных кликов
+
     function addTransaction() {
+        if (isAddingTransaction) return; // Блокируем, если уже сохраняем
+        isAddingTransaction = true;
+        setTimeout(() => { isAddingTransaction = false; }, 600); // Снимаем блок через 0.6 сек
+
         const type = document.getElementById('op-type').value;
         const date = document.getElementById('op-date').value || getLocalDate();
         const inputAmount = parseNum(document.getElementById('op-amount').value);
