@@ -71,12 +71,15 @@
             .nav-island { 
                 pointer-events: auto; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px); 
                 -webkit-backdrop-filter: blur(15px); border-radius: 100px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); gap: 4px; 
+                display: flex; align-items: center; justify-content: center;
             }
             .main-island { flex: 1; justify-content: space-between; overflow: hidden; }
-            .settings-island { flex-shrink: 0; }
+            .settings-island { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: auto; }
             .nav-btn { font-size: 14px; padding: 10px 5px; background: transparent; box-shadow: none; flex: 1; text-align: center; }
             .nav-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
-            .icon-btn { padding: 0; width: 42px; height: 42px; background: transparent; }
+            /* Исправлено обрезание шестеренки: */
+            .icon-btn { padding: 0 !important; width: 42px; min-width: 42px; height: 42px; min-height: 42px; background: transparent; display: flex; align-items: center; justify-content: center; border-radius: 50%; overflow: visible; flex-shrink: 0; }
+            .icon-btn svg { display: block; }
         }
 
         h2 { font-size: 20px; margin-bottom: 15px; font-weight: 600; }
@@ -196,7 +199,7 @@
         </div>
         <div class="nav-island settings-island">
             <button class="nav-btn icon-btn" aria-label="Настройки" onclick="switchTab('settings')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
         </div>
     </div>
@@ -1136,7 +1139,8 @@
                 state.transactions.filter(t => t.accountDetails?.type === 'crypto').forEach(t => { allWalletCoins.add(t.accountDetails.coin); });
 
                 if(allWalletCoins.size > 0) {
-                    html += `<optgroup label="Крипта (PnL)">`; html += `<option value="coin_ALL">Все монеты</option>`;
+                    html += `<optgroup label="Зафиксированный доход">`; 
+                    html += `<option value="coin_ALL">Все монеты</option>`;
                     allWalletCoins.forEach(coin => { html += `<option value="coin_${escapeHTML(coin)}">${escapeHTML(coin)}</option>`; });
                     html += `</optgroup>`;
                 }
@@ -1352,10 +1356,29 @@
         charts.accounts = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data, backgroundColor: chartColors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
     }
 
+    // Хелпер для подсчета виртуального изменения крипты за период
+    function getCryptoDeltaForPrefix(prefix, coinFilter = 'ALL') {
+        let cryptoDelta = 0;
+        state.accounts.filter(a => a.type === 'crypto_wallet').forEach(acc => {
+            (acc.tokens || []).forEach(t => {
+                if (coinFilter === 'ALL' || t.coin === coinFilter) {
+                    if (t.coin !== 'USDT' && state.historyRates && state.historyRates[t.coin]) {
+                        const priceEnd = getHistoricalPrice(t.coin, prefix, 'end');
+                        const priceStart = getHistoricalPrice(t.coin, prefix, 'start');
+                        if (priceEnd !== null && priceStart !== null) {
+                            cryptoDelta += (priceEnd - priceStart) * t.balance * state.rates.USD;
+                        }
+                    }
+                }
+            });
+        });
+        return cryptoDelta;
+    }
+
     function generateHistoryData(type, selectValue, period) {
         const tl = getTimeline(period);
         return tl.prefixes.map(prefix => {
-            // 1. Обычные записанные операции
+            // 1. Ручные операции
             let sum = state.transactions.filter(t => {
                 if (t.type !== type || !t.date.startsWith(prefix)) return false;
                 if (selectValue.startsWith('coin_')) {
@@ -1365,28 +1388,10 @@
                 } else { return t.category === selectValue.replace('cat_', ''); }
             }).reduce((acc, t) => acc + getTxRub(t), 0);
 
-            // 2. Автоматический расчет профита (Крипта) по истории
+            // 2. Автоматический расчет по крипте (если выбран соответствующий фильтр)
             if (type === 'income' && selectValue.startsWith('coin_')) {
-                const targetCoin = selectValue.replace('coin_', '');
-                let cryptoDelta = 0;
-                
-                state.accounts.filter(a => a.type === 'crypto_wallet').forEach(acc => {
-                    (acc.tokens || []).forEach(t => {
-                        if (targetCoin === 'ALL' || t.coin === targetCoin) {
-                            if (t.coin !== 'USDT' && state.historyRates && state.historyRates[t.coin]) {
-                                const priceEnd = getHistoricalPrice(t.coin, prefix, 'end');
-                                const priceStart = getHistoricalPrice(t.coin, prefix, 'start');
-                                if (priceEnd !== null && priceStart !== null) {
-                                    cryptoDelta += (priceEnd - priceStart) * t.balance * state.rates.USD;
-                                }
-                            }
-                        }
-                    });
-                });
-                
-                sum += cryptoDelta;
+                sum += getCryptoDeltaForPrefix(prefix, selectValue.replace('coin_', ''));
             }
-            
             return sum;
         });
     }
@@ -1394,14 +1399,22 @@
     function generateTrendData(type, period) {
          const tl = getTimeline(period);
          return tl.prefixes.map(prefix => {
-             return state.transactions.filter(t => t.type === type && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
+             let sum = state.transactions.filter(t => t.type === type && t.date.startsWith(prefix)).reduce((acc, t) => acc + getTxRub(t), 0);
+             // Прибавляем крипту ко всем общим доходам
+             if (type === 'income') {
+                 sum += getCryptoDeltaForPrefix(prefix, 'ALL');
+             }
+             return sum;
          });
     }
 
     function generateNetData(period) {
          const tl = getTimeline(period);
          return tl.prefixes.map(prefix => {
-             const inc = state.transactions.filter(t => t.type === 'income' && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
+             let inc = state.transactions.filter(t => t.type === 'income' && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
+             // Добавляем PnL крипты к доходам при расчете чистого остатка
+             inc += getCryptoDeltaForPrefix(prefix, 'ALL');
+             
              const exp = state.transactions.filter(t => t.type === 'expense' && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
              return inc - exp;
          });
@@ -1410,9 +1423,12 @@
     function generatePercentData(period) {
          const tl = getTimeline(period);
          return tl.prefixes.map(prefix => {
-             const inc = state.transactions.filter(t => t.type === 'income' && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
+             let inc = state.transactions.filter(t => t.type === 'income' && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
+             // Включаем крипту в базу для расчета %
+             inc += getCryptoDeltaForPrefix(prefix, 'ALL');
+             
              const exp = state.transactions.filter(t => t.type === 'expense' && t.date.startsWith(prefix)).reduce((sum, t) => sum + getTxRub(t), 0);
-             if (inc <= 0) return 0; 
+             if (inc <= 0) return 0; // Если из-за падения крипты общий доход ушел в ноль или минус, % расходов равен 0
              return Math.round((exp / inc) * 100);
          });
     }
