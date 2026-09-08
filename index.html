@@ -816,7 +816,7 @@
             updateOpAccountsForm(accFrom, 'Откуда (списание)'); updateOpAccountsForm(accTo, 'Куда (зачисление)');
         } else {
             catSelect.style.display = 'block'; accTo.style.display = 'none';
-            updateOpAccountsForm(accFrom, 'Счет');
+            updateOpAccountsForm(accFrom, '');
             const currentCat = catSelect.value; 
             catSelect.innerHTML = state.categories[type].map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
             if (currentCat && state.categories[type].includes(currentCat)) catSelect.value = currentCat;
@@ -1325,7 +1325,7 @@
         const currentVal = acc.isCredit ? (acc.balance <= 0 ? Math.abs(acc.balance) : -acc.balance) : acc.balance;
         const placeholder = acc.isCredit ? 'Сумма долга (₽)' : 'Новый баланс (₽)';
 
-        showModal({ title: acc.isCredit ? 'Изменить долг' : 'Изменить баланс', message: `{escapeHTML(acc.name)}`,
+        showModal({ title: acc.isCredit ? 'Изменить долг' : 'Изменить баланс', message: `Счет: ${escapeHTML(acc.name)}`,
             inputs: [{ id: 'new_bal', type: 'text', inputmode: 'decimal', placeholder: placeholder, value: currentVal }],
             submitText: 'Сохранить',
             onSubmit: (data) => {
