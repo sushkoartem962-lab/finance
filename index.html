@@ -78,8 +78,8 @@
             .nav-btn { font-size: 14px; padding: 10px 5px; background: transparent; box-shadow: none; flex: 1; text-align: center; }
             .nav-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
             /* Исправлено обрезание шестеренки: */
-            .icon-btn { padding: 0 !important; width: 42px; min-width: 42px; height: 42px; min-height: 42px; background: transparent; display: flex; align-items: center; justify-content: center; border-radius: 50%; overflow: visible; flex-shrink: 0; }
-            .icon-btn svg { display: block; }
+            .icon-btn { padding: 0 !important; width: 42px !important; height: 42px !important; flex: 0 0 42px !important; background: transparent; display: flex; align-items: center; justify-content: center; border-radius: 50%; overflow: hidden; }
+            .icon-btn svg { width: 20px; height: 20px; flex-shrink: 0; display: block; }
         }
 
         h2 { font-size: 20px; margin-bottom: 15px; font-weight: 600; }
@@ -199,7 +199,7 @@
         </div>
         <div class="nav-island settings-island">
             <button class="nav-btn icon-btn" aria-label="Настройки" onclick="switchTab('settings')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
         </div>
     </div>
@@ -1209,21 +1209,20 @@
     }
 
     function renderAccounts() {
-        let totalRub = 0, debt = 0, freeFunds = 0; 
+        let totalCapital = 0, debt = 0; 
         let hasCreditCard = false;
         const list = document.getElementById('accounts-list'); list.innerHTML = '';
         if (state.accounts.length === 0) list.innerHTML = '<div class="subtitle" style="text-align:center; padding: 20px;">Нет счетов. Добавьте их в настройках.</div>';
 
         state.accounts.forEach(acc => {
             if (acc.type === 'fiat') {
-                totalRub += acc.balance;
-                if (acc.isCredit) {
-                    hasCreditCard = true;
-                    if (acc.balance < 0) debt += Math.abs(acc.balance);
-                    else freeFunds += acc.balance;
-                } else {
-                    freeFunds += acc.balance;
+                if (acc.balance > 0) {
+                    totalCapital += acc.balance;
+                } else if (acc.balance < 0) {
+                    debt += Math.abs(acc.balance);
                 }
+                
+                if (acc.isCredit) hasCreditCard = true;
                 
                 let displayBalance = `${acc.balance.toLocaleString('ru-RU')} ₽`; let badgeHTML = '';
 
@@ -1267,8 +1266,7 @@
                 }).join('');
 
                 walletRub = walletUsd * state.rates.USD; 
-                totalRub += walletRub;
-                freeFunds += walletRub;
+                totalCapital += walletRub;
                 
                 list.innerHTML += `
                     <div style="background: #fafafa; padding: 12px; border-radius: 16px; margin-bottom: 10px;">
@@ -1288,9 +1286,11 @@
             }
         });
         
-        document.getElementById('total-capital').innerText = Math.round(totalRub).toLocaleString('ru-RU') + ' ₽';
+        let freeFunds = totalCapital - debt;
+
+        document.getElementById('total-capital').innerText = Math.round(totalCapital).toLocaleString('ru-RU') + ' ₽';
         let subHtml = '';
-        if (hasCreditCard) {
+        if (hasCreditCard || debt > 0) {
             subHtml = `<div class="subtitle" style="font-size: 13px; margin-top: 5px;">Из них надо вернуть - <span style="color:var(--danger); font-weight:500;">${Math.round(debt).toLocaleString('ru-RU')} ₽</span> | Итого свободных - <span style="color:var(--success); font-weight:500;">${Math.round(freeFunds).toLocaleString('ru-RU')} ₽</span></div>`;
         }
         document.getElementById('total-capital-sub').innerHTML = subHtml;
@@ -1464,7 +1464,6 @@
          });
     }
     
-    // --- Новая функция генерации данных по частоте (штуки) ---
     function generateFreqData(categoryStr, period) {
         const tl = getTimeline(period);
         const targetCat = categoryStr.replace('cat_', '');
@@ -1473,7 +1472,6 @@
         });
     }
     
-    // --- Новая функция для Топ-5 частотных трат ---
     function renderFreqTop5(period) {
         const tl = getTimeline(period);
         const freqCounts = {};
