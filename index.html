@@ -616,7 +616,7 @@
         const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
         
         document.getElementById('tab-month-btn').innerText = capitalizedMonth;
-        document.getElementById('month-title-text').innerText = `Баланс (${capitalizedMonth})`;
+        document.getElementById('month-title-text').innerText = `Баланс`;
         document.getElementById('op-date').value = getLocalDate();
 
         DB.listen((loaded) => {
