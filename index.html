@@ -260,7 +260,12 @@
             </div>
 
             <div class="bento-card span-full">
-                <h2>История операций</h2>
+                <div class="analytics-controls" style="margin-bottom: 10px;">
+                    <h2 style="margin:0;">История операций</h2>
+                    <select id="history-category-filter" onchange="renderMonthTab()" style="width: auto; margin: 0; background: var(--bg-color); border-color: transparent; padding: 6px 12px; font-size: 14px;">
+                        <option value="all">Все категории</option>
+                    </select>
+                </div>
                 <div class="scrollable-list" id="daily-transactions-list"></div>
             </div>
 
@@ -950,9 +955,35 @@
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
 
-        const dailyListEl = document.getElementById('daily-transactions-list');
+const dailyListEl = document.getElementById('daily-transactions-list');
         
-        const sortedTrans = [...monthTransactions].sort((a, b) => {
+        const filterEl = document.getElementById('history-category-filter');
+        const selectedFilter = filterEl ? filterEl.value : 'all';
+
+        const uniqueCategories = new Set();
+        monthTransactions.forEach(t => {
+            if (t.type === 'transfer') uniqueCategories.add('Перевод');
+            else if (t.category) uniqueCategories.add(t.category);
+        });
+
+        if (filterEl) {
+            let filterOptionsHTML = `<option value="all">Все категории</option>`;
+            Array.from(uniqueCategories).sort().forEach(cat => {
+                const isSelected = cat === selectedFilter ? 'selected' : '';
+                filterOptionsHTML += `<option value="${escapeHTML(cat)}" ${isSelected}>${escapeHTML(cat)}</option>`;
+            });
+            filterEl.innerHTML = filterOptionsHTML;
+        }
+
+        let listTransactions = monthTransactions;
+        if (selectedFilter && selectedFilter !== 'all') {
+            listTransactions = monthTransactions.filter(t => {
+                if (selectedFilter === 'Перевод') return t.type === 'transfer';
+                return t.category === selectedFilter;
+            });
+        }
+
+        const sortedTrans = [...listTransactions].sort((a, b) => {
             const dateDiff = new Date(b.date) - new Date(a.date);
             if (dateDiff !== 0) return dateDiff;
             return b.id - a.id; 
