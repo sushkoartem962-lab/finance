@@ -232,14 +232,14 @@
             <div class="bento-card">
                 <h2>Операция</h2>
                 <input type="date" id="op-date">
-                <div class="flex-row">
-                    <select id="op-type" onchange="updateOpForm()">
-                        <option value="expense">Расход</option>
-                        <option value="income">Доход</option>
-                        <option value="transfer">Перевод</option>
-                    </select>
-                    <select id="op-category"></select>
-                </div>
+            <div class="flex-row">
+    <select id="op-type" onchange="updateOpForm()">
+        <option value="expense">Расход</option>
+        <option value="income">Доход</option>
+        <option value="transfer">Перевод</option>
+    </select>
+    <select id="op-category" onchange="handleCategoryChange()"></select>
+</div>
                 
                 <select id="op-account" onchange="updateOpAmountPlaceholder()"></select>
                 <select id="op-account-to" style="display:none;" onchange="updateOpAmountPlaceholder()"></select>
@@ -510,7 +510,7 @@
         }
     };
 
-    let state = { rates: { USD: 95 }, categories: { expense: ['Еда', 'Транспорт'], income: ['Зарплата'] }, accounts: [], transactions: [], budgets: {} };
+    let state = { rates: { USD: 95 }, categories: { expense: ['Еда', 'Транспорт'], income: ['Зарплата'] }, accounts: [], transactions: [], budgets: {}, incomeAccountMapping: {} };
     let charts = {}; 
 
     Chart.defaults.scale.grid.display = false;
@@ -631,6 +631,7 @@
                 state.accounts = loaded.accounts || []; 
                 state.transactions = loaded.transactions || [];
                 state.budgets = loaded.budgets || {};
+state.incomeAccountMapping = loaded.incomeAccountMapping || {};
             }
             renderAll();
             if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
@@ -809,7 +810,25 @@
     function renderAll() {
         renderCategories(); updateOpForm(); renderSettingsBudgets(); renderMonthTab(); renderAccounts();
     }
+function updateIncomeMapping(cat, val) {
+    state.incomeAccountMapping = state.incomeAccountMapping || {};
+    if (val) state.incomeAccountMapping[cat] = val;
+    else delete state.incomeAccountMapping[cat];
+    DB.save(state);
+}
 
+function handleCategoryChange() {
+    const type = document.getElementById('op-type').value;
+    const cat = document.getElementById('op-category').value;
+    if (type === 'income' && state.incomeAccountMapping && state.incomeAccountMapping[cat]) {
+        const accSelect = document.getElementById('op-account');
+        // Проверяем, существует ли этот счет (его могли удалить)
+        if (accSelect.querySelector(`option[value="${state.incomeAccountMapping[cat]}"]`)) {
+            accSelect.value = state.incomeAccountMapping[cat];
+            updateOpAmountPlaceholder();
+        }
+    }
+}
     function updateOpForm() {
         const type = document.getElementById('op-type').value;
         const catSelect = document.getElementById('op-category');
@@ -824,9 +843,10 @@
             updateOpAccountsForm(accFrom, '');
             const currentCat = catSelect.value; 
             catSelect.innerHTML = state.categories[type].map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
-            if (currentCat && state.categories[type].includes(currentCat)) catSelect.value = currentCat;
-        }
-        updateOpAmountPlaceholder();
+           if (currentCat && state.categories[type].includes(currentCat)) catSelect.value = currentCat;
+    handleCategoryChange(); // Автоподстановка счета при смене типа
+}
+updateOpAmountPlaceholder();
     }
 
     function updateOpAccountsForm(selectEl, labelText = '') {
@@ -1154,10 +1174,33 @@ const dailyListEl = document.getElementById('daily-transactions-list');
 
     function renderCategories() {
         const renderList = (type, listId) => {
-            const list = document.getElementById(listId);
-            list.innerHTML = state.categories[type].map((cat, idx) => `
-                <div class="category-tag"><span>${escapeHTML(cat)}</span><div class="actions"><button class="action-btn" aria-label="Удалить" onclick="confirmDeleteCategory('${type}', ${idx})">${icons.delete}</button></div></div>
-            `).join('');
+           const list = document.getElementById(listId);
+list.innerHTML = state.categories[type].map((cat, idx) => {
+    let selectMappingHTML = '';
+    if (type === 'income') {
+        let options = '<option value="">Куда зачислять?</option>';
+        state.accounts.forEach(a => {
+            if (a.type === 'fiat') {
+                const val = 'fiat_' + a.id;
+                options += `<option value="${val}" ${(state.incomeAccountMapping && state.incomeAccountMapping[cat] === val) ? 'selected' : ''}>${escapeHTML(a.name)}</option>`;
+            } else if (a.type === 'crypto_wallet') {
+                (a.tokens || []).forEach(t => {
+                    const val = `crypto_${a.id}_${t.id}`;
+                    options += `<option value="${val}" ${(state.incomeAccountMapping && state.incomeAccountMapping[cat] === val) ? 'selected' : ''}>${escapeHTML(a.name)} • ${escapeHTML(t.coin)}</option>`;
+                });
+            }
+        });
+        selectMappingHTML = `<select style="margin-left: 8px; width: auto; font-size: 11px; padding: 2px 6px; border: none; background: rgba(0,0,0,0.06); border-radius: 6px; outline: none; cursor: pointer; color: var(--text-muted);" onchange="updateIncomeMapping('${escapeHTML(cat)}', this.value)">${options}</select>`;
+    }
+    
+    return `
+        <div class="category-tag" style="${type === 'income' ? 'display: inline-flex; align-items: center; max-width: 100%;' : ''}">
+            <span style="white-space: nowrap;">${escapeHTML(cat)}</span>
+            ${selectMappingHTML}
+            <div class="actions"><button class="action-btn" aria-label="Удалить" onclick="confirmDeleteCategory('${type}', ${idx})">${icons.delete}</button></div>
+        </div>
+    `;
+}).join('');
             
             const expSelect = document.getElementById('analytics-exp-select');
             const freqSelect = document.getElementById('analytics-freq-select');
@@ -1222,7 +1265,9 @@ const dailyListEl = document.getElementById('daily-transactions-list');
                 });
                 state.categories[type].splice(index, 1);
                 state.transactions = state.transactions.filter(t => !(t.type === type && t.category === cat));
-                if (state.budgets[cat]) delete state.budgets[cat]; DB.save(state);
+                if (state.budgets[cat]) delete state.budgets[cat];
+if (state.incomeAccountMapping && state.incomeAccountMapping[cat]) delete state.incomeAccountMapping[cat];
+DB.save(state);
             }
         });
     }
