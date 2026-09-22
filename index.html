@@ -972,7 +972,7 @@ updateOpAmountPlaceholder();
         charts.currentMonth = new Chart(document.getElementById('currentMonthChart').getContext('2d'), {
             type: 'doughnut',
             data: { labels: expensesArr.map(e => escapeHTML(e.name)), datasets: [{ data: expensesArr.map(e => e.val), backgroundColor: chartColors, borderWidth: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: window.innerWidth < 768 ? 'bottom' : 'right' } } }
         });
 
 const dailyListEl = document.getElementById('daily-transactions-list');
@@ -1466,7 +1466,7 @@ DB.save(state);
                 if (walletRub > 0) { data.push(walletRub); labels.push(escapeHTML(acc.name)); }
             }
         });
-        charts.accounts = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data, backgroundColor: chartColors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
+        charts.accounts = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data, backgroundColor: chartColors, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: window.innerWidth < 768 ? 'bottom' : 'right' } } } });
     }
 
     function getCryptoDeltaForPrefix(prefix, coinFilter = 'ALL') {
