@@ -664,7 +664,7 @@
         return t.accountDetails ? t.accountDetails.amount : (t.amount || 0);
     }
 
-    function initApp() {
+function initApp() {
         const date = new Date();
         const monthName = date.toLocaleString('ru-RU', { month: 'long' });
         const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
@@ -673,9 +673,7 @@
         document.getElementById('month-title-text').innerText = `Баланс`;
         document.getElementById('op-date').value = getLocalDate();
 
-showSkeletons(); // Показываем скелетоны до получения данных
-
-DB.listen((loaded) => {
+        showSkeletons(); // Показываем скелетоны до получения данных
 
         DB.listen((loaded) => {
             if(loaded) {
@@ -684,7 +682,7 @@ DB.listen((loaded) => {
                 state.accounts = loaded.accounts || []; 
                 state.transactions = loaded.transactions || [];
                 state.budgets = loaded.budgets || {};
-state.incomeAccountMapping = loaded.incomeAccountMapping || {};
+                state.incomeAccountMapping = loaded.incomeAccountMapping || {};
             }
             renderAll();
             if(document.getElementById('accounts').classList.contains('active')) initAccountsChart();
