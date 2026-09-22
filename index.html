@@ -168,6 +168,21 @@
 
         .progress-bar-container { background: var(--bg-color); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 4px; }
         .progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease, background-color 0.3s ease; }
+        /* --- Скелетоны загрузки --- */
+.skeleton {
+    background: linear-gradient(90deg, #e5e5ea 25%, #f2f2f7 50%, #e5e5ea 75%);
+    background-size: 400% 100%;
+    animation: skeleton-load 1.5s ease-in-out infinite;
+    border-radius: 8px;
+    color: transparent !important;
+    pointer-events: none;
+    overflow: hidden;
+}
+.skeleton * { visibility: hidden !important; }
+@keyframes skeleton-load {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
     </style>
 </head>
 <body>
@@ -460,6 +475,28 @@
     let db, auth;
     let currentUser = null;
     let isAppInitialized = false;
+    function showSkeletons() {
+    // Скелетон баланса
+    document.getElementById('month-net-total').innerHTML = '<div class="skeleton" style="width: 60%; height: 32px; margin: 0 auto;"></div>';
+    document.getElementById('month-income-total').innerHTML = '<div class="skeleton" style="width: 80%; height: 22px;"></div>';
+    document.getElementById('month-expense-total').innerHTML = '<div class="skeleton" style="width: 80%; height: 22px;"></div>';
+    document.getElementById('total-capital').innerHTML = '<div class="skeleton" style="width: 50%; height: 32px;"></div>';
+
+    // Скелетон списков (генерируем 4 фейковых элемента)
+    const listSkeletons = Array(4).fill(`
+        <div class="list-item">
+            <div style="flex:1;">
+                <div class="skeleton" style="width: 50%; height: 16px; margin-bottom: 8px;"></div>
+                <div class="skeleton" style="width: 30%; height: 12px;"></div>
+            </div>
+            <div class="skeleton" style="width: 25%; height: 18px;"></div>
+        </div>
+    `).join('');
+    
+    document.getElementById('daily-transactions-list').innerHTML = listSkeletons;
+    document.getElementById('current-month-expenses-list').innerHTML = listSkeletons;
+    document.getElementById('accounts-list').innerHTML = listSkeletons;
+}
 
     if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
         firebase.initializeApp(firebaseConfig);
@@ -478,17 +515,29 @@
 
     const DB = {
         listen(callback) { 
-            if (!db || !currentUser) {
-                const local = localStorage.getItem('financeState_v15'); 
-                if (local) callback(JSON.parse(local));
-                else callback(null); 
-                return;
-            }
-            db.ref(`users/${currentUser.uid}/financeState`).on('value', snapshot => {
-                if(snapshot.exists()) callback(snapshot.val());
-                else callback(null); 
-            });
-        },
+    // 1. Мгновенная загрузка из локального кэша для старых пользователей
+    const local = localStorage.getItem('financeState_v15'); 
+    let hasCached = false;
+    if (local) {
+        try { callback(JSON.parse(local)); hasCached = true; } catch(e) {}
+    }
+
+    if (!db || !currentUser) {
+        if (!hasCached) callback(null);
+        return;
+    }
+
+    // 2. Асинхронное обновление с сервера (пользователь уже видит интерфейс)
+    db.ref(`users/${currentUser.uid}/financeState`).on('value', snapshot => {
+        if(snapshot.exists()) {
+            const val = snapshot.val();
+            localStorage.setItem('financeState_v15', JSON.stringify(val)); // Обновляем кэш
+            callback(val);
+        } else {
+            callback(null); 
+        }
+    });
+},
         stopListen() {
             if (db && currentUser) db.ref(`users/${currentUser.uid}/financeState`).off();
         },
@@ -623,6 +672,10 @@
         document.getElementById('tab-month-btn').innerText = capitalizedMonth;
         document.getElementById('month-title-text').innerText = `Баланс`;
         document.getElementById('op-date').value = getLocalDate();
+
+showSkeletons(); // Показываем скелетоны до получения данных
+
+DB.listen((loaded) => {
 
         DB.listen((loaded) => {
             if(loaded) {
@@ -761,17 +814,21 @@ state.incomeAccountMapping = loaded.incomeAccountMapping || {};
         if(document.getElementById('analytics').classList.contains('active')) updateAnalyticsCharts();
     }
 
-    async function fetchLiveRates() {
-        const statusEl = document.getElementById('rates-status');
-        try {
-            const fiatRes = await fetch('https://open.er-api.com/v6/latest/USD');
-            if (!fiatRes.ok) throw new Error('Network error fiat');
-            const fiatData = await fiatRes.json();
-            state.rates.USD = fiatData.rates.RUB;
+async function fetchLiveRates() {
+    const statusEl = document.getElementById('rates-status');
+    try {
+        // Запускаем запросы параллельно, это экономит ~0.5 - 1 секунду
+        const [fiatRes, cryptoRes] = await Promise.all([
+            fetch('https://open.er-api.com/v6/latest/USD'),
+            fetch('https://api.binance.com/api/v3/ticker/price')
+        ]);
 
-            const cryptoRes = await fetch('https://api.binance.com/api/v3/ticker/price');
-            if (!cryptoRes.ok) throw new Error('Network error crypto');
-            const cryptoData = await cryptoRes.json();
+        if (!fiatRes.ok || !cryptoRes.ok) throw new Error('Network error');
+        
+        const fiatData = await fiatRes.json();
+        const cryptoData = await cryptoRes.json();
+
+        state.rates.USD = fiatData.rates.RUB;
             
             state.rates.USDT = 1;
             cryptoData.forEach(item => {
