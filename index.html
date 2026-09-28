@@ -8,8 +8,9 @@
 <meta name="apple-mobile-web-app-title" content="FinTracker">
 <meta name="theme-color" content="#FAFAF9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%2310B981'/%3E%3Cpath d='M38 70V30h14c7.7 0 14 5.4 14 12s-6.3 12-14 12h-8' stroke='white' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M30 54h26M30 63h26' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 <title>FinTracker</title>
-<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiRmluVHJhY2tlciIsInNob3J0X25hbWUiOiJGaW5UcmFja2VyIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNGQUZBRjkiLCJ0aGVtZV9jb2xvciI6IiNGQUZBRjkiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxOTInIGhlaWdodD0nMTkyJyB2aWV3Qm94PScwIDAgMTkyIDE5MiclM0UlM0NyZWN0IHdpZHRoPScxOTInIGhlaWdodD0nMTkyJyByeD0nNDAnIGZpbGw9JyUyMzEwQjk4MSclMkYlM0UlM0NwYXRoIGQ9J005NiA1MHY5Mk01MCA5Nmg5Micgc3Ryb2tlPSclMjNmZmYnIHN0cm9rZS13aWR0aD0nMTInIHN0cm9rZS1saW5lY2FwPSdvdW5kJyUyRiUzRSUzQyUyRnN2ZyUzRSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiRmluVHJhY2tlciIsInNob3J0X25hbWUiOiJGaW5UcmFja2VyIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNGQUZBRjkiLCJ0aGVtZV9jb2xvciI6IiNGQUZBRjkiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxOTInIGhlaWdodD0nMTkyJyB2aWV3Qm94PScwIDAgMTkyIDE5MiclM0UlM0NjaXJjbGUgY3g9Jzk2JyBjeT0nOTYnIHI9Jzk2JyBmaWxsPSclMjMxMEI5ODEnLyUzRSUzQ3BhdGggZD0nTTcyIDEzNFY2MmgyNmMxNC45IDAgMjYgMTAuMyAyNiAyM3MtMTEuMSAyMy0yNiAyM2gtMTQnIHN0cm9rZT0nd2hpdGUnIHN0cm9rZS13aWR0aD0nMTMnIGZpbGw9J25vbmUnIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgLyUzRSUzQ3BhdGggZD0nTTU2IDEwNWg1ME01NiAxMjFoNTAnIHN0cm9rZT0nd2hpdGUnIHN0cm9rZS13aWR0aD0nMTEnIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcvJTNFJTNDL3N2ZyUzRSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
@@ -88,6 +89,14 @@ body {
   font-weight: 400;
   letter-spacing: -0.01em;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Lock scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 /* === SCROLLBARS === */
@@ -191,7 +200,7 @@ body {
 .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .input-label { font-size: 13px; font-weight: 500; color: var(--text-3); }
 
-/* === DATE INPUT FIX === */
+/* === DATE INPUT === */
 input[type="date"] {
   position: relative;
   z-index: 1;
@@ -204,15 +213,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   color: transparent;
   cursor: pointer;
   z-index: 2;
-}
-input[type="date"]::before {
-  content: '📅';
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  font-size: 16px;
 }
 
 /* === APP CONTAINER === */
@@ -407,6 +407,7 @@ input[type="date"]::before {
   max-height: 92vh; overflow-y: auto; overflow-x: hidden;
   transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
   box-shadow: var(--shadow-xl);
+  -webkit-overflow-scrolling: touch;
 }
 .modal-overlay.active .modal-sheet { transform: translateY(0); }
 .modal-handle {
@@ -594,6 +595,21 @@ input[type="date"]::before {
 .accounts-detail-value { font-size: 16px; font-weight: 600; }
 .accounts-detail-value.positive { color: var(--accent); }
 .accounts-detail-value.negative { color: var(--danger); }
+
+/* === EXPENSE STRUCTURE ITEM === */
+.expense-structure-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.expense-structure-item:last-child { border-bottom: none; }
+.expense-color-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.expense-structure-body { flex: 1; min-width: 0; }
+.expense-structure-name { font-size: 14px; font-weight: 500; }
+.expense-structure-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.expense-structure-pct { font-size: 13px; color: var(--text-3); font-weight: 500; min-width: 36px; text-align: right; }
+.expense-structure-amount { font-size: 14px; font-weight: 600; }
 
 /* === UTILITIES === */
 .flex { display: flex; }
@@ -1008,7 +1024,7 @@ input[type="date"]::before {
     </div>
 
     <div style="text-align: center; padding: 24px; color: var(--text-4); font-size: 12px;">
-      FinTracker v2.1 • Made with ❤️
+      FinTracker v2.2 • Made with ❤️
     </div>
   </div>
 
@@ -1237,7 +1253,13 @@ function loginWithGoogle() {
 function logout() { if (auth) auth.signOut().then(() => location.reload()); }
 
 // === MODAL ===
+let scrollPosition = 0;
 function showModal({title, message, body, submitText, cancelText, isDanger, onSubmit}) {
+  // Lock scroll
+  scrollPosition = window.pageYOffset;
+  document.body.classList.add('modal-open');
+  document.body.style.top = `-${scrollPosition}px`;
+
   document.getElementById('modal-title').innerText = title || '';
   const msgEl = document.getElementById('modal-message');
   if (message) { msgEl.innerHTML = message; msgEl.style.display = 'block'; } else { msgEl.style.display = 'none'; }
@@ -1253,7 +1275,13 @@ function showModal({title, message, body, submitText, cancelText, isDanger, onSu
   };
   document.getElementById('app-modal').classList.add('active');
 }
-function hideModal() { document.getElementById('app-modal').classList.remove('active'); }
+function hideModal() {
+  document.getElementById('app-modal').classList.remove('active');
+  // Unlock scroll
+  document.body.classList.remove('modal-open');
+  document.body.style.top = '';
+  window.scrollTo(0, scrollPosition);
+}
 function showAlert(msg) { showModal({ title: 'Внимание', message: escapeHTML(msg), cancelText: 'Понятно' }); }
 
 // === TRANSACTION FORM MODAL ===
@@ -1263,7 +1291,6 @@ function showTransactionModal(txId = null) {
   const isEdit = txId !== null;
   let tx = isEdit ? state.transactions.find(t => t.id === txId) : null;
 
-  const typeOptions = `<option value="expense">Расход</option><option value="income">Доход</option><option value="transfer">Перевод</option>`;
   const dateVal = tx ? tx.date : getLocalDate();
   const typeVal = tx ? tx.type : 'expense';
   const amountVal = tx ? (tx.accountDetails ? tx.accountDetails.amount : tx.amount) : '';
@@ -1311,7 +1338,6 @@ function showTransactionModal(txId = null) {
     }
   });
 
-  // Segmented type switcher
   document.querySelectorAll('#tx-type-seg .segmented-btn').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('#tx-type-seg .segmented-btn').forEach(b => b.classList.remove('active'));
@@ -1360,18 +1386,18 @@ function updateModalForm() {
     catRow.style.display = 'none';
     accToRow.style.display = 'block';
     accLabel.textContent = 'Откуда списать';
-    populateAccountSelect(accFrom, '');
-    populateAccountSelect(accTo, '');
+    populateAccountSelect(accFrom);
+    populateAccountSelect(accTo);
   } else {
     catRow.style.display = 'block';
     accToRow.style.display = 'none';
     accLabel.textContent = 'Счёт';
     catSel.innerHTML = state.categories[type].map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
-    populateAccountSelect(accFrom, '');
+    populateAccountSelect(accFrom);
   }
   updateAmountPlaceholder();
 }
-function populateAccountSelect(sel, label) {
+function populateAccountSelect(sel) {
   if (!sel) return;
   const current = sel.value;
   sel.innerHTML = '';
@@ -1405,7 +1431,6 @@ function handleCategoryAutoAccount() {
   }
 }
 function updateAmountPlaceholder() {
-  const type = getCurrentModalType();
   const sel = document.getElementById('tx-account');
   const amt = document.getElementById('tx-amount');
   if (!sel || !sel.value) { amt.placeholder = '0'; return; }
@@ -1427,7 +1452,6 @@ function saveTransactionFromModal() {
   if (isNaN(amount) || amount === 0) { showAlert('Укажите сумму'); return false; }
   if (type === 'transfer' && amount < 0) { showAlert('Сумма перевода должна быть положительной'); return false; }
 
-  // If editing, revert original transaction first
   if (editingTxId !== null) {
     const old = state.transactions.find(t => t.id === editingTxId);
     if (old) {
@@ -1446,18 +1470,18 @@ function saveTransactionFromModal() {
   if (type === 'transfer') {
     const from = document.getElementById('tx-account').value;
     const to = document.getElementById('tx-account-to').value;
-    if (!from || !to) { showAlert('Укажите оба счёта'); revertEdit(); return false; }
-    if (from === to) { showAlert('Нельзя перевести на тот же счёт'); revertEdit(); return false; }
+    if (!from || !to) { showAlert('Укажите оба счёта'); return false; }
+    if (from === to) { showAlert('Нельзя перевести на тот же счёт'); return false; }
     modifyAccountBalance(from, -amount);
     modifyAccountBalance(to, amount);
     state.transactions.push({ id: editingTxId || Date.now(), type, amount, date, note, transferDetails: { from, to, amount } });
   } else {
     const cat = document.getElementById('tx-category').value;
     const accVal = document.getElementById('tx-account').value;
-    if (!cat) { showAlert('Сначала создайте категорию'); revertEdit(); return false; }
-    if (!accVal) { showAlert('Сначала создайте счёт'); revertEdit(); return false; }
+    if (!cat) { showAlert('Сначала создайте категорию'); return false; }
+    if (!accVal) { showAlert('Сначала создайте счёт'); return false; }
     const info = modifyAccountBalance(accVal, type === 'income' ? amount : -amount);
-    if (!info) { revertEdit(); return false; }
+    if (!info) return false;
     state.transactions.push({
       id: editingTxId || Date.now(), type, category: cat, amount, date, note,
       accountDetails: { type: info.accType, accId: info.accId, tokenId: info.tokenId, amount, coin: info.coin || 'RUB' }
@@ -1465,9 +1489,6 @@ function saveTransactionFromModal() {
   }
   editingTxId = null;
   DB.save(state);
-}
-function revertEdit() {
-  // No-op here since we already reversed in saveTransactionFromModal only on failure after modifying
 }
 
 function modifyAccountBalance(accVal, delta) {
@@ -1515,7 +1536,6 @@ function switchTab(tab, btn) {
 function initApp() {
   applyTheme();
   const date = new Date();
-  const monthName = date.toLocaleString('ru-RU', { month: 'long' });
   document.getElementById('dashboard-date').textContent = date.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
   const hour = date.getHours();
   const greet = hour < 6 ? 'Доброй ночи' : hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер';
@@ -1602,7 +1622,6 @@ function renderDashboard() {
   // Today widget
   document.getElementById('today-expense').textContent = `${fmt(tExp)} ₽`;
   document.getElementById('today-income').textContent = `+${fmt(tInc)} ₽`;
-  // Compare with yesterday
   const y = new Date(); y.setDate(y.getDate() - 1);
   const yDate = `${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
   const yTx = state.transactions.filter(t => t.date === yDate && t.type === 'expense');
@@ -1642,7 +1661,7 @@ function renderDashboard() {
     budgetsCard.style.display = 'none';
   }
 
-  // Recent transactions (last 5)
+  // Recent transactions
   const recent = [...state.transactions].sort((a, b) => {
     const d = new Date(b.date) - new Date(a.date);
     if (d !== 0) return d;
@@ -1659,16 +1678,26 @@ function renderDashboard() {
     recentEl.innerHTML = recent.map(t => renderTxItem(t)).join('');
   }
 
-  // Expenses by category
+  // Expenses by category WITH PERCENTS
   let expArr = Object.keys(expMap).map(k => ({ name: k, val: expMap[k] })).sort((a, b) => b.val - a.val);
-  document.getElementById('current-month-expenses-list').innerHTML = expArr.map(e => `
-    <div class="list-item" style="padding: 10px 4px;">
-      <div class="list-item-body">
-        <div class="list-item-title">${escapeHTML(e.name)}</div>
+  const totalExpForPct = mExp > 0 ? mExp : 1;
+  
+  document.getElementById('current-month-expenses-list').innerHTML = expArr.map((e, idx) => {
+    const pct = Math.round((e.val / totalExpForPct) * 100);
+    const color = chartColors[idx % chartColors.length];
+    return `
+      <div class="expense-structure-item">
+        <div class="expense-color-dot" style="background: ${color};"></div>
+        <div class="expense-structure-body">
+          <div class="expense-structure-name">${escapeHTML(e.name)}</div>
+        </div>
+        <div class="expense-structure-right">
+          <span class="expense-structure-pct">${pct}%</span>
+          <span class="expense-structure-amount">${fmt(e.val)} ₽</span>
+        </div>
       </div>
-      <div class="list-item-amount expense">${fmt(e.val)} ₽</div>
-    </div>
-  `).join('') || `<div class="text-center text-muted text-sm" style="padding: 20px;">Нет расходов</div>`;
+    `;
+  }).join('') || `<div class="text-center text-muted text-sm" style="padding: 20px;">Нет расходов</div>`;
 
   if (charts.currentMonth) charts.currentMonth.destroy();
   charts.currentMonth = new Chart(document.getElementById('currentMonthChart').getContext('2d'), {
@@ -1867,7 +1896,7 @@ function renderAccounts() {
   document.getElementById('total-capital').textContent = `${fmt(totalCapital)} ₽`;
   
   let subHtml = '';
-  if (totalDebt > 0 || creditCardDebt > 0) {
+  if (totalDebt > 0) {
     subHtml = `
       <div class="sub-item">
         <div class="sub-label">Общий долг</div>
@@ -1881,7 +1910,6 @@ function renderAccounts() {
   }
   document.getElementById('total-capital-sub').innerHTML = subHtml;
 
-  // Detail grid for credit card breakdown
   const legendEl = document.getElementById('accounts-legend');
   if (creditCardDebt > 0 || ownFundsOnCredit > 0) {
     legendEl.innerHTML = `
@@ -2149,7 +2177,6 @@ function renderCategories() {
   renderList('expense', 'exp-categories-list');
   renderList('income', 'inc-categories-list');
 
-  // Update analytics selects
   const expSel = document.getElementById('analytics-exp-select');
   const freqSel = document.getElementById('analytics-freq-select');
   if (expSel) {
@@ -2247,7 +2274,6 @@ function renderHistory() {
   const filter = document.getElementById('history-category-filter')?.value || 'all';
   const filterEl = document.getElementById('history-category-filter');
 
-  // Update filter options
   if (filterEl) {
     const uniqueCats = new Set();
     state.transactions.forEach(t => {
@@ -2293,7 +2319,6 @@ function renderHistory() {
         </div>
       </div>
     `).join('');
-    // re-attach swipe
     el.querySelectorAll('.list-item-wrapper').forEach(attachSwipe);
   }
 }
@@ -2411,7 +2436,6 @@ function renderGoals() {
   }
   list.innerHTML = state.goals.map(g => {
     const pct = Math.min((g.current / g.target) * 100, 100);
-    const sourceAccount = findAccountByKey(g.sourceAccount);
     return `
       <div class="goal-card">
         <div class="goal-header">
@@ -2419,7 +2443,6 @@ function renderGoals() {
           <div class="goal-info">
             <div class="goal-name">${escapeHTML(g.name)}</div>
             <div class="goal-target">Цель: ${fmt(g.target)} ₽</div>
-            ${sourceAccount ? `<div class="goal-target">Источник: ${escapeHTML(sourceAccount.name)}</div>` : ''}
           </div>
           <div>
             <div class="goal-amount">${fmt(g.current)} ₽</div>
@@ -2438,14 +2461,6 @@ function renderGoals() {
 }
 function showGoalModal(goal = null) {
   const isEdit = !!goal;
-  let accountOptions = '<option value="">Выберите счёт...</option>';
-  state.accounts.forEach(a => {
-    if (a.type === 'fiat') {
-      const val = 'fiat_' + a.id;
-      accountOptions += `<option value="${val}" ${(goal && goal.sourceAccount === val) ? 'selected' : ''}>${escapeHTML(a.name)} (${a.currency || '₽'})</option>`;
-    }
-  });
-
   showModal({
     title: isEdit ? 'Редактировать цель' : 'Новая цель',
     body: `
@@ -2465,10 +2480,6 @@ function showGoalModal(goal = null) {
         <label class="input-label">Уже накоплено (₽)</label>
         <input type="text" inputmode="decimal" class="input font-mono" id="g-current" value="${isEdit ? goal.current : 0}">
       </div>
-      <div class="input-group">
-        <label class="input-label">Счёт-источник пополнения</label>
-        <select class="select" id="g-source">${accountOptions}</select>
-      </div>
     `,
     submitText: isEdit ? 'Сохранить' : 'Создать',
     onSubmit: () => {
@@ -2476,14 +2487,12 @@ function showGoalModal(goal = null) {
       const icon = document.getElementById('g-icon').value || '🎯';
       const target = parseNum(document.getElementById('g-target').value);
       const current = parseNum(document.getElementById('g-current').value) || 0;
-      const source = document.getElementById('g-source').value;
       if (!name || isNaN(target) || target <= 0) { showAlert('Заполните корректно'); return false; }
-      if (!source) { showAlert('Выберите счёт-источник'); return false; }
       if (isEdit) {
-        goal.name = name; goal.icon = icon; goal.target = target; goal.current = current; goal.sourceAccount = source;
+        goal.name = name; goal.icon = icon; goal.target = target; goal.current = current;
       } else {
         state.goals = state.goals || [];
-        state.goals.push({ id: Date.now(), name, icon, target, current, sourceAccount: source });
+        state.goals.push({ id: Date.now(), name, icon, target, current });
       }
       DB.save(state);
     }
@@ -2502,6 +2511,21 @@ function deleteGoal(id) {
 function addToGoal(id) {
   const g = state.goals.find(g => g.id === id);
   if (!g) return;
+
+  // Build account options including crypto tokens
+  let accOptions = '<option value="">Выберите счёт списания...</option>';
+  state.accounts.filter(a => a.type === 'fiat').forEach(a => {
+    const val = `fiat_${a.id}`;
+    accOptions += `<option value="${val}">${escapeHTML(a.name)} • ${fmt(a.balance)} ${a.currency || '₽'}</option>`;
+  });
+  state.accounts.filter(a => a.type === 'crypto_wallet').forEach(a => {
+    (a.tokens || []).forEach(t => {
+      const val = `crypto_${a.id}_${t.id}`;
+      const rubVal = t.balance * (state.rates[t.coin] || 0) * state.rates.USD;
+      accOptions += `<option value="${val}">${escapeHTML(a.name)} • ${escapeHTML(t.coin)} (${t.balance} ≈ ${fmt(rubVal)}₽)</option>`;
+    });
+  });
+
   showModal({
     title: `Пополнить "${g.name}"`,
     body: `
@@ -2509,13 +2533,35 @@ function addToGoal(id) {
         <label class="input-label">Сумма пополнения (₽)</label>
         <input type="text" inputmode="decimal" class="input input-lg font-mono" id="g-add" placeholder="0">
       </div>
+      <div class="input-group">
+        <label class="input-label">Списать со счёта</label>
+        <select class="select" id="g-source-account">${accOptions}</select>
+      </div>
     `,
     submitText: 'Пополнить',
     onSubmit: () => {
       const a = parseNum(document.getElementById('g-add').value);
       if (isNaN(a) || a <= 0) { showAlert('Некорректная сумма'); return false; }
-      const info = modifyAccountBalance(g.sourceAccount, -a);
-      if (!info) return false;
+      const srcAcc = document.getElementById('g-source-account').value;
+      if (!srcAcc) { showAlert('Выберите счёт списания'); return false; }
+
+      if (srcAcc.startsWith('fiat_')) {
+        const info = modifyAccountBalance(srcAcc, -a);
+        if (!info) return false;
+      } else if (srcAcc.startsWith('crypto_')) {
+        const parts = srcAcc.split('_');
+        const wallet = state.accounts.find(x => x.id === parseInt(parts[1]));
+        if (!wallet) { showAlert('Кошелёк не найден'); return false; }
+        const token = wallet.tokens.find(t => t.id === parseInt(parts[2]));
+        if (!token) { showAlert('Токен не найден'); return false; }
+        const rateRub = (state.rates[token.coin] || 0) * state.rates.USD;
+        if (rateRub <= 0) { showAlert('Нет курса для этого токена'); return false; }
+        const tokenAmount = a / rateRub;
+        if (tokenAmount > token.balance) { showAlert('Недостаточно средств на крипто-счёте'); return false; }
+        const info = modifyAccountBalance(srcAcc, -tokenAmount);
+        if (!info) return false;
+      }
+
       g.current += a;
       DB.save(state);
     }
@@ -2581,7 +2627,6 @@ function applyTemplate(id) {
   if (!t) return;
   showTransactionModal();
   setTimeout(() => {
-    // Pre-fill
     document.querySelectorAll('#tx-type-seg .segmented-btn').forEach(b => b.classList.toggle('active', b.dataset.type === t.type));
     updateModalForm();
     setTimeout(() => {
@@ -2875,7 +2920,6 @@ function updateAnalyticsCharts() {
   const accent = cs.getPropertyValue('--accent').trim();
   const danger = cs.getPropertyValue('--danger').trim();
   const indigo = cs.getPropertyValue('--indigo').trim();
-  const text3 = cs.getPropertyValue('--text-3').trim();
 
   if (charts.netAndPercent) {
     charts.netAndPercent.data.datasets[0].data = generatePercentData(period);
@@ -2908,7 +2952,6 @@ function updateAnalyticsCharts() {
 }
 
 function initAnalyticsCharts() {
-  // Segmented listener
   document.querySelectorAll('#analytics-period-seg .segmented-btn').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('#analytics-period-seg .segmented-btn').forEach(b => b.classList.remove('active'));
@@ -2921,8 +2964,6 @@ function initAnalyticsCharts() {
   const accent = cs.getPropertyValue('--accent').trim();
   const danger = cs.getPropertyValue('--danger').trim();
   const indigo = cs.getPropertyValue('--indigo').trim();
-  const text3 = cs.getPropertyValue('--text-3').trim();
-  const surface3 = cs.getPropertyValue('--surface-3').trim();
   const period = document.querySelector('#analytics-period-seg .segmented-btn.active')?.dataset.period || 'current_month';
   const tl = getTimeline(period);
 
