@@ -183,12 +183,37 @@ body {
   border: 1.5px solid var(--border); background: var(--surface);
   color: var(--text); font-size: 15px; font-family: inherit;
   transition: all 0.2s ease; outline: none;
+  -webkit-appearance: none; appearance: none;
 }
 .input:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .input::placeholder { color: var(--text-4); }
 .input-lg { padding: 18px 20px; font-size: 20px; font-weight: 600; }
 .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .input-label { font-size: 13px; font-weight: 500; color: var(--text-3); }
+
+/* === DATE INPUT FIX === */
+input[type="date"] {
+  position: relative;
+  z-index: 1;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  width: auto; height: auto;
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  z-index: 2;
+}
+input[type="date"]::before {
+  content: '📅';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 16px;
+}
 
 /* === APP CONTAINER === */
 #app-container { display: none; padding-top: var(--safe-top); padding-bottom: calc(var(--tab-height) + 16px); min-height: 100vh; }
@@ -227,7 +252,7 @@ body {
 }
 .card-hero .label { font-size: 13px; opacity: 0.85; font-weight: 500; margin-bottom: 6px; }
 .card-hero .value { font-size: 36px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 16px; }
-.card-hero .sub-row { display: flex; gap: 16px; font-size: 14px; }
+.card-hero .sub-row { display: flex; gap: 16px; font-size: 14px; flex-wrap: wrap; }
 .card-hero .sub-item { display: flex; flex-direction: column; gap: 2px; }
 .card-hero .sub-label { opacity: 0.75; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
 .card-hero .sub-value { font-weight: 600; }
@@ -355,10 +380,10 @@ body {
 
 /* === FAB === */
 .fab {
-  position: fixed; bottom: calc(var(--tab-height) - 28px); right: 20px;
+  position: fixed; bottom: calc(var(--tab-height) + 16px); right: 20px;
   width: 56px; height: 56px; border-radius: 18px;
   background: linear-gradient(135deg, var(--accent) 0%, #059669 100%);
-  color: white; border: none; cursor: pointer; z-index: 101;
+  color: white; border: none; cursor: pointer; z-index: 99;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -379,7 +404,7 @@ body {
 .modal-sheet {
   background: var(--surface); width: 100%; max-width: 480px;
   border-radius: 28px 28px 0 0; padding: 8px 20px calc(20px + var(--safe-bottom));
-  max-height: 92vh; overflow-y: auto;
+  max-height: 92vh; overflow-y: auto; overflow-x: hidden;
   transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
   box-shadow: var(--shadow-xl);
 }
@@ -397,6 +422,7 @@ body {
 .chart-container { position: relative; width: 100%; height: 200px; }
 .chart-container-sm { height: 160px; }
 .chart-container-lg { height: 280px; }
+.chart-container-xl { height: 320px; }
 
 /* === LIVE STATUS === */
 .live-status {
@@ -492,6 +518,12 @@ body {
 }
 .category-tag:hover .del-btn, .category-tag.show-actions .del-btn { opacity: 0.7; }
 .category-tag .del-btn:hover { opacity: 1; background: rgba(0,0,0,0.1); }
+.category-mapping-select {
+  margin-left: 8px; width: auto; font-size: 11px; padding: 2px 6px;
+  border: none; background: rgba(0,0,0,0.06); border-radius: 6px;
+  outline: none; cursor: pointer; color: var(--text-3);
+}
+[data-theme="dark"] .category-mapping-select { background: rgba(255,255,255,0.08); }
 
 /* === SKELETON === */
 .skeleton {
@@ -548,6 +580,20 @@ body {
 .ptr-indicator svg { width: 18px; height: 18px; color: var(--accent); }
 .ptr-indicator.loading svg { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* === ACCOUNTS DETAIL === */
+.accounts-detail-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+  margin-top: 16px; padding: 16px; background: var(--surface-2);
+  border-radius: var(--radius);
+}
+.accounts-detail-item {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.accounts-detail-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.accounts-detail-value { font-size: 16px; font-weight: 600; }
+.accounts-detail-value.positive { color: var(--accent); }
+.accounts-detail-value.negative { color: var(--danger); }
 
 /* === UTILITIES === */
 .flex { display: flex; }
@@ -716,9 +762,15 @@ body {
     </div>
 
     <div class="card card-elevated">
-      <div class="chart-container chart-container-sm" style="margin-bottom: 16px;">
+      <div class="card-title"><h3>Распределение</h3></div>
+      <div class="chart-container chart-container-xl">
         <canvas id="accountsChart"></canvas>
       </div>
+      <div id="accounts-legend" style="margin-top: 16px;"></div>
+    </div>
+
+    <div class="card card-elevated">
+      <div class="card-title"><h3>Все счета</h3></div>
       <div id="accounts-list"></div>
     </div>
   </div>
@@ -802,7 +854,7 @@ body {
   </div>
 
   <!-- TAB: GOALS -->
-  <div id="tab-goals" class="tab-content">
+  <div id="tab-goals" class="tab-content" style="padding-bottom: calc(var(--tab-height) + 100px);">
     <div class="page-header">
       <div>
         <div class="page-title">Цели</div>
@@ -893,7 +945,7 @@ body {
         <button class="btn btn-primary mb-4" onclick="addCategory()">Добавить категорию</button>
         <div class="input-label mb-2">Расходы</div>
         <div id="exp-categories-list" class="mb-3"></div>
-        <div class="input-label mb-2">Доходы</div>
+        <div class="input-label mb-2">Доходы (с привязкой к счёту)</div>
         <div id="inc-categories-list"></div>
       </div>
     </div>
@@ -956,7 +1008,7 @@ body {
     </div>
 
     <div style="text-align: center; padding: 24px; color: var(--text-4); font-size: 12px;">
-      FinTracker v2.0 • Made with ❤️
+      FinTracker v2.1 • Made with ❤️
     </div>
   </div>
 
@@ -1018,7 +1070,6 @@ const escapeHTML = (s) => s == null ? '' : String(s).replace(/&/g,'&amp;').repla
 const getLocalDate = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const parseNum = (v) => {
   if (v === null || v === undefined || v === '') return NaN;
-  // Calculator: evaluate simple arithmetic
   const s = String(v).replace(/\s/g, '').replace(/,/g, '.');
   if (/^[\d+\-*/.()\s]+$/.test(s) && /[+\-*/]/.test(s)) {
     try {
@@ -1028,6 +1079,7 @@ const parseNum = (v) => {
   }
   return Number(s);
 };
+const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
 
 // === ICONS ===
 const icons = {
@@ -1327,8 +1379,8 @@ function populateAccountSelect(sel, label) {
   let fiatOpts = '';
   state.accounts.filter(a => a.type === 'fiat').forEach(a => {
     const val = `fiat_${a.id}`;
-    let bal = `${a.balance.toLocaleString('ru-RU')} ${a.currency || '₽'}`;
-    if (a.isCredit) bal = a.balance < 0 ? `Долг ${Math.abs(a.balance).toLocaleString('ru-RU')} ${a.currency || '₽'}` : `${a.balance} ${a.currency || '₽'}`;
+    let bal = `${fmt(a.balance)} ${a.currency || '₽'}`;
+    if (a.isCredit) bal = a.balance < 0 ? `Долг ${fmt(Math.abs(a.balance))} ${a.currency || '₽'}` : `${fmt(a.balance)} ${a.currency || '₽'}`;
     fiatOpts += `<option value="${val}">${escapeHTML(a.name)} • ${bal}</option>`;
   });
   let cryptoOpts = '';
@@ -1529,9 +1581,9 @@ function renderDashboard() {
   });
 
   const net = mInc - mExp;
-  document.getElementById('hero-net').textContent = `${net >= 0 ? '+' : ''}${net.toLocaleString('ru-RU')} ₽`;
-  document.getElementById('hero-income').textContent = `+${mInc.toLocaleString('ru-RU')} ₽`;
-  document.getElementById('hero-expense').textContent = `-${mExp.toLocaleString('ru-RU')} ₽`;
+  document.getElementById('hero-net').textContent = `${net >= 0 ? '+' : ''}${fmt(net)} ₽`;
+  document.getElementById('hero-income').textContent = `+${fmt(mInc)} ₽`;
+  document.getElementById('hero-expense').textContent = `-${fmt(mExp)} ₽`;
 
   let totalCapital = 0, totalDebt = 0;
   state.accounts.forEach(a => {
@@ -1545,11 +1597,11 @@ function renderDashboard() {
       });
     }
   });
-  document.getElementById('hero-capital').textContent = `${Math.round(totalCapital - totalDebt).toLocaleString('ru-RU')} ₽`;
+  document.getElementById('hero-capital').textContent = `${fmt(totalCapital - totalDebt)} ₽`;
 
   // Today widget
-  document.getElementById('today-expense').textContent = `${tExp.toLocaleString('ru-RU')} ₽`;
-  document.getElementById('today-income').textContent = `+${tInc.toLocaleString('ru-RU')} ₽`;
+  document.getElementById('today-expense').textContent = `${fmt(tExp)} ₽`;
+  document.getElementById('today-income').textContent = `+${fmt(tInc)} ₽`;
   // Compare with yesterday
   const y = new Date(); y.setDate(y.getDate() - 1);
   const yDate = `${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
@@ -1580,7 +1632,7 @@ function renderDashboard() {
         <div style="margin-bottom: 12px;">
           <div class="flex justify-between items-center mb-2">
             <span class="text-sm font-mono" style="font-weight:500;">${escapeHTML(cat)}</span>
-            <span class="text-sm text-muted">${spent.toLocaleString('ru-RU')} / ${limit.toLocaleString('ru-RU')} ₽</span>
+            <span class="text-sm text-muted">${fmt(spent)} / ${fmt(limit)} ₽</span>
           </div>
           <div class="progress"><div class="progress-fill ${cls}" style="width: ${pct}%;"></div></div>
         </div>
@@ -1614,7 +1666,7 @@ function renderDashboard() {
       <div class="list-item-body">
         <div class="list-item-title">${escapeHTML(e.name)}</div>
       </div>
-      <div class="list-item-amount expense">${e.val.toLocaleString('ru-RU')} ₽</div>
+      <div class="list-item-amount expense">${fmt(e.val)} ₽</div>
     </div>
   `).join('') || `<div class="text-center text-muted text-sm" style="padding: 20px;">Нет расходов</div>`;
 
@@ -1661,7 +1713,7 @@ function renderTxItem(t, showActions = true) {
     const fromAcc = findAccountByKey(t.transferDetails.from);
     const toAcc = findAccountByKey(t.transferDetails.to);
     sub = `${fromAcc ? fromAcc.name : '?'} → ${toAcc ? toAcc.name : '?'}`;
-    amount = `${t.amount.toLocaleString('ru-RU')} ₽`;
+    amount = `${fmt(t.amount)} ₽`;
   } else {
     icon = t.type === 'income' ? icons.income : icons.expense;
     cls = t.type;
@@ -1673,7 +1725,7 @@ function renderTxItem(t, showActions = true) {
     }
     const rub = getTxRub(t);
     const sign = t.type === 'income' ? (rub >= 0 ? '+' : '-') : (rub >= 0 ? '-' : '+');
-    amount = `${sign}${Math.abs(rub).toLocaleString('ru-RU')} ₽`;
+    amount = `${sign}${fmt(Math.abs(rub))} ₽`;
   }
   if (t.note) sub += ` • ${escapeHTML(t.note)}`;
 
@@ -1708,7 +1760,7 @@ function findAccountByKey(key) {
 
 // === ACCOUNTS ===
 function renderAccounts() {
-  let totalCapital = 0, totalDebt = 0;
+  let totalCapital = 0, totalDebt = 0, creditCardDebt = 0, ownFundsOnCredit = 0;
   const list = document.getElementById('accounts-list');
   list.innerHTML = '';
 
@@ -1724,16 +1776,21 @@ function renderAccounts() {
     if (acc.type === 'fiat') {
       const curRate = acc.currency === 'USD' ? state.rates.USD : acc.currency === 'EUR' ? state.rates.EUR || (state.rates.USD * 1.1) : 1;
       const rub = acc.balance * curRate;
-      if (rub > 0) totalCapital += rub;
-      else if (rub < 0) totalDebt += Math.abs(rub);
+      if (rub > 0) {
+        totalCapital += rub;
+        if (acc.isCredit) ownFundsOnCredit += rub;
+      } else if (rub < 0) {
+        totalDebt += Math.abs(rub);
+        if (acc.isCredit) creditCardDebt += Math.abs(rub);
+      }
 
-      let balText = `${acc.balance.toLocaleString('ru-RU')} ${acc.currency || '₽'}`;
+      let balText = `${fmt(acc.balance)} ${acc.currency || '₽'}`;
       let badge = '';
       if (acc.isCredit) {
         badge = '<span class="chip chip-warning" style="margin-left:6px;">КРЕДИТКА</span>';
-        if (acc.balance < 0) balText = `<span style="color: var(--danger); font-weight: 600;">Долг ${Math.abs(acc.balance).toLocaleString('ru-RU')} ${acc.currency || '₽'}</span>`;
+        if (acc.balance < 0) balText = `<span style="color: var(--danger); font-weight: 600;">Долг ${fmt(Math.abs(acc.balance))} ${acc.currency || '₽'}</span>`;
         else if (acc.balance === 0) balText = '<span style="color: var(--accent);">Долгов нет</span>';
-        else balText = `<span style="color: var(--accent);">Свои: ${acc.balance.toLocaleString('ru-RU')} ${acc.currency || '₽'}</span>`;
+        else balText = `<span style="color: var(--accent);">Свои: ${fmt(acc.balance)} ${acc.currency || '₽'}</span>`;
       }
 
       list.innerHTML += `
@@ -1792,7 +1849,7 @@ function renderAccounts() {
               <div class="list-item-icon account">${icons.crypto}</div>
               <div>
                 <div class="list-item-title">${escapeHTML(acc.name)} <span class="chip chip-indigo">CRYPTO</span></div>
-                <div class="list-item-sub">≈ ${Math.round(walletRub).toLocaleString('ru-RU')} ₽ ($${walletUsd.toLocaleString('en-US', {maximumFractionDigits: 2})})</div>
+                <div class="list-item-sub">≈ ${fmt(walletRub)} ₽ ($${walletUsd.toLocaleString('en-US', {maximumFractionDigits: 2})})</div>
               </div>
             </div>
             <div class="flex gap-2">
@@ -1806,22 +1863,50 @@ function renderAccounts() {
     }
   });
 
-  const free = totalCapital - totalDebt;
-  document.getElementById('total-capital').textContent = `${Math.round(totalCapital).toLocaleString('ru-RU')} ₽`;
+  const freeFunds = totalCapital - totalDebt;
+  document.getElementById('total-capital').textContent = `${fmt(totalCapital)} ₽`;
+  
   let subHtml = '';
-  if (totalDebt > 0) {
+  if (totalDebt > 0 || creditCardDebt > 0) {
     subHtml = `
       <div class="sub-item">
-        <div class="sub-label">Долги</div>
-        <div class="sub-value">-${Math.round(totalDebt).toLocaleString('ru-RU')} ₽</div>
+        <div class="sub-label">Общий долг</div>
+        <div class="sub-value">-${fmt(totalDebt)} ₽</div>
       </div>
       <div class="sub-item">
         <div class="sub-label">Свободно</div>
-        <div class="sub-value">${Math.round(free).toLocaleString('ru-RU')} ₽</div>
+        <div class="sub-value">${fmt(freeFunds)} ₽</div>
       </div>
     `;
   }
   document.getElementById('total-capital-sub').innerHTML = subHtml;
+
+  // Detail grid for credit card breakdown
+  const legendEl = document.getElementById('accounts-legend');
+  if (creditCardDebt > 0 || ownFundsOnCredit > 0) {
+    legendEl.innerHTML = `
+      <div class="accounts-detail-grid">
+        <div class="accounts-detail-item">
+          <div class="accounts-detail-label">Всего средств</div>
+          <div class="accounts-detail-value positive">${fmt(totalCapital)} ₽</div>
+        </div>
+        <div class="accounts-detail-item">
+          <div class="accounts-detail-label">Долг по кредиткам</div>
+          <div class="accounts-detail-value negative">-${fmt(creditCardDebt)} ₽</div>
+        </div>
+        <div class="accounts-detail-item">
+          <div class="accounts-detail-label">Свои на кредитках</div>
+          <div class="accounts-detail-value positive">+${fmt(ownFundsOnCredit)} ₽</div>
+        </div>
+        <div class="accounts-detail-item">
+          <div class="accounts-detail-label">Реально свободно</div>
+          <div class="accounts-detail-value" style="color: var(--accent);">${fmt(totalCapital - creditCardDebt)} ₽</div>
+        </div>
+      </div>
+    `;
+  } else {
+    legendEl.innerHTML = '';
+  }
 }
 
 function initAccountsChart() {
@@ -1842,8 +1927,30 @@ function initAccountsChart() {
   if (data.length === 0) { data.push(1); labels.push('Нет данных'); }
   charts.accounts = new Chart(ctx, {
     type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: chartColors, borderWidth: 0, cutout: '70%' }] },
-    options: { plugins: { legend: { display: true, position: 'bottom', labels: { padding: 10, font: { size: 11 } } } } }
+    data: { labels, datasets: [{ data, backgroundColor: chartColors, borderWidth: 0, cutout: '65%' }] },
+    options: {
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            padding: 12,
+            font: { size: 11 },
+            generateLabels: (chart) => {
+              const dataset = chart.data.datasets[0];
+              const total = dataset.data.reduce((a, b) => a + b, 0);
+              return chart.data.labels.map((label, i) => ({
+                text: `${label}: ${fmt(dataset.data[i])}₽ (${Math.round((dataset.data[i]/total)*100)}%)`,
+                fillStyle: dataset.backgroundColor[i],
+                strokeStyle: dataset.backgroundColor[i],
+                hidden: false,
+                index: i
+              }));
+            }
+          }
+        }
+      }
+    }
   });
 }
 
@@ -2013,12 +2120,31 @@ function confirmDeleteToken(walletId, tokenId) {
 function renderCategories() {
   const renderList = (type, listId) => {
     const list = document.getElementById(listId);
-    list.innerHTML = state.categories[type].map((cat, idx) => `
-      <div class="category-tag">
-        <span>${escapeHTML(cat)}</span>
-        <button class="del-btn" onclick="confirmDeleteCategory('${type}', ${idx})">${icons.x}</button>
-      </div>
-    `).join('') || `<div class="text-muted text-sm">Нет категорий</div>`;
+    list.innerHTML = state.categories[type].map((cat, idx) => {
+      let mappingHTML = '';
+      if (type === 'income') {
+        let options = '<option value="">Куда зачислять?</option>';
+        state.accounts.forEach(a => {
+          if (a.type === 'fiat') {
+            const val = 'fiat_' + a.id;
+            options += `<option value="${val}" ${(state.incomeAccountMapping && state.incomeAccountMapping[cat] === val) ? 'selected' : ''}>${escapeHTML(a.name)}</option>`;
+          } else if (a.type === 'crypto_wallet') {
+            (a.tokens || []).forEach(t => {
+              const val = `crypto_${a.id}_${t.id}`;
+              options += `<option value="${val}" ${(state.incomeAccountMapping && state.incomeAccountMapping[cat] === val) ? 'selected' : ''}>${escapeHTML(a.name)} • ${escapeHTML(t.coin)}</option>`;
+            });
+          }
+        });
+        mappingHTML = `<select class="category-mapping-select" onchange="updateIncomeMapping('${escapeHTML(cat)}', this.value)">${options}</select>`;
+      }
+      return `
+        <div class="category-tag" style="${type === 'income' ? 'display: inline-flex; align-items: center; max-width: 100%;' : ''}">
+          <span style="white-space: nowrap;">${escapeHTML(cat)}</span>
+          ${mappingHTML}
+          <button class="del-btn" onclick="confirmDeleteCategory('${type}', ${idx})">${icons.x}</button>
+        </div>
+      `;
+    }).join('') || `<div class="text-muted text-sm">Нет категорий</div>`;
   };
   renderList('expense', 'exp-categories-list');
   renderList('income', 'inc-categories-list');
@@ -2049,6 +2175,12 @@ function renderCategories() {
     incSel.innerHTML = html;
     if (cur) incSel.value = cur;
   }
+}
+function updateIncomeMapping(cat, val) {
+  state.incomeAccountMapping = state.incomeAccountMapping || {};
+  if (val) state.incomeAccountMapping[cat] = val;
+  else delete state.incomeAccountMapping[cat];
+  DB.save(state);
 }
 function addCategory() {
   const type = document.getElementById('new-cat-type').value;
@@ -2092,7 +2224,7 @@ function renderSettingsBudgets() {
     <div class="list-item">
       <div class="list-item-body">
         <div class="list-item-title">${escapeHTML(cat)}</div>
-        <div class="list-item-sub">Лимит: ${state.budgets[cat].toLocaleString('ru-RU')} ₽</div>
+        <div class="list-item-sub">Лимит: ${fmt(state.budgets[cat])} ₽</div>
       </div>
       <button class="btn-icon" onclick="removeBudget('${escapeHTML(cat)}')" style="color: var(--danger);">${icons.delete}</button>
     </div>
@@ -2279,16 +2411,18 @@ function renderGoals() {
   }
   list.innerHTML = state.goals.map(g => {
     const pct = Math.min((g.current / g.target) * 100, 100);
+    const sourceAccount = findAccountByKey(g.sourceAccount);
     return `
       <div class="goal-card">
         <div class="goal-header">
           <div class="goal-icon">${g.icon || '🎯'}</div>
           <div class="goal-info">
             <div class="goal-name">${escapeHTML(g.name)}</div>
-            <div class="goal-target">Цель: ${g.target.toLocaleString('ru-RU')} ₽</div>
+            <div class="goal-target">Цель: ${fmt(g.target)} ₽</div>
+            ${sourceAccount ? `<div class="goal-target">Источник: ${escapeHTML(sourceAccount.name)}</div>` : ''}
           </div>
           <div>
-            <div class="goal-amount">${g.current.toLocaleString('ru-RU')} ₽</div>
+            <div class="goal-amount">${fmt(g.current)} ₽</div>
             <div class="goal-percent">${pct.toFixed(0)}%</div>
           </div>
         </div>
@@ -2304,6 +2438,14 @@ function renderGoals() {
 }
 function showGoalModal(goal = null) {
   const isEdit = !!goal;
+  let accountOptions = '<option value="">Выберите счёт...</option>';
+  state.accounts.forEach(a => {
+    if (a.type === 'fiat') {
+      const val = 'fiat_' + a.id;
+      accountOptions += `<option value="${val}" ${(goal && goal.sourceAccount === val) ? 'selected' : ''}>${escapeHTML(a.name)} (${a.currency || '₽'})</option>`;
+    }
+  });
+
   showModal({
     title: isEdit ? 'Редактировать цель' : 'Новая цель',
     body: `
@@ -2323,6 +2465,10 @@ function showGoalModal(goal = null) {
         <label class="input-label">Уже накоплено (₽)</label>
         <input type="text" inputmode="decimal" class="input font-mono" id="g-current" value="${isEdit ? goal.current : 0}">
       </div>
+      <div class="input-group">
+        <label class="input-label">Счёт-источник пополнения</label>
+        <select class="select" id="g-source">${accountOptions}</select>
+      </div>
     `,
     submitText: isEdit ? 'Сохранить' : 'Создать',
     onSubmit: () => {
@@ -2330,12 +2476,14 @@ function showGoalModal(goal = null) {
       const icon = document.getElementById('g-icon').value || '🎯';
       const target = parseNum(document.getElementById('g-target').value);
       const current = parseNum(document.getElementById('g-current').value) || 0;
+      const source = document.getElementById('g-source').value;
       if (!name || isNaN(target) || target <= 0) { showAlert('Заполните корректно'); return false; }
+      if (!source) { showAlert('Выберите счёт-источник'); return false; }
       if (isEdit) {
-        goal.name = name; goal.icon = icon; goal.target = target; goal.current = current;
+        goal.name = name; goal.icon = icon; goal.target = target; goal.current = current; goal.sourceAccount = source;
       } else {
         state.goals = state.goals || [];
-        state.goals.push({ id: Date.now(), name, icon, target, current });
+        state.goals.push({ id: Date.now(), name, icon, target, current, sourceAccount: source });
       }
       DB.save(state);
     }
@@ -2366,6 +2514,8 @@ function addToGoal(id) {
     onSubmit: () => {
       const a = parseNum(document.getElementById('g-add').value);
       if (isNaN(a) || a <= 0) { showAlert('Некорректная сумма'); return false; }
+      const info = modifyAccountBalance(g.sourceAccount, -a);
+      if (!info) return false;
       g.current += a;
       DB.save(state);
     }
@@ -2385,7 +2535,7 @@ function renderTemplates() {
       <div class="list-item-icon ${t.type}">${t.type === 'income' ? icons.income : t.type === 'transfer' ? icons.transfer : icons.expense}</div>
       <div class="list-item-body">
         <div class="list-item-title">${escapeHTML(t.category || 'Перевод')}</div>
-        <div class="list-item-sub">${t.amount.toLocaleString('ru-RU')} ₽ ${t.note ? '• ' + escapeHTML(t.note) : ''}</div>
+        <div class="list-item-sub">${fmt(t.amount)} ₽ ${t.note ? '• ' + escapeHTML(t.note) : ''}</div>
       </div>
       <button class="btn-icon" onclick="applyTemplate(${t.id})" style="background: var(--accent); color: white;">${icons.plus}</button>
       <button class="btn-icon" onclick="deleteTemplate(${t.id})" style="color: var(--danger);">${icons.delete}</button>
