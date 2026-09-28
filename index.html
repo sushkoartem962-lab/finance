@@ -479,16 +479,58 @@ function renderCategoryStats(){const el=document.getElementById('category-stats-
 const total=Object.values(catMap).reduce((s,c)=>s+c.sum,0);const arr=Object.entries(catMap).map(([k,v])=>({name:k,...v,avg:v.count>0?v.sum/v.count:0,share:total>0?v.sum/total*100:0})).sort((a,b)=>b.sum-a.sum);
 if(!arr.length){el.innerHTML='<div class="text-muted text-sm text-center" style="padding:20px">Нет данных</div>';return}
 el.innerHTML=arr.map((c,i)=>{const color=chartColors[i%chartColors.length];return `<div class="expense-structure-item"><div class="expense-color-dot" style="background:${color}"></div><div class="expense-structure-body"><div class="expense-structure-name">${escapeHTML(c.name)}</div><div class="text-xs text-muted">${c.count} оп • ср. ${fmt(c.avg)} ₽ • макс ${fmt(c.max)} ₽</div></div><div class="expense-structure-right"><span class="expense-structure-pct">${Math.round(c.share)}%</span><span class="expense-structure-amount">${fmt(c.sum)} ₽</span></div></div>`}).join('')}
-function renderDeepSection(){renderComparison();renderFreqTop5();updateDeepCharts()}
+function renderDeepSection(){renderComparison();renderFreqTop5();initDeepCharts()}
+  function initDeepCharts(){
+  const period = analyticsPeriod;
+  const tl = getTimeline(period);
+  const cs = getComputedStyle(document.documentElement);
+  const accent = cs.getPropertyValue('--accent').trim();
+  const danger = cs.getPropertyValue('--danger').trim();
+  const indigo = cs.getPropertyValue('--indigo').trim();
+
+  const cf = document.getElementById('analytics-freq-select').value || (state.categories.expense[0] ? `cat_${state.categories.expense[0]}` : '');
+  if (charts.freqHistory) charts.freqHistory.destroy();
+  charts.freqHistory = new Chart(document.getElementById('chartFreqHistory'), {
+    type: 'bar',
+    data: { labels: tl.labels, datasets: [{ label: 'Раз', data: cf ? generateFreqData(cf, period) : [0], backgroundColor: indigo, borderRadius: 4 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } }, x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 8 } } } }
+  });
+
+  const ce = document.getElementById('analytics-exp-select').value || (state.categories.expense[0] ? `cat_${state.categories.expense[0]}` : '');
+  if (charts.expHistory) charts.expHistory.destroy();
+  charts.expHistory = new Chart(document.getElementById('chartExpHistory'), {
+    type: 'line',
+    data: { labels: tl.labels, datasets: [{ data: ce ? generateHistoryData('expense', ce, period) : [0], borderColor: danger, pointBackgroundColor: danger, pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 3, backgroundColor: 'rgba(239,68,68,.1)', fill: true, tension: .4 }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 8 } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+  });
+
+  const ci = document.getElementById('analytics-inc-select').value || (state.categories.income[0] ? `cat_${state.categories.income[0]}` : '');
+  if (charts.incHistory) charts.incHistory.destroy();
+  charts.incHistory = new Chart(document.getElementById('chartIncHistory'), {
+    type: 'line',
+    data: { labels: tl.labels, datasets: [{ data: ci ? generateHistoryData('income', ci, period) : [0], borderColor: accent, pointBackgroundColor: accent, pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 3, backgroundColor: 'rgba(16,185,129,.1)', fill: true, tension: .4 }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 8 } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+  });
+}
 function renderComparison(){const el=document.getElementById('comparison-list');const now=new Date();let curPrefix,prevPrefix;if(analyticsPeriod==='current_month'||analyticsPeriod==='last_month'){const cm=analyticsPeriod==='current_month'?new Date():new Date(now.getFullYear(),now.getMonth()-1,1);const pm=new Date(cm.getFullYear(),cm.getMonth()-1,1);curPrefix=`${cm.getFullYear()}-${String(cm.getMonth()+1).padStart(2,'0')}`;prevPrefix=`${pm.getFullYear()}-${String(pm.getMonth()+1).padStart(2,'0')}`}else{el.innerHTML='<div class="text-muted text-sm text-center" style="padding:16px">Сравнение доступно для месячных периодов</div>';return}
 const curMap={},prevMap={};state.transactions.filter(t=>t.type==='expense'&&t.date.startsWith(curPrefix)).forEach(t=>{curMap[t.category]=(curMap[t.category]||0)+getTxRub(t)});state.transactions.filter(t=>t.type==='expense'&&t.date.startsWith(prevPrefix)).forEach(t=>{prevMap[t.category]=(prevMap[t.category]||0)+getTxRub(t)});
 const allCats=[...new Set([...Object.keys(curMap),...Object.keys(prevMap)])];const maxVal=Math.max(...allCats.map(c=>Math.max(curMap[c]||0,prevMap[c]||0)),1);
 el.innerHTML=allCats.map(c=>{const cur=curMap[c]||0,prev=prevMap[c]||0;const change=prev>0?((cur-prev)/prev)*100:cur>0?100:0;const cls=change>0?'up':'down';const arrow=change>0?'↑':'↓';return `<div class="comparison-row"><div class="comparison-cat">${escapeHTML(c)}</div><div class="comparison-bars"><div class="comparison-bar current" style="width:${cur/maxVal*100}%"></div><div class="comparison-bar prev" style="width:${prev/maxVal*100}%"></div></div><div class="comparison-change ${cls}">${arrow} ${Math.abs(Math.round(change))}%</div></div>`}).join('')||'<div class="text-muted text-sm text-center" style="padding:20px">Нет данных</div>'}
 function renderFreqTop5(){const el=document.getElementById('freq-top5');const pTx=getPeriodTx();const counts={};pTx.filter(t=>t.type==='expense').forEach(t=>{counts[t.category]=(counts[t.category]||0)+1});const top=Object.entries(counts).map(([k,v])=>({name:k,count:v})).sort((a,b)=>b.count-a.count).slice(0,5);el.innerHTML=top.length?top.map((x,i)=>`<div class="list-item" style="padding:8px 4px"><div class="list-item-body"><div class="list-item-title"><span class="text-muted">${i+1}.</span> ${escapeHTML(x.name)}</div></div><div class="list-item-amount">${x.count}×</div></div>`).join(''):'<div class="text-muted text-sm text-center" style="padding:12px">Нет операций</div>'}
-function updateDeepCharts(){const period=analyticsPeriod;const expCat=document.getElementById('analytics-exp-select').value;const incCat=document.getElementById('analytics-inc-select').value;const freqCat=document.getElementById('analytics-freq-select').value;const tl=getTimeline(period);
-if(charts.freqHistory&&freqCat){charts.freqHistory.data.datasets[0].data=generateFreqData(freqCat,period);charts.freqHistory.data.labels=tl.labels;charts.freqHistory.update()}
-if(charts.expHistory&&expCat){charts.expHistory.data.datasets[0].data=generateHistoryData('expense',expCat,period);charts.expHistory.data.labels=tl.labels;charts.expHistory.update()}
-if(charts.incHistory&&incCat){charts.incHistory.data.datasets[0].data=generateHistoryData('income',incCat,period);charts.incHistory.data.labels=tl.labels;charts.incHistory.update()}}
+function updateDeepCharts(){
+  if (!charts.freqHistory || !charts.expHistory || !charts.incHistory) {
+    if (document.getElementById('analytics-deep').classList.contains('active')) initDeepCharts();
+    return;
+  }
+  const period = analyticsPeriod;
+  const tl = getTimeline(period);
+  const expCat = document.getElementById('analytics-exp-select').value;
+  const incCat = document.getElementById('analytics-inc-select').value;
+  const freqCat = document.getElementById('analytics-freq-select').value;
+  if (freqCat) { charts.freqHistory.data.datasets[0].data = generateFreqData(freqCat, period); charts.freqHistory.data.labels = tl.labels; charts.freqHistory.update(); }
+  if (expCat) { charts.expHistory.data.datasets[0].data = generateHistoryData('expense', expCat, period); charts.expHistory.data.labels = tl.labels; charts.expHistory.update(); }
+  if (incCat) { charts.incHistory.data.datasets[0].data = generateHistoryData('income', incCat, period); charts.incHistory.data.labels = tl.labels; charts.incHistory.update(); }
+}
 function updateAnalyticsCharts(){updateDeepCharts()}
 function getTimeline(period='current_month'){const date=new Date(),labels=[],prefixes=[];if(period==='current_month'||period==='last_month'){const tm=period==='current_month'?date.getMonth():date.getMonth()-1;const ty=period==='current_month'?date.getFullYear():(tm<0?date.getFullYear()-1:date.getFullYear());const rm=tm<0?11:tm;const days=new Date(ty,rm+1,0).getDate();for(let i=1;i<=days;i++){labels.push(`${i}`);prefixes.push(`${ty}-${String(rm+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`)}}else if(period==='current_year'){const y=date.getFullYear();for(let i=0;i<12;i++){labels.push(new Date(y,i,1).toLocaleString('ru-RU',{month:'short'}));prefixes.push(`${y}-${String(i+1).padStart(2,'0')}`)}}else if(period==='all'){let sy=date.getFullYear(),sm=date.getMonth();if(state.transactions.length>0){const s=[...state.transactions].sort((a,b)=>new Date(a.date)-new Date(b.date));const f=new Date(s[0].date);sy=f.getFullYear();sm=f.getMonth()}let total=(date.getFullYear()-sy)*12+(date.getMonth()-sm)+1;if(total<1)total=1;for(let i=0;i<total;i++){const d=new Date(sy,sm+i,1);labels.push(d.toLocaleString('ru-RU',{month:'short'}));prefixes.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`)}}else if(period==='custom'&&analyticsCustomStart&&analyticsCustomEnd){const s=new Date(analyticsCustomStart),e=new Date(analyticsCustomEnd);const diff=Math.ceil((e-s)/(864e5))+1;for(let i=0;i<diff;i++){const d=new Date(s);d.setDate(d.getDate()+i);labels.push(`${d.getDate()}`);prefixes.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`)}}return{labels,prefixes}}
 function generateHistoryData(type,sel,period){const tl=getTimeline(period);return tl.prefixes.map(p=>{let sum=state.transactions.filter(t=>{if(t.type!==type||!t.date.startsWith(p))return false;if(sel.startsWith('coin_')){const c=sel.replace('coin_','');return c==='ALL'?t.accountDetails?.type==='crypto':t.accountDetails?.coin===c}return t.category===sel.replace('cat_','')}).reduce((a,t)=>a+getTxRub(t),0);if(type==='income'&&sel.startsWith('coin_'))sum+=getCryptoDeltaForPrefix(p,sel.replace('coin_',''));return sum})}
