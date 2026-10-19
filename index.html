@@ -236,6 +236,15 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;top:0;ri
 .comparison-bar.current{background:var(--accent)}
 .comparison-bar.prev{background:var(--surface-3)}
 .flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-2{gap:8px}.gap-3{gap:12px}.mb-2{margin-bottom:8px}.mb-3{margin-bottom:12px}.mb-4{margin-bottom:16px}.mt-3{margin-top:12px}.text-muted{color:var(--text-3)}.text-xs{font-size:12px}.text-sm{font-size:13px}.text-center{text-align:center}.font-mono{font-family:"SF Mono",ui-monospace,monospace}
+/* History Day Grouping & Cross-Transfer UI */
+.history-filters-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.history-summary-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;font-size:12px;box-shadow:var(--shadow-sm)}
+.history-day-group{margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.history-day-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--surface-2);border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text-2)}
+.history-day-date{text-transform:capitalize}
+.history-day-total{font-family:"SF Mono",ui-monospace,monospace;font-weight:600}
+.history-day-list{padding:0 12px}
+.fx-rate-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--indigo);background:var(--indigo-soft);padding:3px 8px;border-radius:8px}
 @media(min-width:768px){#app-container{max-width:480px;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border);min-height:100vh;box-shadow:var(--shadow-xl)}.tab-bar{max-width:480px;left:50%;transform:translateX(-50%);border-radius:20px 20px 0 0;border-left:1px solid var(--border);border-right:1px solid var(--border)}.fab{right:calc(50% - 220px)}.modal-sheet{border-radius:28px;margin:auto;max-width:420px}.modal-overlay{align-items:center}}
 </style>
 </head>
@@ -317,10 +326,14 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;top:0;ri
 
 <!-- HISTORY -->
 <div id="tab-history" class="tab-content">
-<div class="page-header"><div><div class="page-title">История</div><div class="page-subtitle">Все операции</div></div></div>
-<div class="search-bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="text" id="history-search" placeholder="Поиск по операциям..." oninput="renderHistory()"></div>
-<select class="select mb-3" id="history-category-filter" onchange="renderHistory()"><option value="all">Все категории</option></select>
-<div class="card card-elevated"><div id="full-history-list"></div></div>
+<div class="page-header"><div><div class="page-title">История</div><div class="page-subtitle">Все операции по дням</div></div></div>
+<div class="search-bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="text" id="history-search" placeholder="Поиск по категории, заметке, сумме..." oninput="renderHistory()"></div>
+<div class="history-filters-row">
+  <select class="select" id="history-category-filter" onchange="renderHistory()"><option value="all">Все категории</option></select>
+  <select class="select" id="history-account-filter" onchange="renderHistory()"><option value="all">Все счета</option></select>
+</div>
+<div id="history-summary-container"></div>
+<div id="full-history-list"></div>
 </div>
 
 <!-- SETTINGS -->
@@ -373,26 +386,395 @@ function logout(){if(auth)auth.signOut().then(()=>location.reload())}
 function showModal({title,message,body,submitText,cancelText,isDanger,onSubmit}){scrollPosition=window.pageYOffset;document.body.classList.add('modal-open');document.body.style.top=`-${scrollPosition}px`;document.getElementById('modal-title').innerText=title||'';const m=document.getElementById('modal-message');if(message){m.innerHTML=message;m.style.display='block'}else m.style.display='none';const b=document.getElementById('modal-body');b.innerHTML=body||'';const sb=document.getElementById('modal-submit');sb.innerText=submitText||'ОК';sb.style.display=onSubmit?'flex':'none';sb.className='btn '+(isDanger?'btn-danger':'btn-primary');document.getElementById('modal-cancel').innerText=cancelText||'Отмена';sb.onclick=()=>{if(onSubmit){if(onSubmit()===false)return}hideModal()};document.getElementById('app-modal').classList.add('active')}
 function hideModal(){document.getElementById('app-modal').classList.remove('active');document.body.classList.remove('modal-open');document.body.style.top='';window.scrollTo(0,scrollPosition)}
 function showAlert(m){showModal({title:'Внимание',message:escapeHTML(m),cancelText:'Понятно'})}
-function showTransactionModal(txId=null){editingTxId=txId;const isE=txId!==null;let tx=isE?state.transactions.find(t=>t.id===txId):null;const dV=tx?tx.date:getLocalDate();const tV=tx?tx.type:'expense';const aV=tx?(tx.accountDetails?tx.accountDetails.amount:tx.amount):'';const nV=tx?tx.note||'':'';
-showModal({title:isE?'Редактировать':'Новая операция',body:`<div class="segmented mb-3" id="tx-type-seg"><button class="segmented-btn ${tV==='expense'?'active':''}" data-type="expense">Расход</button><button class="segmented-btn ${tV==='income'?'active':''}" data-type="income">Доход</button><button class="segmented-btn ${tV==='transfer'?'active':''}" data-type="transfer">Перевод</button></div><div class="input-group"><label class="input-label">Дата</label><input type="date" class="input" id="tx-date" value="${dV}"></div><div id="tx-category-row" class="input-group"><label class="input-label">Категория</label><select class="select" id="tx-category"></select></div><div class="input-group"><label class="input-label" id="tx-acc-label">Счёт</label><select class="select" id="tx-account"></select></div><div class="input-group" id="tx-account-to-row" style="display:none"><label class="input-label">Куда зачислить</label><select class="select" id="tx-account-to"></select></div><div class="input-group"><label class="input-label">Сумма <span class="text-muted text-xs">(можно: 1000+500)</span></label><input type="text" inputmode="decimal" class="input input-lg font-mono" id="tx-amount" placeholder="0" value="${aV}"></div><div class="input-group"><label class="input-label">Комментарий</label><input type="text" class="input" id="tx-note" placeholder="Опционально" value="${escapeHTML(nV)}"></div>`,submitText:isE?'Сохранить':'Добавить',cancelText:'Отмена',onSubmit:()=>saveTransactionFromModal()});
-document.querySelectorAll('#tx-type-seg .segmented-btn').forEach(b=>{b.onclick=()=>{document.querySelectorAll('#tx-type-seg .segmented-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');updateModalForm()}});
-document.getElementById('tx-category').addEventListener('change',handleCategoryAutoAccount);
-document.getElementById('tx-account').addEventListener('change',updateAmountPlaceholder);
-updateModalForm();
-if(tx){if(tx.category)setTimeout(()=>{const c=document.getElementById('tx-category');if(c)c.value=tx.category},10);setTimeout(()=>{if(tx.type==='transfer'&&tx.transferDetails){const f=document.getElementById('tx-account'),t=document.getElementById('tx-account-to');if(f)f.value=tx.transferDetails.from;if(t)t.value=tx.transferDetails.to}else if(tx.accountDetails){const a=document.getElementById('tx-account');const vk=tx.accountDetails.type==='fiat'?`fiat_${tx.accountDetails.accId}`:`crypto_${tx.accountDetails.accId}_${tx.accountDetails.tokenId}`;if(a)a.value=vk}},10)}}
+function getAccountUnitInfo(key){
+  if(!key)return{unit:'RUB',symbol:'₽',usdRate:1/(state.rates.USD||95),type:'fiat'};
+  if(key.startsWith('fiat_')){
+    const id=parseInt(key.split('_')[1]);
+    const a=state.accounts.find(x=>x.id===id&&x.type==='fiat');
+    const cur=a?.currency||'RUB';
+    const sym=cur==='USD'?'$':cur==='EUR'?'€':'₽';
+    const rubRate=cur==='USD'?state.rates.USD:cur==='EUR'?(state.rates.EUR||state.rates.USD*1.1):1;
+    return{unit:cur,symbol:sym,rubRate,usdRate:rubRate/(state.rates.USD||95),type:'fiat',acc:a};
+  }
+  if(key.startsWith('crypto_')){
+    const p=key.split('_'),wid=parseInt(p[1]),tid=parseInt(p[2]);
+    const w=state.accounts.find(x=>x.id===wid);
+    const t=w?.tokens?.find(x=>x.id===tid);
+    const coin=t?.coin||'USDT';
+    const usdRate=coin==='USDT'?1:(state.rates[coin]||0);
+    return{unit:coin,symbol:coin,rubRate:usdRate*(state.rates.USD||95),usdRate,type:'crypto',wallet:w,token:t};
+  }
+  return{unit:'RUB',symbol:'₽',rubRate:1,usdRate:1/(state.rates.USD||95),type:'fiat'};
+}
+
+let isManualAmountTo=false;
+
+function showTransactionModal(txId=null){
+  editingTxId=txId;
+  isManualAmountTo=false;
+  const isE=txId!==null;
+  let tx=isE?state.transactions.find(t=>t.id===txId):null;
+  const dV=tx?tx.date:getLocalDate();
+  const tV=tx?tx.type:'expense';
+  const aV=tx?(tx.type==='transfer'?(tx.transferDetails?.amountFrom??tx.transferDetails?.amount??tx.amount):(tx.accountDetails?tx.accountDetails.amount:tx.amount)):'';
+  const aToV=tx&&tx.type==='transfer'?(tx.transferDetails?.amountTo??tx.transferDetails?.amount??tx.amount):'';
+  const nV=tx?tx.note||'':'';
+
+  showModal({
+    title:isE?'Редактировать':'Новая операция',
+    body:`
+      <div class="segmented mb-3" id="tx-type-seg">
+        <button class="segmented-btn ${tV==='expense'?'active':''}" data-type="expense">Расход</button>
+        <button class="segmented-btn ${tV==='income'?'active':''}" data-type="income">Доход</button>
+        <button class="segmented-btn ${tV==='transfer'?'active':''}" data-type="transfer">Перевод</button>
+      </div>
+      <div class="input-group"><label class="input-label">Дата</label><input type="date" class="input" id="tx-date" value="${dV}"></div>
+      <div id="tx-category-row" class="input-group"><label class="input-label">Категория</label><select class="select" id="tx-category"></select></div>
+      <div class="input-group"><label class="input-label" id="tx-acc-label">Счёт</label><select class="select" id="tx-account"></select></div>
+      <div class="input-group" id="tx-account-to-row" style="display:none"><label class="input-label">Куда зачислить</label><select class="select" id="tx-account-to"></select></div>
+      <div class="input-group">
+        <label class="input-label" id="tx-amount-label">Сумма <span class="text-muted text-xs">(можно: 1000+500)</span></label>
+        <input type="text" inputmode="decimal" class="input input-lg font-mono" id="tx-amount" placeholder="0" value="${aV}">
+      </div>
+      <div class="input-group" id="tx-amount-to-row" style="display:none">
+        <div class="flex justify-between items-center">
+          <label class="input-label" id="tx-amount-to-label">Сумма зачисления</label>
+          <span class="fx-rate-badge" id="tx-fx-hint"></span>
+        </div>
+        <input type="text" inputmode="decimal" class="input input-lg font-mono" id="tx-amount-to" placeholder="0" value="${aToV}">
+      </div>
+      <div class="input-group"><label class="input-label">Комментарий</label><input type="text" class="input" id="tx-note" placeholder="Опционально" value="${escapeHTML(nV)}"></div>
+    `,
+    submitText:isE?'Сохранить':'Добавить',
+    cancelText:'Отмена',
+    onSubmit:()=>saveTransactionFromModal()
+  });
+
+  document.querySelectorAll('#tx-type-seg .segmented-btn').forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll('#tx-type-seg .segmented-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      updateModalForm();
+    };
+  });
+  document.getElementById('tx-category').addEventListener('change',handleCategoryAutoAccount);
+  document.getElementById('tx-account').addEventListener('change',()=>{isManualAmountTo=false;updateAmountPlaceholder()});
+  document.getElementById('tx-account-to').addEventListener('change',()=>{isManualAmountTo=false;updateAmountPlaceholder()});
+  document.getElementById('tx-amount').addEventListener('input',()=>syncCrossTransferAmount('from'));
+  document.getElementById('tx-amount-to').addEventListener('input',()=>{isManualAmountTo=true;syncCrossTransferAmount('to')});
+
+  updateModalForm();
+  if(tx){
+    if(tx.category)setTimeout(()=>{const c=document.getElementById('tx-category');if(c)c.value=tx.category},10);
+    setTimeout(()=>{
+      if(tx.type==='transfer'&&tx.transferDetails){
+        const f=document.getElementById('tx-account'),t=document.getElementById('tx-account-to');
+        if(f)f.value=tx.transferDetails.from;
+        if(t)t.value=tx.transferDetails.to;
+        isManualAmountTo=true;
+        updateAmountPlaceholder();
+      }else if(tx.accountDetails){
+        const a=document.getElementById('tx-account');
+        const vk=tx.accountDetails.type==='fiat'?`fiat_${tx.accountDetails.accId}`:`crypto_${tx.accountDetails.accId}_${tx.accountDetails.tokenId}`;
+        if(a)a.value=vk;
+        updateAmountPlaceholder();
+      }
+    },10);
+  }
+}
+
 function getCurrentModalType(){const a=document.querySelector('#tx-type-seg .segmented-btn.active');return a?a.dataset.type:'expense'}
-function updateModalForm(){const t=getCurrentModalType();const cr=document.getElementById('tx-category-row'),cs=document.getElementById('tx-category'),al=document.getElementById('tx-acc-label'),af=document.getElementById('tx-account'),ar=document.getElementById('tx-account-to-row'),at=document.getElementById('tx-account-to');if(t==='transfer'){cr.style.display='none';ar.style.display='block';al.textContent='Откуда списать';populateAccountSelect(af,true);populateAccountSelect(at,false);if(at&&af&&at.value&&at.value===af.value){const alt=[...at.options].map(o=>o.value).find(v=>v!==af.value);if(alt)at.value=alt}}else{cr.style.display='block';ar.style.display='none';al.textContent='Счёт';cs.innerHTML=state.categories[t].map(c=>`<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');populateAccountSelect(af,true);if(t==='income')handleCategoryAutoAccount()}updateAmountPlaceholder()}function isTBank(a){const n=(a.name||'').toLowerCase();return n.includes('т-банк')||n.includes('тбанк')||n.includes('t-bank')||n.includes('tbank')}
-function populateAccountSelect(s,preferTBank){if(!s)return;const c=s.value;s.innerHTML='';if(!state.accounts.length){s.innerHTML='<option value="">Нет счетов</option>';return}let f='',tb='',first='';state.accounts.filter(a=>a.type==='fiat').forEach(a=>{const v=`fiat_${a.id}`;if(!first)first=v;if(!tb&&isTBank(a))tb=v;let b=`${fmt(a.balance)} ${a.currency||'₽'}`;if(a.isCredit)b=a.balance<0?`Долг ${fmt(Math.abs(a.balance))} ${a.currency||'₽'}`:`${fmt(a.balance)} ${a.currency||'₽'}`;f+=`<option value="${v}">${escapeHTML(a.name)} • ${b}</option>`});let cr='',firstC='';state.accounts.filter(a=>a.type==='crypto_wallet').forEach(a=>{(a.tokens||[]).forEach(t=>{const v=`crypto_${a.id}_${t.id}`;if(!firstC)firstC=v;cr+=`<option value="${v}" data-coin="${escapeHTML(t.coin)}">${escapeHTML(a.name)} • ${escapeHTML(t.coin)} (${t.balance})</option>`})});if(f)s.innerHTML+=`<optgroup label="Счета и карты">${f}</optgroup>`;if(cr)s.innerHTML+=`<optgroup label="Крипто">${cr}</optgroup>`;if(c&&s.querySelector(`option[value="${c}"]`)){s.value=c;return}if(preferTBank&&tb){s.value=tb;return}s.value=first||firstC||''}
-function handleCategoryAutoAccount(){const t=getCurrentModalType(),c=document.getElementById('tx-category').value;if(t==='income'&&state.incomeAccountMapping&&state.incomeAccountMapping[c]){const a=document.getElementById('tx-account');if(a.querySelector(`option[value="${state.incomeAccountMapping[c]}"]`))a.value=state.incomeAccountMapping[c]}}
-function updateAmountPlaceholder(){const s=document.getElementById('tx-account'),a=document.getElementById('tx-amount');if(!s||!s.value){a.placeholder='0';return}if(s.value.startsWith('fiat')){const ac=state.accounts.find(x=>x.id===parseInt(s.value.split('_')[1]));a.placeholder=`0 ${ac&&ac.currency?ac.currency:'₽'}`}else{const o=s.options[s.selectedIndex];a.placeholder=`0 ${o.getAttribute('data-coin')||''}`}}
-function saveTransactionFromModal(){const t=getCurrentModalType(),d=document.getElementById('tx-date').value||getLocalDate(),am=parseNum(document.getElementById('tx-amount').value),n=document.getElementById('tx-note').value.trim();if(isNaN(am)||am===0){showAlert('Укажите сумму');return false}if(t==='transfer'&&am<0){showAlert('Сумма должна быть положительной');return false}if(editingTxId!==null){const o=state.transactions.find(x=>x.id===editingTxId);if(o){if(o.type==='transfer'){modifyAccountBalance(o.transferDetails.from,o.transferDetails.amount);modifyAccountBalance(o.transferDetails.to,-o.transferDetails.amount)}else if(o.accountDetails){const ad=o.accountDetails,vk=ad.type==='fiat'?`fiat_${ad.accId}`:`crypto_${ad.accId}_${ad.tokenId}`;modifyAccountBalance(vk,o.type==='income'?-ad.amount:ad.amount)}state.transactions=state.transactions.filter(x=>x.id!==editingTxId)}}if(t==='transfer'){const f=document.getElementById('tx-account').value,to=document.getElementById('tx-account-to').value;if(!f||!to){showAlert('Укажите оба счёта');return false}if(f===to){showAlert('Нельзя на тот же счёт');return false}modifyAccountBalance(f,-am);modifyAccountBalance(to,am);state.transactions.push({id:editingTxId||Date.now(),type:t,amount:am,date:d,note:n,transferDetails:{from:f,to:to,amount:am}})}else{const c=document.getElementById('tx-category').value,av=document.getElementById('tx-account').value;if(!c){showAlert('Создайте категорию');return false}if(!av){showAlert('Создайте счёт');return false}const i=modifyAccountBalance(av,t==='income'?am:-am);if(!i)return false;state.transactions.push({id:editingTxId||Date.now(),type:t,category:c,amount:am,date:d,note:n,accountDetails:{type:i.accType,accId:i.accId,tokenId:i.tokenId,amount:am,coin:i.coin||'RUB'}})}editingTxId=null;DB.save(state)}
-function modifyAccountBalance(av,d){let at,ai,ti,c;if(av.startsWith('fiat_')){at='fiat';ai=parseInt(av.split('_')[1]);const a=state.accounts.find(x=>x.id===ai);if(a)a.balance+=d}else if(av.startsWith('crypto_')){at='crypto';ai=parseInt(av.split('_')[1]);ti=parseInt(av.split('_')[2]);const w=state.accounts.find(x=>x.id===ai);if(w){const t=w.tokens.find(x=>x.id===ti);if(t){c=t.coin;const r=state.rates[c];if(!r&&c!=='USDT'){showAlert(`Нет курса для ${escapeHTML(c)}`);return null}t.balance+=d}}}return{accType:at,accId:ai,tokenId:ti,coin:c}}
+
+function updateModalForm(){
+  const t=getCurrentModalType();
+  const cr=document.getElementById('tx-category-row'),cs=document.getElementById('tx-category'),al=document.getElementById('tx-acc-label'),af=document.getElementById('tx-account'),ar=document.getElementById('tx-account-to-row'),at=document.getElementById('tx-account-to');
+  if(t==='transfer'){
+    cr.style.display='none';
+    ar.style.display='flex';
+    al.textContent='Откуда списать';
+    populateAccountSelect(af,true);
+    populateAccountSelect(at,false);
+    if(at&&af&&at.value&&at.value===af.value){
+      const alt=[...at.options].map(o=>o.value).find(v=>v!==af.value);
+      if(alt)at.value=alt;
+    }
+  }else{
+    cr.style.display='flex';
+    ar.style.display='none';
+    al.textContent='Счёт';
+    cs.innerHTML=state.categories[t].map(c=>`<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+    populateAccountSelect(af,true);
+    if(t==='income')handleCategoryAutoAccount();
+  }
+  updateAmountPlaceholder();
+}
+
+function isTBank(a){const n=(a.name||'').toLowerCase();return n.includes('т-банк')||n.includes('тбанк')||n.includes('t-bank')||n.includes('tbank')}
+
+function populateAccountSelect(s,preferTBank){
+  if(!s)return;
+  const c=s.value;
+  s.innerHTML='';
+  if(!state.accounts.length){s.innerHTML='<option value="">Нет счетов</option>';return}
+  let f='',tb='',first='';
+  state.accounts.filter(a=>a.type==='fiat').forEach(a=>{
+    const v=`fiat_${a.id}`;
+    if(!first)first=v;
+    if(!tb&&isTBank(a))tb=v;
+    let b=`${fmt(a.balance)} ${a.currency||'₽'}`;
+    if(a.isCredit)b=a.balance<0?`Долг ${fmt(Math.abs(a.balance))} ${a.currency||'₽'}`:`${fmt(a.balance)} ${a.currency||'₽'}`;
+    f+=`<option value="${v}">${escapeHTML(a.name)} • ${b}</option>`;
+  });
+  let cr='',firstC='';
+  state.accounts.filter(a=>a.type==='crypto_wallet').forEach(a=>{
+    (a.tokens||[]).forEach(t=>{
+      const v=`crypto_${a.id}_${t.id}`;
+      if(!firstC)firstC=v;
+      cr+=`<option value="${v}" data-coin="${escapeHTML(t.coin)}">${escapeHTML(a.name)} • ${escapeHTML(t.coin)} (${t.balance})</option>`;
+    });
+  });
+  if(f)s.innerHTML+=`<optgroup label="Счета и карты">${f}</optgroup>`;
+  if(cr)s.innerHTML+=`<optgroup label="Крипто">${cr}</optgroup>`;
+  if(c&&s.querySelector(`option[value="${c}"]`)){s.value=c;return}
+  if(preferTBank&&tb){s.value=tb;return}
+  s.value=first||firstC||'';
+}
+
+function handleCategoryAutoAccount(){
+  const t=getCurrentModalType(),c=document.getElementById('tx-category').value;
+  if(t==='income'&&state.incomeAccountMapping&&state.incomeAccountMapping[c]){
+    const a=document.getElementById('tx-account');
+    if(a.querySelector(`option[value="${state.incomeAccountMapping[c]}"]`)){
+      a.value=state.incomeAccountMapping[c];
+      updateAmountPlaceholder();
+    }
+  }
+}
+
+function updateAmountPlaceholder(){
+  const t=getCurrentModalType();
+  const s=document.getElementById('tx-account'),sTo=document.getElementById('tx-account-to');
+  const a=document.getElementById('tx-amount'),aTo=document.getElementById('tx-amount-to');
+  const aRowTo=document.getElementById('tx-amount-to-row');
+  const lblFrom=document.getElementById('tx-amount-label'),lblTo=document.getElementById('tx-amount-to-label');
+  if(!s||!s.value){a.placeholder='0';if(aRowTo)aRowTo.style.display='none';return}
+
+  const infoFrom=getAccountUnitInfo(s.value);
+  a.placeholder=`0 ${infoFrom.symbol}`;
+
+  if(t==='transfer'&&sTo&&sTo.value){
+    const infoTo=getAccountUnitInfo(sTo.value);
+    const isCross=infoFrom.unit!==infoTo.unit;
+    if(isCross){
+      aRowTo.style.display='flex';
+      lblFrom.innerHTML=`Сумма списания (${escapeHTML(infoFrom.unit)})`;
+      lblTo.textContent=`К зачислению (${infoTo.unit})`;
+      aTo.placeholder=`0 ${infoTo.symbol}`;
+      syncCrossTransferAmount('from');
+    }else{
+      aRowTo.style.display='none';
+      lblFrom.innerHTML=`Сумма перевода (${escapeHTML(infoFrom.unit)}) <span class="text-muted text-xs">(можно: 1000+500)</span>`;
+    }
+  }else{
+    if(aRowTo)aRowTo.style.display='none';
+    if(lblFrom)lblFrom.innerHTML=`Сумма (${escapeHTML(infoFrom.unit)}) <span class="text-muted text-xs">(можно: 1000+500)</span>`;
+  }
+}
+
+function syncCrossTransferAmount(source){
+  const t=getCurrentModalType();
+  if(t!=='transfer')return;
+  const sFrom=document.getElementById('tx-account')?.value,sTo=document.getElementById('tx-account-to')?.value;
+  if(!sFrom||!sTo)return;
+  const infoFrom=getAccountUnitInfo(sFrom),infoTo=getAccountUnitInfo(sTo);
+  if(infoFrom.unit===infoTo.unit)return;
+
+  const inpFrom=document.getElementById('tx-amount'),inpTo=document.getElementById('tx-amount-to'),hint=document.getElementById('tx-fx-hint');
+  const valFrom=parseNum(inpFrom.value);
+
+  if(source==='from'&&!isManualAmountTo){
+    if(!isNaN(valFrom)&&valFrom>0&&infoFrom.rubRate>0&&infoTo.rubRate>0){
+      const converted=(valFrom*infoFrom.rubRate)/infoTo.rubRate;
+      const decimals=infoTo.type==='crypto'&&(infoTo.unit!=='USDT'&&infoTo.unit!=='USDC')?6:2;
+      inpTo.value=Number(converted.toFixed(decimals));
+    }else if(!inpFrom.value){
+      inpTo.value='';
+    }
+  }
+
+  const finalFrom=parseNum(inpFrom.value),finalTo=parseNum(inpTo.value);
+  if(!isNaN(finalFrom)&&finalFrom>0&&!isNaN(finalTo)&&finalTo>0){
+    if(finalFrom>=finalTo){
+      const rate=finalFrom/finalTo;
+      hint.textContent=`1 ${infoTo.unit} = ${rate<10?rate.toFixed(4):rate.toFixed(2)} ${infoFrom.unit}`;
+    }else{
+      const rate=finalTo/finalFrom;
+      hint.textContent=`1 ${infoFrom.unit} = ${rate<10?rate.toFixed(4):rate.toFixed(2)} ${infoTo.unit}`;
+    }
+  }else{
+    const mktRate=infoTo.rubRate/infoFrom.rubRate;
+    hint.textContent=mktRate>=1?`Курс: ~${mktRate.toFixed(2)} ${infoFrom.unit}`:`Курс: ~${(1/mktRate).toFixed(2)} ${infoTo.unit}`;
+  }
+}
+
+function saveTransactionFromModal(){
+  const t=getCurrentModalType(),d=document.getElementById('tx-date').value||getLocalDate(),am=parseNum(document.getElementById('tx-amount').value),n=document.getElementById('tx-note').value.trim();
+  if(isNaN(am)||am===0){showAlert('Укажите сумму');return false}
+  if(t==='transfer'&&am<=0){showAlert('Сумма должна быть положительной');return false}
+
+  // Откат старой операции при редактировании
+  if(editingTxId!==null){
+    const o=state.transactions.find(x=>x.id===editingTxId);
+    if(o){
+      if(o.type==='transfer'&&o.transferDetails){
+        const oldFromAmt=o.transferDetails.amountFrom??o.transferDetails.amount;
+        const oldToAmt=o.transferDetails.amountTo??o.transferDetails.amount;
+        modifyAccountBalance(o.transferDetails.from,oldFromAmt);
+        modifyAccountBalance(o.transferDetails.to,-oldToAmt);
+      }else if(o.accountDetails){
+        const ad=o.accountDetails,vk=ad.type==='fiat'?`fiat_${ad.accId}`:`crypto_${ad.accId}_${ad.tokenId}`;
+        modifyAccountBalance(vk,o.type==='income'?-ad.amount:ad.amount);
+      }
+      state.transactions=state.transactions.filter(x=>x.id!==editingTxId);
+    }
+  }
+
+  if(t==='transfer'){
+    const f=document.getElementById('tx-account').value,to=document.getElementById('tx-account-to').value;
+    if(!f||!to){showAlert('Укажите оба счёта');return false}
+    if(f===to){showAlert('Нельзя перевести на тот же счёт');return false}
+    const infoFrom=getAccountUnitInfo(f),infoTo=getAccountUnitInfo(to);
+    const isCross=infoFrom.unit!==infoTo.unit;
+    const amTo=isCross?parseNum(document.getElementById('tx-amount-to').value):am;
+    if(isNaN(amTo)||amTo<=0){showAlert('Укажите корректную сумму зачисления');return false}
+
+    // Если покупаем крипту за фиат или стейблкоин — обновляем среднюю цену покупки (avgBuyPrice в USD)
+    if(infoTo.type==='crypto'&&infoTo.token&&infoTo.unit!=='USDT'&&editingTxId===null){
+      const costInUsd=am*infoFrom.usdRate;
+      const oldBal=Math.max(0,infoTo.token.balance||0);
+      const oldAvg=infoTo.token.avgBuyPrice||(state.rates[infoTo.unit]||0);
+      const newBal=oldBal+amTo;
+      if(newBal>0&&costInUsd>0){
+        infoTo.token.avgBuyPrice=Number(((oldBal*oldAvg+costInUsd)/newBal).toFixed(4));
+      }
+    }
+
+    modifyAccountBalance(f,-am);
+    modifyAccountBalance(to,amTo);
+    const rubEquiv=am*infoFrom.rubRate;
+    state.transactions.push({
+      id:editingTxId||Date.now(),
+      type:t,
+      amount:rubEquiv,
+      date:d,
+      note:n,
+      transferDetails:{
+        from:f,
+        to:to,
+        amount:am,
+        amountFrom:am,
+        amountTo:amTo,
+        unitFrom:infoFrom.unit,
+        unitTo:infoTo.unit
+      }
+    });
+  }else{
+    const c=document.getElementById('tx-category').value,av=document.getElementById('tx-account').value;
+    if(!c){showAlert('Создайте категорию');return false}
+    if(!av){showAlert('Создайте счёт');return false}
+    const i=modifyAccountBalance(av,t==='income'?am:-am);
+    if(!i)return false;
+    state.transactions.push({
+      id:editingTxId||Date.now(),
+      type:t,
+      category:c,
+      amount:am,
+      date:d,
+      note:n,
+      accountDetails:{type:i.accType,accId:i.accId,tokenId:i.tokenId,amount:am,coin:i.coin||i.currency||'RUB'}
+    });
+  }
+  editingTxId=null;
+  DB.save(state);
+}
+
+function modifyAccountBalance(av,d){
+  let at,ai,ti,c,cur;
+  if(av.startsWith('fiat_')){
+    at='fiat';ai=parseInt(av.split('_')[1]);
+    const a=state.accounts.find(x=>x.id===ai);
+    if(a){a.balance=Number((a.balance+d).toFixed(2));cur=a.currency||'RUB'}
+  }else if(av.startsWith('crypto_')){
+    at='crypto';ai=parseInt(av.split('_')[1]);ti=parseInt(av.split('_')[2]);
+    const w=state.accounts.find(x=>x.id===ai);
+    if(w){
+      const t=w.tokens.find(x=>x.id===ti);
+      if(t){
+        c=t.coin;
+        const r=state.rates[c];
+        if(!r&&c!=='USDT'){showAlert(`Нет курса для ${escapeHTML(c)}`);return null}
+        t.balance=Number((t.balance+d).toFixed(8));
+      }
+    }
+  }
+  return{accType:at,accId:ai,tokenId:ti,coin:c,currency:cur};
+}
+
 function switchTab(tab,btn){document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');if(btn)btn.classList.add('active');else{const b=document.querySelector(`.tab-btn[data-tab="${tab}"]`);if(b)b.classList.add('active')}if(tab==='dashboard')renderDashboard();if(tab==='accounts')initAccountsChart();if(tab==='analytics')initAnalytics();if(tab==='history')renderHistory();if(tab==='settings')renderSettings();window.scrollTo(0,0)}
 function initApp(){applyTheme();const d=new Date();document.getElementById('dashboard-date').textContent=d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});const h=d.getHours();document.getElementById('dashboard-greeting').textContent=(h<6?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+' 👋';DB.listen(l=>{if(l){state={...state,...l};state.rates=l.rates||state.rates;state.categories=l.categories||{expense:[],income:[]};state.accounts=l.accounts||[];state.transactions=l.transactions||[];state.budgets=l.budgets||{};state.incomeAccountMapping=l.incomeAccountMapping||{};state.templates=l.templates||[];state.settings=l.settings||{theme:'auto'}}applyTheme();renderAll();if(!isAppInitialized){fetchLiveRates();isAppInitialized=true}});initPullToRefresh();initSwipeHandlers()}
 function renderAll(){renderDashboard();renderAccounts();renderCategories();renderSettingsBudgets();renderHistory();renderTemplates();if(document.getElementById('tab-analytics').classList.contains('active'))initAnalytics()}
 function renderDashboard(){const now=new Date(),mp=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`,td=getLocalDate();const mTx=state.transactions.filter(t=>t.date.startsWith(mp)),tTx=state.transactions.filter(t=>t.date===td);let mI=0,mE=0,tI=0,tE=0;const em={};mTx.forEach(t=>{if(t.type==='transfer')return;const r=getTxRub(t);if(t.type==='income')mI+=r;else{mE+=r;em[t.category]=(em[t.category]||0)+r}});tTx.forEach(t=>{if(t.type==='transfer')return;const r=getTxRub(t);if(t.type==='income')tI+=r;else tE+=r});const net=mI-mE;document.getElementById('hero-net').textContent=`${net>=0?'+':''}${fmt(net)} ₽`;document.getElementById('hero-income').textContent=`+${fmt(mI)} ₽`;document.getElementById('hero-expense').textContent=`-${fmt(mE)} ₽`;let tc=0,td2=0;state.accounts.forEach(a=>{if(a.type==='fiat'){const cr=a.currency==='USD'?state.rates.USD:a.currency==='EUR'?state.rates.EUR||state.rates.USD*1.1:1;if(a.balance>0)tc+=a.balance*cr;else if(a.balance<0)td2+=Math.abs(a.balance)*cr}else if(a.type==='crypto_wallet')(a.tokens||[]).forEach(t=>{tc+=t.balance*(state.rates[t.coin]||0)*state.rates.USD})});document.getElementById('hero-capital').textContent=`${fmt(tc-td2)} ₽`;document.getElementById('today-expense').textContent=`${fmt(tE)} ₽`;document.getElementById('today-income').textContent=`+${fmt(tI)} ₽`;const y=new Date();y.setDate(y.getDate()-1);const yD=`${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;const yE=state.transactions.filter(t=>t.date===yD&&t.type==='expense').reduce((s,t)=>s+getTxRub(t),0);const ch=document.getElementById('today-compare-chip');if(yE>0&&tE>0){const df=((tE-yE)/yE)*100;ch.textContent=`${df>=0?'+':''}${Math.round(df)}% vs вчера`;ch.className='chip '+(df>0?'chip-danger':'chip-accent')}else if(tE>0){ch.textContent='сегодня';ch.className='chip chip-accent'}else{ch.textContent='нет трат';ch.className='chip'}const bc=document.getElementById('budgets-card'),bl=document.getElementById('budgets-list');if(Object.keys(state.budgets).length>0){bc.style.display='block';bl.innerHTML=Object.keys(state.budgets).map(c=>{const l=state.budgets[c],s=em[c]||0,p=Math.min(s/l*100,100),cl=p>=100?'danger':p>75?'warning':'';return `<div style="margin-bottom:12px"><div class="flex justify-between items-center mb-2"><span class="text-sm font-mono" style="font-weight:500">${escapeHTML(c)}</span><span class="text-sm text-muted">${fmt(s)} / ${fmt(l)} ₽</span></div><div class="progress"><div class="progress-fill ${cl}" style="width:${p}%"></div></div></div>`}).join('')}else bc.style.display='none';const rc=[...state.transactions].sort((a,b)=>{const d=new Date(b.date)-new Date(a.date);return d!==0?d:b.id-a.id}).slice(0,5);const re=document.getElementById('recent-transactions-list');re.innerHTML=rc.length===0?`<div class="empty-state"><div class="empty-state-icon">${icons.empty}</div><div class="empty-state-title">Пока нет операций</div><div class="empty-state-text">Нажмите +, чтобы добавить</div></div>`:rc.map(t=>renderTxItem(t)).join('');let ea=Object.keys(em).map(k=>({name:k,val:em[k]})).sort((a,b)=>b.val-a.val);const te=mE>0?mE:1;document.getElementById('current-month-expenses-list').innerHTML=ea.map((e,i)=>{const p=Math.round(e.val/te*100),c=chartColors[i%chartColors.length];return `<div class="expense-structure-item"><div class="expense-color-dot" style="background:${c}"></div><div class="expense-structure-body"><div class="expense-structure-name">${escapeHTML(e.name)}</div></div><div class="expense-structure-right"><span class="expense-structure-pct">${p}%</span><span class="expense-structure-amount">${fmt(e.val)} ₽</span></div></div>`}).join('')||'<div class="text-center text-muted text-sm" style="padding:20px">Нет расходов</div>';if(charts.currentMonth)charts.currentMonth.destroy();charts.currentMonth=new Chart(document.getElementById('currentMonthChart').getContext('2d'),{type:'doughnut',data:{labels:ea.map(e=>e.name),datasets:[{data:ea.map(e=>e.val),backgroundColor:chartColors,borderWidth:0,cutout:'70%'}]},options:{plugins:{legend:{display:false}}}});const da={};const dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();for(let i=1;i<=dim;i++)da[i]=0;mTx.filter(t=>t.type==='expense').forEach(t=>{da[parseInt(t.date.split('-')[2])]+=getTxRub(t)});const dl=Object.keys(da),dd=dl.map(k=>da[k]);if(charts.dailyExpenses)charts.dailyExpenses.destroy();charts.dailyExpenses=new Chart(document.getElementById('dailyExpensesChart').getContext('2d'),{type:'bar',data:{labels:dl,datasets:[{data:dd,backgroundColor:c=>c.dataIndex===now.getDate()-1?getComputedStyle(document.documentElement).getPropertyValue('--accent').trim():getComputedStyle(document.documentElement).getPropertyValue('--surface-3').trim(),borderRadius:4,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:10}}},y:{grid:{display:false},ticks:{display:false},beginAtZero:true}}}})}
-function renderTxItem(t,sa=true){const d=new Date(t.date),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});let ic='',ti='',su='',am='',cl='';if(t.type==='transfer'){ic=icons.transfer;cl='transfer';ti='Перевод';const fa=findAccountByKey(t.transferDetails.from),ta=findAccountByKey(t.transferDetails.to);su=`${fa?fa.name:'?'} → ${ta?ta.name:'?'}`;am=`${fmt(t.amount)} ₽`}else{ic=t.type==='income'?icons.income:icons.expense;cl=t.type;ti=t.category;su=ds;if(t.accountDetails)su+=` • ${t.accountDetails.type==='fiat'?'💳':'🪙'} ${escapeHTML(t.accountDetails.coin||'RUB')}`;const r=getTxRub(t),sg=t.type==='income'?(r>=0?'+':'-'):(r>=0?'-':'+');am=`${sg}${fmt(Math.abs(r))} ₽`}if(t.note)su+=` • ${escapeHTML(t.note)}`;return `<div class="list-item"><div class="list-item-icon ${cl}">${ic}</div><div class="list-item-body"><div class="list-item-title">${escapeHTML(ti)}</div><div class="list-item-sub">${su}</div></div><div class="list-item-right"><div class="list-item-amount ${cl}">${am}</div></div>${sa?`<button class="btn-icon" onclick="event.stopPropagation();showTransactionModal(${t.id})" style="margin-left:4px">${icons.edit}</button>`:''}</div>`}
-function findAccountByKey(k){if(k.startsWith('fiat_')){return state.accounts.find(a=>a.id===parseInt(k.split('_')[1])&&a.type==='fiat')}else if(k.startsWith('crypto_')){const p=k.split('_'),w=state.accounts.find(a=>a.id===parseInt(p[1]));if(w){const t=w.tokens.find(x=>x.id===parseInt(p[2]));if(t)return{name:`${w.name} • ${t.coin}`}}}return null}
+
+function renderTxItem(t,showEditBtn=true,hideDate=false){
+  const d=new Date(t.date),ds=d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+  let ic='',ti='',su='',am='',subAm='',cl='';
+  if(t.type==='transfer'&&t.transferDetails){
+    ic=icons.transfer;cl='transfer';ti='Перевод';
+    const td=t.transferDetails;
+    const fa=findAccountByKey(td.from),ta=findAccountByKey(td.to);
+    su=`${hideDate?'':ds+' • '}${fa?escapeHTML(fa.name):'?'} → ${ta?escapeHTML(ta.name):'?'}`;
+    const af=td.amountFrom??td.amount,at=td.amountTo??td.amount;
+    const uf=td.unitFrom||getAccountUnitInfo(td.from).unit;
+    const ut=td.unitTo||getAccountUnitInfo(td.to).unit;
+    if(uf!==ut){
+      const fmtFrom=uf==='RUB'?`${fmt(af)} ₽`:`${af} ${uf}`;
+      const fmtTo=ut==='RUB'?`${fmt(at)} ₽`:`${at} ${ut}`;
+      am=`${fmtFrom} → ${fmtTo}`;
+    }else{
+      am=uf==='RUB'?`${fmt(af)} ₽`:`${af} ${uf}`;
+    }
+  }else{
+    ic=t.type==='income'?icons.income:icons.expense;cl=t.type;ti=t.category;
+    su=hideDate?'':ds;
+    if(t.accountDetails){
+      const accKey=t.accountDetails.type==='fiat'?`fiat_${t.accountDetails.accId}`:`crypto_${t.accountDetails.accId}_${t.accountDetails.tokenId}`;
+      const accObj=findAccountByKey(accKey);
+      const accLabel=accObj?accObj.name:(t.accountDetails.coin||'RUB');
+      su+=(su?' • ':'')+`${t.accountDetails.type==='fiat'?'💳':'🪙'} ${escapeHTML(accLabel)}`;
+    }
+    const r=getTxRub(t),sg=t.type==='income'?(r>=0?'+':'-'):(r>=0?'-':'+');
+    am=`${sg}${fmt(Math.abs(r))} ₽`;
+    if(t.accountDetails&&t.accountDetails.coin&&t.accountDetails.coin!=='RUB'){
+      subAm=`<div class="text-xs text-muted">${t.accountDetails.amount} ${escapeHTML(t.accountDetails.coin)}</div>`;
+    }
+  }
+  if(t.note)su+=(su?' • ':'')+escapeHTML(t.note);
+  return `<div class="list-item"><div class="list-item-icon ${cl}">${ic}</div><div class="list-item-body"><div class="list-item-title">${escapeHTML(ti)}</div><div class="list-item-sub">${su}</div></div><div class="list-item-right"><div class="list-item-amount ${cl}">${am}</div>${subAm}</div>${showEditBtn?`<button class="btn-icon" onclick="event.stopPropagation();showTransactionModal(${t.id})" style="margin-left:4px">${icons.edit}</button>`:''}</div>`;
+}
+
+function findAccountByKey(k){
+  if(!k)return null;
+  if(k.startsWith('fiat_')){
+    return state.accounts.find(a=>a.id===parseInt(k.split('_')[1])&&a.type==='fiat');
+  }else if(k.startsWith('crypto_')){
+    const p=k.split('_'),w=state.accounts.find(a=>a.id===parseInt(p[1]));
+    if(w){
+      const t=w.tokens.find(x=>x.id===parseInt(p[2]));
+      if(t)return{name:`${w.name} • ${t.coin}`};
+    }
+  }
+  return null;
+}
 function renderAccounts(){let tc=0,td=0,ccd=0,ofc=0;const l=document.getElementById('accounts-list');l.innerHTML='';if(!state.accounts.length)l.innerHTML=`<div class="empty-state"><div class="empty-state-icon">${icons.wallet}</div><div class="empty-state-title">Нет счетов</div><div class="empty-state-text">Добавьте первый счёт</div></div>`;state.accounts.forEach(a=>{if(a.type==='fiat'){const cr=a.currency==='USD'?state.rates.USD:a.currency==='EUR'?state.rates.EUR||state.rates.USD*1.1:1;const r=a.balance*cr;if(r>0){tc+=r;if(a.isCredit)ofc+=r}else if(r<0){td+=Math.abs(r);if(a.isCredit)ccd+=Math.abs(r)}let bt=`${fmt(a.balance)} ${a.currency||'₽'}`,bg='';if(a.isCredit){bg='<span class="chip chip-warning" style="margin-left:6px">КРЕДИТКА</span>';if(a.balance<0)bt=`<span style="color:var(--danger);font-weight:600">Долг ${fmt(Math.abs(a.balance))} ${a.currency||'₽'}</span>`;else if(a.balance===0)bt='<span style="color:var(--accent)">Долгов нет</span>';else bt=`<span style="color:var(--accent)">Свои: ${fmt(a.balance)} ${a.currency||'₽'}</span>`}l.innerHTML+=`<div class="list-item"><div class="list-item-icon account">${icons.wallet}</div><div class="list-item-body"><div class="list-item-title">${escapeHTML(a.name)}${bg}</div><div class="list-item-sub">${bt}</div></div><div class="list-item-right"><button class="btn-icon" onclick="editFiatBalance(${a.id})">${icons.edit}</button><button class="btn-icon" onclick="confirmDeleteAccount(${a.id})" style="color:var(--danger)">${icons.delete}</button></div></div>`}else if(a.type==='crypto_wallet'){let wu=0;const th=(a.tokens||[]).map(t=>{const r=state.rates[t.coin]||0,uv=t.balance*r;wu+=uv;let ph='';if(t.avgBuyPrice&&t.avgBuyPrice>0){const iv=t.balance*t.avgBuyPrice,pv=uv-iv,pp=(r/t.avgBuyPrice-1)*100;if(Math.abs(pv)>0.01){const ip=pv>=0,sg=ip?'+':'',cl=ip?'chip-accent':'chip-danger';ph=`<span class="chip ${cl}">${sg}$${Math.abs(pv).toFixed(1)} (${sg}${pp.toFixed(1)}%)</span>`}}return `<div class="list-item" style="padding:10px 8px;margin:4px 0;background:var(--surface-2);border-radius:12px;border-bottom:none"><div class="list-item-icon account">${icons.crypto}</div><div class="list-item-body"><div class="list-item-title">${t.balance} ${escapeHTML(t.coin)}</div><div class="list-item-sub">$${uv.toLocaleString('en-US',{maximumFractionDigits:2})} ${ph}</div></div><div class="list-item-right"><button class="btn-icon" onclick="editTokenBalance(${a.id},${t.id})">${icons.edit}</button><button class="btn-icon" onclick="confirmDeleteToken(${a.id},${t.id})" style="color:var(--danger)">${icons.delete}</button></div></div>`}).join('');const wr=wu*state.rates.USD;tc+=wr;l.innerHTML+=`<div style="margin-bottom:12px;background:var(--surface-2);border-radius:var(--radius);padding:12px"><div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><div class="list-item-icon account">${icons.crypto}</div><div><div class="list-item-title">${escapeHTML(a.name)} <span class="chip chip-indigo">CRYPTO</span></div><div class="list-item-sub">≈ ${fmt(wr)} ₽</div></div></div><div class="flex gap-2"><button class="btn-icon" onclick="addTokenToWallet(${a.id})" style="background:var(--accent);color:#fff">${icons.plus}</button><button class="btn-icon" onclick="confirmDeleteAccount(${a.id})" style="color:var(--danger)">${icons.delete}</button></div></div>${th||'<div class="text-center text-muted text-sm" style="padding:10px">Нет токенов</div>'}</div>`}});const ff=tc-td;document.getElementById('total-capital').textContent=`${fmt(tc)} ₽`;document.getElementById('total-capital-sub').innerHTML=td>0?`<div class="sub-item"><div class="sub-label">Общий долг</div><div class="sub-value">-${fmt(td)} ₽</div></div><div class="sub-item"><div class="sub-label">Свободно</div><div class="sub-value">${fmt(ff)} ₽</div></div>`:'';const le=document.getElementById('accounts-legend');le.innerHTML=(ccd>0||ofc>0)?`<div class="accounts-detail-grid"><div class="accounts-detail-item"><div class="accounts-detail-label">Всего средств</div><div class="accounts-detail-value positive">${fmt(tc)} ₽</div></div><div class="accounts-detail-item"><div class="accounts-detail-label">Долг по кредиткам</div><div class="accounts-detail-value negative">-${fmt(ccd)} ₽</div></div><div class="accounts-detail-item"><div class="accounts-detail-label">Свои на кредитках</div><div class="accounts-detail-value positive">+${fmt(ofc)} ₽</div></div><div class="accounts-detail-item"><div class="accounts-detail-label">Реально свободно</div><div class="accounts-detail-value" style="color:var(--accent)">${fmt(tc-ccd)} ₽</div></div></div>`:''}
 function initAccountsChart(){if(charts.accounts)charts.accounts.destroy();const d=[],lb=[];state.accounts.forEach(a=>{if(a.type==='fiat'){const cr=a.currency==='USD'?state.rates.USD:a.currency==='EUR'?state.rates.EUR||state.rates.USD*1.1:1;const r=a.balance*cr;if(r>0){d.push(r);lb.push(a.name)}}else if(a.type==='crypto_wallet'){let w=0;(a.tokens||[]).forEach(t=>w+=t.balance*(state.rates[t.coin]||0)*state.rates.USD);if(w>0){d.push(w);lb.push(a.name)}}});if(!d.length){d.push(1);lb.push('Нет данных')}charts.accounts=new Chart(document.getElementById('accountsChart').getContext('2d'),{type:'doughnut',data:{labels:lb,datasets:[{data:d,backgroundColor:chartColors,borderWidth:0,cutout:'65%'}]},options:{plugins:{legend:{display:true,position:'bottom',labels:{padding:12,font:{size:11},generateLabels:c=>{const ds=c.data.datasets[0],tt=ds.data.reduce((a,b)=>a+b,0);return c.data.labels.map((l,i)=>({text:`${l}: ${fmt(ds.data[i])}₽ (${Math.round(ds.data[i]/tt*100)}%)`,fillStyle:ds.backgroundColor[i],strokeStyle:ds.backgroundColor[i],hidden:false,index:i}))}}}}}})}
 function showAccountModal(){showModal({title:'Новый счёт',body:`<div class="input-group"><label class="input-label">Название</label><input type="text" class="input" id="acc-name" placeholder="Т-Банк, Сбер..."></div><div class="input-group"><label class="input-label">Тип</label><select class="select" id="acc-type" onchange="toggleAccountModalInputs()"><option value="fiat">Фиатный счёт</option><option value="crypto_wallet">Крипто-кошелёк</option></select></div><div class="input-group" id="acc-currency-row"><label class="input-label">Валюта</label><select class="select" id="acc-currency"><option value="RUB">₽ Рубли</option><option value="USD">$ Доллары</option><option value="EUR">€ Евро</option></select></div><label class="flex items-center gap-2 mb-3" id="acc-credit-row" style="cursor:pointer"><input type="checkbox" id="acc-is-credit" style="width:18px;height:18px"><span>Это кредитная карта</span></label><div class="input-group" id="acc-balance-row"><label class="input-label">Начальный баланс</label><input type="text" inputmode="decimal" class="input" id="acc-balance" placeholder="0"></div>`,submitText:'Создать',onSubmit:()=>{const n=document.getElementById('acc-name').value.trim(),t=document.getElementById('acc-type').value,c=document.getElementById('acc-currency').value,ic=document.getElementById('acc-is-credit').checked;if(!n){showAlert('Введите название');return false}if(t==='fiat'){let b=parseNum(document.getElementById('acc-balance').value)||0;if(ic)b=-Math.abs(b);state.accounts.push({id:Date.now(),name:n,type:t,balance:b,isCredit:ic,currency:c})}else state.accounts.push({id:Date.now(),name:n,type:t,tokens:[]});DB.save(state)}});toggleAccountModalInputs()}
@@ -409,8 +791,151 @@ function confirmDeleteCategory(type,idx){const cat=state.categories[type][idx];s
 function renderSettingsBudgets(){document.getElementById('budget-cat-select').innerHTML='<option value="">Выберите категорию...</option>'+state.categories.expense.map(c=>`<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');document.getElementById('settings-budgets-list').innerHTML=Object.keys(state.budgets).map(c=>`<div class="list-item"><div class="list-item-body"><div class="list-item-title">${escapeHTML(c)}</div><div class="list-item-sub">Лимит: ${fmt(state.budgets[c])} ₽</div></div><button class="btn-icon" onclick="removeBudget('${escapeHTML(c)}')" style="color:var(--danger)">${icons.delete}</button></div>`).join('')||'<div class="text-muted text-sm text-center" style="padding:20px">Нет лимитов</div>'}
 function setBudget(){const c=document.getElementById('budget-cat-select').value,l=parseNum(document.getElementById('budget-limit').value);if(!c)return showAlert('Выберите категорию');if(isNaN(l)||l<=0)return showAlert('Введите лимит');state.budgets[c]=l;document.getElementById('budget-limit').value='';DB.save(state)}
 function removeBudget(c){delete state.budgets[c];DB.save(state)}
-function renderHistory(){const s=(document.getElementById('history-search')?.value||'').toLowerCase().trim(),f=document.getElementById('history-category-filter')?.value||'all';const fe=document.getElementById('history-category-filter');if(fe){const uc=new Set();state.transactions.forEach(t=>{if(t.type==='transfer')uc.add('Перевод');else if(t.category)uc.add(t.category)});const cv=fe.value;fe.innerHTML='<option value="all">Все категории</option>'+[...uc].sort().map(c=>`<option value="${escapeHTML(c)}" ${c===cv?'selected':''}>${escapeHTML(c)}</option>`).join('')}let list=[...state.transactions];if(f&&f!=='all')list=list.filter(t=>f==='Перевод'?t.type==='transfer':t.category===f);if(s)list=list.filter(t=>[t.category,t.note,t.type].filter(Boolean).join(' ').toLowerCase().includes(s));list.sort((a,b)=>{const d=new Date(b.date)-new Date(a.date);return d!==0?d:b.id-a.id});const el=document.getElementById('full-history-list');if(!list.length)el.innerHTML=`<div class="empty-state"><div class="empty-state-icon">${icons.empty}</div><div class="empty-state-title">Ничего не найдено</div></div>`;else{el.innerHTML=list.map(t=>`<div class="list-item-wrapper" data-id="${t.id}"><div class="list-item-inner">${renderTxItem(t,false)}</div><div class="swipe-actions"><button class="swipe-btn edit" onclick="showTransactionModal(${t.id})">${icons.edit}</button><button class="swipe-btn delete" onclick="confirmDeleteTransaction(${t.id})">${icons.delete}</button></div></div>`).join('');el.querySelectorAll('.list-item-wrapper').forEach(attachSwipe)}}
-function confirmDeleteTransaction(id){showModal({title:'Удалить операцию?',message:'Средства будут возвращены на счёт.',submitText:'Удалить',isDanger:true,onSubmit:()=>{const t=state.transactions.find(x=>x.id===id);if(!t)return;if(t.type==='transfer'){modifyAccountBalance(t.transferDetails.from,t.transferDetails.amount);modifyAccountBalance(t.transferDetails.to,-t.transferDetails.amount)}else if(t.accountDetails){const ad=t.accountDetails,vk=ad.type==='fiat'?`fiat_${ad.accId}`:`crypto_${ad.accId}_${ad.tokenId}`;modifyAccountBalance(vk,t.type==='income'?-ad.amount:ad.amount)}state.transactions=state.transactions.filter(x=>x.id!==id);DB.save(state)}})}
+function formatHistoryDayLabel(dateStr){
+  const today=getLocalDate();
+  const y=new Date();y.setDate(y.getDate()-1);
+  const yesterday=`${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
+  const d=new Date(dateStr+'T00:00:00');
+  const base=d.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
+  if(dateStr===today)return `Сегодня • ${base}`;
+  if(dateStr===yesterday)return `Вчера • ${base}`;
+  return base;
+}
+
+function renderHistory(){
+  const s=(document.getElementById('history-search')?.value||'').toLowerCase().trim();
+  const fCat=document.getElementById('history-category-filter')?.value||'all';
+  const fAcc=document.getElementById('history-account-filter')?.value||'all';
+
+  // Обновляем селект категорий
+  const fe=document.getElementById('history-category-filter');
+  if(fe){
+    const uc=new Set();
+    state.transactions.forEach(t=>{if(t.type==='transfer')uc.add('Перевод');else if(t.category)uc.add(t.category)});
+    const cv=fe.value;
+    fe.innerHTML='<option value="all">Все категории</option>'+[...uc].sort().map(c=>`<option value="${escapeHTML(c)}" ${c===cv?'selected':''}>${escapeHTML(c)}</option>`).join('');
+  }
+
+  // Обновляем селект счетов
+  const fae=document.getElementById('history-account-filter');
+  if(fae){
+    const cv=fae.value;
+    let opts='<option value="all">Все счета</option>';
+    state.accounts.forEach(a=>{
+      if(a.type==='fiat'){
+        const k=`fiat_${a.id}`;
+        opts+=`<option value="${k}" ${k===cv?'selected':''}>💳 ${escapeHTML(a.name)}</option>`;
+      }else if(a.type==='crypto_wallet'){
+        (a.tokens||[]).forEach(tk=>{
+          const k=`crypto_${a.id}_${tk.id}`;
+          opts+=`<option value="${k}" ${k===cv?'selected':''}>🪙 ${escapeHTML(a.name)} (${escapeHTML(tk.coin)})</option>`;
+        });
+      }
+    });
+    fae.innerHTML=opts;
+  }
+
+  let list=[...state.transactions];
+  if(fCat&&fCat!=='all')list=list.filter(t=>fCat==='Перевод'?t.type==='transfer':t.category===fCat);
+  if(fAcc&&fAcc!=='all'){
+    list=list.filter(t=>{
+      if(t.type==='transfer'&&t.transferDetails)return t.transferDetails.from===fAcc||t.transferDetails.to===fAcc;
+      if(t.accountDetails){
+        const k=t.accountDetails.type==='fiat'?`fiat_${t.accountDetails.accId}`:`crypto_${t.accountDetails.accId}_${t.accountDetails.tokenId}`;
+        return k===fAcc;
+      }
+      return false;
+    });
+  }
+  if(s){
+    list=list.filter(t=>[t.category,t.note,t.type,t.amount].filter(Boolean).join(' ').toLowerCase().includes(s));
+  }
+
+  list.sort((a,b)=>{const d=new Date(b.date)-new Date(a.date);return d!==0?d:b.id-a.id});
+
+  // Считаем сводку по выборке
+  const sumEl=document.getElementById('history-summary-container');
+  const el=document.getElementById('full-history-list');
+  if(!list.length){
+    if(sumEl)sumEl.innerHTML='';
+    el.innerHTML=`<div class="card card-elevated"><div class="empty-state"><div class="empty-state-icon">${icons.empty}</div><div class="empty-state-title">Ничего не найдено</div><div class="empty-state-text">Попробуйте изменить фильтры</div></div></div>`;
+    return;
+  }
+
+  let totalInc=0,totalExp=0;
+  const groups={};
+  list.forEach(t=>{
+    const r=getTxRub(t);
+    if(t.type==='income')totalInc+=r;
+    if(t.type==='expense')totalExp+=r;
+    if(!groups[t.date])groups[t.date]={items:[],net:0};
+    groups[t.date].items.push(t);
+    if(t.type==='income')groups[t.date].net+=r;
+    else if(t.type==='expense')groups[t.date].net-=r;
+  });
+
+  if(sumEl){
+    sumEl.innerHTML=`
+      <div class="history-summary-bar">
+        <span class="text-muted">Операций: <strong>${list.length}</strong></span>
+        <div class="flex gap-3 font-mono">
+          ${totalInc>0?`<span style="color:var(--accent)">+${fmt(totalInc)} ₽</span>`:''}
+          ${totalExp>0?`<span style="color:var(--danger)">-${fmt(totalExp)} ₽</span>`:''}
+        </div>
+      </div>
+    `;
+  }
+
+  el.innerHTML=Object.keys(groups).map(date=>{
+    const g=groups[date];
+    const netStr=g.net===0?'0 ₽':`${g.net>0?'+':''}${fmt(g.net)} ₽`;
+    const netColor=g.net>0?'var(--accent)':g.net<0?'var(--text-2)':'var(--text-4)';
+    const itemsHtml=g.items.map(t=>`
+      <div class="list-item-wrapper" data-id="${t.id}">
+        <div class="list-item-inner">${renderTxItem(t,false,true)}</div>
+        <div class="swipe-actions">
+          <button class="swipe-btn edit" onclick="showTransactionModal(${t.id})">${icons.edit}</button>
+          <button class="swipe-btn delete" onclick="confirmDeleteTransaction(${t.id})">${icons.delete}</button>
+        </div>
+      </div>
+    `).join('');
+    return `
+      <div class="history-day-group">
+        <div class="history-day-header">
+          <span class="history-day-date">${formatHistoryDayLabel(date)}</span>
+          <span class="history-day-total" style="color:${netColor}">${netStr}</span>
+        </div>
+        <div class="history-day-list">${itemsHtml}</div>
+      </div>
+    `;
+  }).join('');
+
+  el.querySelectorAll('.list-item-wrapper').forEach(attachSwipe);
+}
+
+function confirmDeleteTransaction(id){
+  showModal({
+    title:'Удалить операцию?',
+    message:'Средства будут возвращены на счёт.',
+    submitText:'Удалить',
+    isDanger:true,
+    onSubmit:()=>{
+      const t=state.transactions.find(x=>x.id===id);
+      if(!t)return;
+      if(t.type==='transfer'&&t.transferDetails){
+        const fromAmt=t.transferDetails.amountFrom??t.transferDetails.amount;
+        const toAmt=t.transferDetails.amountTo??t.transferDetails.amount;
+        modifyAccountBalance(t.transferDetails.from,fromAmt);
+        modifyAccountBalance(t.transferDetails.to,-toAmt);
+      }else if(t.accountDetails){
+        const ad=t.accountDetails,vk=ad.type==='fiat'?`fiat_${ad.accId}`:`crypto_${ad.accId}_${ad.tokenId}`;
+        modifyAccountBalance(vk,t.type==='income'?-ad.amount:ad.amount);
+      }
+      state.transactions=state.transactions.filter(x=>x.id!==id);
+      DB.save(state);
+    }
+  });
+}
 function attachSwipe(w){let sx=0,sy=0,cx=0,dr=false,hz=null;const inn=w.querySelector('.list-item-inner');w.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;dr=true;hz=null;inn.style.transition='none'},{passive:true});w.addEventListener('touchmove',e=>{if(!dr)return;const dx=e.touches[0].clientX-sx,dy=e.touches[0].clientY-sy;if(hz===null)hz=Math.abs(dx)>Math.abs(dy);if(!hz)return;cx=Math.min(0,Math.max(-120,dx));inn.style.transform=`translateX(${cx}px)`},{passive:true});w.addEventListener('touchend',()=>{dr=false;inn.style.transition='transform .25s';if(cx<-60){inn.style.transform='translateX(-120px)';w.classList.add('swiped')}else{inn.style.transform='translateX(0)';w.classList.remove('swiped')}cx=0})}
 function initSwipeHandlers(){document.addEventListener('click',e=>{if(!e.target.closest('.list-item-wrapper'))document.querySelectorAll('.list-item-wrapper.swiped').forEach(w=>{w.classList.remove('swiped');const i=w.querySelector('.list-item-inner');if(i)i.style.transform='translateX(0)'})})}
 function initPullToRefresh(){let sy=0,pl=false;const ind=document.getElementById('ptr-indicator'),con=document.getElementById('app-container');con.addEventListener('touchstart',e=>{if(window.scrollY===0){sy=e.touches[0].clientY;pl=true}},{passive:true});con.addEventListener('touchmove',e=>{if(!pl)return;if(e.touches[0].clientY-sy>50&&window.scrollY===0)ind.classList.add('active')},{passive:true});con.addEventListener('touchend',()=>{if(ind.classList.contains('active')){ind.classList.add('loading');fetchLiveRates().then(()=>setTimeout(()=>ind.classList.remove('active','loading'),500))}pl=false})}
