@@ -120,11 +120,9 @@ body {
   transition: background-color 0.28s ease, color 0.28s ease;
 }
 
-body.modal-open {
+html.modal-open, body.modal-open {
   overflow: hidden;
-  position: fixed;
-  width: 100%;
-  height: 100%;
+  overscroll-behavior: none;
 }
 
 .num, .stat-value, .list-item-amount, .card-hero .value, .card-hero .sub-value,
@@ -144,43 +142,6 @@ body.privacy-mode .sensitive-val {
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--fill-strong); border-radius: 10px; }
-
-/* LOADER */
-#global-loader {
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 18px;
-  transition: opacity 0.35s ease;
-}
-.loader-logo {
-  width: 76px;
-  height: 76px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, #34C759, #007AFF);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 36px;
-  font-weight: 700;
-  box-shadow: 0 14px 36px rgba(0, 122, 255, 0.28);
-  animation: pulse-loader 1.6s ease-in-out infinite;
-}
-@keyframes pulse-loader {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-.loader-text {
-  color: var(--text-3);
-  font-size: 14px;
-  font-weight: 500;
-}
 
 /* DYNAMIC ISLAND TOAST */
 #toast-container {
@@ -250,7 +211,7 @@ body.privacy-mode .sensitive-val {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  transition: opacity 0.35s, visibility 0.35s;
+  transition: opacity 0.25s, visibility 0.25s;
 }
 .auth-overlay.hidden {
   opacity: 0;
@@ -311,7 +272,7 @@ body.privacy-mode .sensitive-val {
   letter-spacing: -0.015em;
   width: 100%;
 }
-.btn:active, .btn-icon:active, .btn-pill:active {
+.btn:active, .btn-icon:active {
   transform: scale(0.96);
 }
 .btn-primary {
@@ -791,7 +752,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .list-item-amount.expense { color: var(--text); }
 .list-item-amount.transfer { color: var(--indigo); }
 
-/* SWIPE ROWS */
+/* SWIPE ROWS (FIXED Z-INDEX) */
 .list-item-wrapper {
   position: relative;
   overflow: hidden;
@@ -805,6 +766,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   top: 0;
   right: 0;
   bottom: 0;
+  z-index: 3;
   display: flex;
   transform: translateX(100%);
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
@@ -812,6 +774,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .list-item-wrapper.swiped .swipe-actions { transform: translateX(0); }
 .list-item-wrapper.swiped .list-item-inner { transform: translateX(-124px); }
 .list-item-inner {
+  position: relative;
+  z-index: 2;
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   background: var(--surface);
   cursor: pointer;
@@ -983,10 +947,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .fab:active { transform: scale(0.9); }
 .fab svg { width: 26px; height: 26px; stroke-width: 2.5; }
 
-/* iOS BOTTOM SHEET MODAL */
+/* iOS BOTTOM SHEET MODAL (FIXED HEIGHT & SAFE AREA) */
 .modal-overlay {
   position: fixed;
   inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  padding: calc(var(--safe-top) + 20px) 0 0;
   z-index: 9999;
   background: rgba(0, 0, 0, 0.42);
   backdrop-filter: blur(6px);
@@ -994,6 +961,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  overscroll-behavior: contain;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.28s ease, visibility 0.28s ease;
@@ -1006,8 +974,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   max-width: 480px;
   border-radius: 26px 26px 0 0;
   padding: 10px 20px calc(20px + var(--safe-bottom));
-  max-height: 92vh;
+  max-height: 85vh;
+  max-height: calc(100dvh - var(--safe-top) - 24px);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   transform: translateY(100%);
   transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1);
   box-shadow: var(--shadow-xl);
@@ -1532,18 +1503,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-radius: 26px;
     margin: auto;
     max-width: 420px;
+    max-height: calc(100dvh - 40px);
     border: 0.5px solid var(--border);
   }
-  .modal-overlay { align-items: center; }
+  .modal-overlay { align-items: center; padding: 20px; }
 }
 </style>
 </head>
 <body>
-
-<div id="global-loader">
-  <div class="loader-logo">₽</div>
-  <div class="loader-text">Загрузка FinTracker...</div>
-</div>
 
 <div id="toast-container" aria-live="polite"></div>
 
@@ -1603,7 +1570,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       </div>
     </div>
 
-    <!-- НОВОЕ: Быстрые шаблоны в 1 тап -->
     <div id="quick-templates-section" class="quick-strip-wrap" style="display:none">
       <div class="quick-strip" id="quick-templates-strip"></div>
     </div>
@@ -1625,7 +1591,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       </div>
     </div>
 
-    <!-- НОВОЕ: Подписки к оплате -->
     <div class="card card-elevated" id="dashboard-recurring-card" style="display:none">
       <div class="card-title">
         <h3>Подписки этого месяца</h3>
@@ -1642,7 +1607,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       <div id="budgets-list"></div>
     </div>
 
-    <!-- НОВОЕ: Цели накопления (превью) -->
     <div class="card card-elevated" id="dashboard-goals-card" style="display:none">
       <div class="card-title">
         <h3>Цели накопления</h3>
@@ -1711,7 +1675,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       <div id="accounts-list"></div>
     </div>
 
-    <!-- НОВОЕ: Цели накопления -->
     <div class="card card-elevated" id="accounts-goals-section">
       <div class="card-title">
         <h3>Цели накопления</h3>
@@ -1857,7 +1820,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       <input type="text" id="history-search" placeholder="Поиск по категории, заметке, сумме..." oninput="renderHistory()">
     </div>
 
-    <!-- НОВОЕ: Быстрый фильтр по типу -->
     <div class="segmented" id="history-type-seg">
       <button class="segmented-btn active" data-htype="all" onclick="setHistoryTypeFilter('all',this)">Все</button>
       <button class="segmented-btn" data-htype="expense" onclick="setHistoryTypeFilter('expense',this)">Расходы</button>
@@ -1888,7 +1850,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
           <div class="settings-item-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
           <div class="settings-item-body">
             <div class="settings-item-title" id="user-email">email@example.com</div>
-            <div class="settings-item-sub">Apple Cloud / Firebase синхронизация</div>
+            <div class="settings-item-sub">Облачная синхронизация Firebase</div>
           </div>
           <button class="btn btn-secondary" style="width:auto;padding:7px 13px;font-size:13px" onclick="logout()">Выйти</button>
         </div>
@@ -1970,7 +1932,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       </div>
     </div>
 
-    <!-- НОВОЕ: Регулярные платежи и подписки -->
     <div class="settings-group" id="settings-recurring-section">
       <div class="settings-group-title">Подписки и регулярные платежи</div>
       <div class="card card-elevated">
@@ -2023,7 +1984,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       </div>
     </div>
 
-    <div style="text-align:center;padding:18px 0 24px;color:var(--text-3);font-size:12px">FinTracker v4.0 • Designed for clarity</div>
+    <div style="text-align:center;padding:18px 0 24px;color:var(--text-3);font-size:12px">FinTracker v4.1 • Designed for clarity</div>
   </div>
 </div>
 
@@ -2140,7 +2101,7 @@ const firebaseConfig = {
   appId: "1:309538443227:web:2f11759258845c8e8421fe"
 };
 
-let db, auth, currentUser = null, isAppInitialized = false;
+let db, auth, currentUser = null, isAppInitialized = false, appShellReady = false;
 if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
@@ -2187,7 +2148,6 @@ function normalizeState(raw) {
 let state = getDefaultState();
 let charts = {};
 let editingTxId = null;
-let scrollPosition = 0;
 let isManualAmountTo = false;
 let historyTypeFilter = 'all';
 let analyticsPeriod = 'current_month';
@@ -2205,26 +2165,6 @@ Chart.defaults.maintainAspectRatio = false;
 const chartColors = ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#5856D6', '#AF52DE', '#30B0C7', '#FF2D55', '#5AC8FA', '#A2845E', '#32ADE6', '#FFD60A'];
 
 const DB = {
-  listen(cb) {
-    const l = localStorage.getItem('financeState_v3');
-    let hasCached = false;
-    if (l) {
-      try { cb(JSON.parse(l)); hasCached = true; } catch (e) {}
-    }
-    if (!db || !currentUser) {
-      if (!hasCached) cb(null);
-      return;
-    }
-    db.ref(`users/${currentUser.uid}/financeState`).on('value', s => {
-      if (s.exists()) {
-        const v = s.val();
-        try { localStorage.setItem('financeState_v3', JSON.stringify(v)); } catch (e) {}
-        cb(v);
-      } else {
-        cb(null);
-      }
-    });
-  },
   stopListen() {
     if (db && currentUser) db.ref(`users/${currentUser.uid}/financeState`).off();
   },
@@ -2281,7 +2221,7 @@ function applyTheme() {
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   const meta = document.getElementById('meta-theme-color');
   if (meta) meta.setAttribute('content', isDark ? '#000000' : '#F2F2F7');
-  Chart.defaults.color = isDark ? '#8E8E93' : '#8E8E93';
+  Chart.defaults.color = '#8E8E93';
 }
 
 if (window.matchMedia) {
@@ -2313,47 +2253,89 @@ function togglePrivacyMode(forceVal) {
   DB.save(state);
 }
 
-/* ============ AUTH & MODAL ============ */
-function hideLoader() {
-  const l = document.getElementById('global-loader');
-  if (l) {
-    l.style.opacity = '0';
-    setTimeout(() => l.style.display = 'none', 360);
-  }
+/* ============ INSTANT BOOT, AUTH & MODAL ============ */
+function setupAppOnce() {
+  if (appShellReady) return;
+  appShellReady = true;
+  const d = new Date();
+  document.getElementById('dashboard-date').textContent = d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+  const h = d.getHours();
+  document.getElementById('dashboard-greeting').textContent = h < 6 ? 'Доброй ночи' : h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
+  const monthLabel = d.toLocaleDateString('ru-RU', { month: 'long' });
+  const pill = document.getElementById('hero-month-pill');
+  if (pill) pill.textContent = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+  initPullToRefresh();
+  initSwipeHandlers();
+}
+
+function showAppUI() {
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('app-container').style.display = 'block';
+  document.getElementById('tab-bar').style.display = 'flex';
+  document.getElementById('fab').style.display = 'flex';
+}
+
+function showAuthUI() {
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('app-container').style.display = 'none';
+  document.getElementById('tab-bar').style.display = 'none';
+  document.getElementById('fab').style.display = 'none';
+  document.getElementById('profile-card').style.display = 'none';
 }
 
 function initAuth() {
+  const cachedRaw = localStorage.getItem('financeState_v3');
+  const wasAuthed = localStorage.getItem('fintracker_authed') === '1';
+
+  if (cachedRaw) {
+    try { state = normalizeState(JSON.parse(cachedRaw)); } catch (e) {}
+  }
+  applyTheme();
+  applyPrivacyMode();
+  setupAppOnce();
+
+  // Мгновенный рендер интерфейса из кэша без заставки и ожидания Firebase
+  if (!auth || wasAuthed || cachedRaw) {
+    showAppUI();
+    renderAll();
+  } else {
+    showAuthUI();
+  }
+
   if (!auth) {
-    document.getElementById('auth-screen').classList.add('hidden');
-    document.getElementById('app-container').style.display = 'block';
-    document.getElementById('tab-bar').style.display = 'flex';
-    document.getElementById('fab').style.display = 'flex';
-    hideLoader();
-    initApp();
+    if (!isAppInitialized) { fetchLiveRates(); isAppInitialized = true; }
     return;
   }
+
   auth.onAuthStateChanged(u => {
     if (u) {
+      DB.stopListen();
       currentUser = u;
-      document.getElementById('auth-screen').classList.add('hidden');
-      document.getElementById('app-container').style.display = 'block';
-      document.getElementById('tab-bar').style.display = 'flex';
-      document.getElementById('fab').style.display = 'flex';
+      try { localStorage.setItem('fintracker_authed', '1'); } catch (e) {}
+      showAppUI();
       document.getElementById('profile-card').style.display = 'block';
       document.getElementById('user-email').innerText = u.email;
-      DB.stopListen();
-      initApp();
-      hideLoader();
+      if (!wasAuthed && !cachedRaw) renderAll();
+      db.ref(`users/${currentUser.uid}/financeState`).on('value', s => {
+        if (s.exists()) {
+          const v = s.val();
+          try { localStorage.setItem('financeState_v3', JSON.stringify(v)); } catch (e) {}
+          state = normalizeState(v);
+          applyTheme();
+          applyPrivacyMode();
+          renderAll();
+        }
+      });
+      if (!isAppInitialized) {
+        fetchLiveRates();
+        isAppInitialized = true;
+      }
     } else {
+      DB.stopListen();
       currentUser = null;
       isAppInitialized = false;
-      DB.stopListen();
-      hideLoader();
-      document.getElementById('auth-screen').classList.remove('hidden');
-      document.getElementById('app-container').style.display = 'none';
-      document.getElementById('tab-bar').style.display = 'none';
-      document.getElementById('fab').style.display = 'none';
-      document.getElementById('profile-card').style.display = 'none';
+      try { localStorage.removeItem('fintracker_authed'); } catch (e) {}
+      showAuthUI();
     }
   });
 }
@@ -2374,15 +2356,13 @@ function loginWithGoogle() {
 }
 
 function logout() {
+  try { localStorage.removeItem('fintracker_authed'); } catch (e) {}
   if (auth) auth.signOut().then(() => location.reload());
 }
 
 function showModal({ title, message, body, submitText, cancelText, isDanger, onSubmit }) {
-  if (!document.body.classList.contains('modal-open')) {
-    scrollPosition = window.pageYOffset;
-    document.body.classList.add('modal-open');
-    document.body.style.top = `-${scrollPosition}px`;
-  }
+  document.documentElement.classList.add('modal-open');
+  document.body.classList.add('modal-open');
   document.getElementById('modal-title').innerText = title || '';
   const m = document.getElementById('modal-message');
   if (message) {
@@ -2403,14 +2383,15 @@ function showModal({ title, message, body, submitText, cancelText, isDanger, onS
     }
     hideModal();
   };
+  const sheet = document.querySelector('#app-modal .modal-sheet');
+  if (sheet) sheet.scrollTop = 0;
   document.getElementById('app-modal').classList.add('active');
 }
 
 function hideModal() {
   document.getElementById('app-modal').classList.remove('active');
+  document.documentElement.classList.remove('modal-open');
   document.body.classList.remove('modal-open');
-  document.body.style.top = '';
-  window.scrollTo(0, scrollPosition);
 }
 
 /* ============ ACCOUNT UNITS & RATES ============ */
@@ -2470,7 +2451,7 @@ function getTxRub(t) {
   return t.amount || 0;
 }
 
-/* ============ TRANSACTION MODAL & LOGIC (FIXED VALIDATION ORDER) ============ */
+/* ============ TRANSACTION MODAL & LOGIC ============ */
 function updateCalcPreview() {
   const inp = document.getElementById('tx-amount');
   const prev = document.getElementById('tx-calc-preview');
@@ -2807,7 +2788,7 @@ function saveTransactionFromModal() {
   const am = parseNum(document.getElementById('tx-amount').value);
   const n = document.getElementById('tx-note').value.trim();
 
-  // 1. Вся валидация выполняется ДО изменения балансов и удаления старой транзакции
+  // Вся валидация выполняется строго ДО изменения балансов
   if (isNaN(am) || am === 0) { showToast('Укажите корректную сумму', 'warning'); return false; }
   if (t === 'transfer' && am <= 0) { showToast('Сумма перевода должна быть больше 0', 'warning'); return false; }
 
@@ -2836,7 +2817,6 @@ function saveTransactionFromModal() {
     regularPayload = { c, av };
   }
 
-  // 2. Безопасный откат старой операции при редактировании
   const wasEditing = editingTxId !== null;
   if (wasEditing) {
     const o = state.transactions.find(x => x.id === editingTxId);
@@ -2855,7 +2835,6 @@ function saveTransactionFromModal() {
     }
   }
 
-  // 3. Применение новой операции
   if (t === 'transfer') {
     const { f, to, amTo, infoFrom, infoTo } = transferPayload;
     if (infoTo.type === 'crypto' && infoTo.token && infoTo.unit !== 'USDT' && !wasEditing) {
@@ -2943,7 +2922,7 @@ function modifyAccountBalance(av, d, skipRateCheck = false) {
   return { accType: at, accId: ai, tokenId: ti, coin: c, currency: cur };
 }
 
-/* ============ NAVIGATION & INIT ============ */
+/* ============ NAVIGATION & RENDER ORCHESTRATION ============ */
 function switchTab(tab, btn) {
   document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
@@ -2961,30 +2940,6 @@ function switchTab(tab, btn) {
   if (tab === 'history') renderHistory();
   if (tab === 'settings') renderSettings();
   window.scrollTo(0, 0);
-}
-
-function initApp() {
-  applyTheme();
-  const d = new Date();
-  document.getElementById('dashboard-date').textContent = d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
-  const h = d.getHours();
-  document.getElementById('dashboard-greeting').textContent = h < 6 ? 'Доброй ночи' : h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
-  const monthLabel = d.toLocaleDateString('ru-RU', { month: 'long' });
-  const pill = document.getElementById('hero-month-pill');
-  if (pill) pill.textContent = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
-
-  DB.listen(l => {
-    state = normalizeState(l);
-    applyTheme();
-    applyPrivacyMode();
-    renderAll();
-    if (!isAppInitialized) {
-      fetchLiveRates();
-      isAppInitialized = true;
-    }
-  });
-  initPullToRefresh();
-  initSwipeHandlers();
 }
 
 function renderAll() {
@@ -3073,7 +3028,6 @@ function renderDashboard() {
   renderDashboardRecurring(mp);
   renderDashboardGoals();
 
-  // Budgets widget
   const bc = document.getElementById('budgets-card');
   const bl = document.getElementById('budgets-list');
   if (Object.keys(state.budgets).length > 0) {
@@ -3095,7 +3049,6 @@ function renderDashboard() {
     bc.style.display = 'none';
   }
 
-  // Recent transactions
   const rc = [...state.transactions].sort((a, b) => {
     const d = parseLocalDate(b.date) - parseLocalDate(a.date);
     return d !== 0 ? d : b.id - a.id;
@@ -3105,7 +3058,6 @@ function renderDashboard() {
     ? `<div class="empty-state"><div class="empty-state-icon">${icons.empty}</div><div class="empty-state-title">Пока нет операций</div><div class="empty-state-text">Нажмите +, чтобы записать первую</div></div>`
     : rc.map(t => renderTxItem(t)).join('');
 
-  // Expense structure
   const ea = Object.keys(em).map(k => ({ name: k, val: em[k] })).sort((a, b) => b.val - a.val);
   const te = mE > 0 ? mE : 1;
   document.getElementById('current-month-expenses-list').innerHTML = ea.map((e, i) => {
@@ -3139,7 +3091,6 @@ function renderDashboard() {
     });
   }
 
-  // Daily expenses chart
   const da = {};
   const dim = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   for (let i = 1; i <= dim; i++) da[i] = 0;
@@ -3548,7 +3499,7 @@ function confirmDeleteToken(wid, tid) {
   });
 }
 
-/* ============ НОВОЕ: ЦЕЛИ НАКОПЛЕНИЯ (SAVINGS GOALS) ============ */
+/* ============ ЦЕЛИ НАКОПЛЕНИЯ (SAVINGS GOALS) ============ */
 function renderGoals() {
   const el = document.getElementById('goals-list');
   if (!el) return;
@@ -3672,7 +3623,7 @@ function deleteGoal(id) {
   });
 }
 
-/* ============ НОВОЕ: ПОДПИСКИ И РЕГУЛЯРНЫЕ ПЛАТЕЖИ ============ */
+/* ============ ПОДПИСКИ И РЕГУЛЯРНЫЕ ПЛАТЕЖИ ============ */
 function renderRecurring() {
   const list = document.getElementById('recurring-list');
   const badge = document.getElementById('recurring-total-badge');
@@ -3688,7 +3639,7 @@ function renderRecurring() {
 
   const now = new Date();
   const curMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  list.innerHTML = items.sort((a, b) => (a.day || 1) - (b.day || 1)).map(r => {
+  list.innerHTML = [...items].sort((a, b) => (a.day || 1) - (b.day || 1)).map(r => {
     const isPaid = r.lastPaidMonth === curMonth;
     return `<div class="list-item">
       <div class="list-item-icon sub">${icons.repeat}</div>
@@ -3717,7 +3668,7 @@ function renderDashboardRecurring(curMonth) {
     return;
   }
   card.style.display = 'block';
-  list.innerHTML = unpaid.sort((a, b) => (a.day || 1) - (b.day || 1)).slice(0, 3).map(r => `
+  list.innerHTML = [...unpaid].sort((a, b) => (a.day || 1) - (b.day || 1)).slice(0, 3).map(r => `
     <div class="list-item">
       <div class="list-item-icon sub">${icons.repeat}</div>
       <div class="list-item-body">
@@ -3804,7 +3755,7 @@ function deleteRecurring(id) {
   showToast('Подписка удалена', 'info');
 }
 
-/* ============ CATEGORIES & BUDGETS (SAFE HANDLERS) ============ */
+/* ============ CATEGORIES & BUDGETS ============ */
 function renderCategories() {
   const rl = (type, lid) => {
     const l = document.getElementById(lid);
@@ -3948,7 +3899,7 @@ function removeBudgetByIndex(idx) {
   }
 }
 
-/* ============ HISTORY & SWIPES ============ */
+/* ============ HISTORY & FIXED SWIPES ============ */
 function setHistoryTypeFilter(type, btn) {
   historyTypeFilter = type;
   document.querySelectorAll('#history-type-seg .segmented-btn').forEach(b => b.classList.remove('active'));
@@ -4061,8 +4012,8 @@ function renderHistory() {
       <div class="list-item-wrapper" data-id="${t.id}">
         <div class="list-item-inner" onclick="handleHistoryRowClick(event,this,${t.id})">${renderTxItem(t, false, true)}</div>
         <div class="swipe-actions">
-          <button class="swipe-btn edit" onclick="showTransactionModal(${t.id})" aria-label="Редактировать">${icons.edit}</button>
-          <button class="swipe-btn delete" onclick="confirmDeleteTransaction(${t.id})" aria-label="Удалить">${icons.delete}</button>
+          <button type="button" class="swipe-btn edit" onclick="event.stopPropagation();closeAllSwipes();showTransactionModal(${t.id})" aria-label="Редактировать">${icons.edit}</button>
+          <button type="button" class="swipe-btn delete" onclick="event.stopPropagation();closeAllSwipes();confirmDeleteTransaction(${t.id})" aria-label="Удалить">${icons.delete}</button>
         </div>
       </div>
     `).join('');
@@ -4078,7 +4029,17 @@ function renderHistory() {
   el.querySelectorAll('.list-item-wrapper').forEach(attachSwipe);
 }
 
+function closeAllSwipes(exceptWrapper = null) {
+  document.querySelectorAll('.list-item-wrapper.swiped').forEach(w => {
+    if (w === exceptWrapper) return;
+    w.classList.remove('swiped');
+    const i = w.querySelector('.list-item-inner');
+    if (i) i.style.transform = 'translateX(0)';
+  });
+}
+
 function handleHistoryRowClick(e, innerEl, id) {
+  if (innerEl.dataset.justSwiped === '1') return;
   const wrap = innerEl.closest('.list-item-wrapper');
   if (wrap && wrap.classList.contains('swiped')) {
     wrap.classList.remove('swiped');
@@ -4115,46 +4076,58 @@ function confirmDeleteTransaction(id) {
 }
 
 function attachSwipe(w) {
-  let sx = 0, sy = 0, cx = 0, dr = false, hz = null;
+  let sx = 0, sy = 0, startOffset = 0, cx = 0, dr = false, hz = null, moved = false;
   const inn = w.querySelector('.list-item-inner');
+
   w.addEventListener('touchstart', e => {
+    if (e.target.closest('.swipe-actions')) return;
     sx = e.touches[0].clientX;
     sy = e.touches[0].clientY;
+    startOffset = w.classList.contains('swiped') ? -124 : 0;
+    cx = startOffset;
     dr = true;
     hz = null;
+    moved = false;
     inn.style.transition = 'none';
   }, { passive: true });
+
   w.addEventListener('touchmove', e => {
     if (!dr) return;
     const dx = e.touches[0].clientX - sx;
     const dy = e.touches[0].clientY - sy;
-    if (hz === null) hz = Math.abs(dx) > Math.abs(dy);
+    if (hz === null && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+      hz = Math.abs(dx) > Math.abs(dy);
+    }
     if (!hz) return;
-    cx = Math.min(0, Math.max(-124, dx));
+    moved = true;
+    cx = Math.min(0, Math.max(-124, startOffset + dx));
     inn.style.transform = `translateX(${cx}px)`;
   }, { passive: true });
+
   w.addEventListener('touchend', () => {
+    if (!dr) return;
     dr = false;
     inn.style.transition = 'transform .25s cubic-bezier(0.22, 1, 0.36, 1)';
+    if (!moved) return;
+
+    inn.dataset.justSwiped = '1';
+    setTimeout(() => { inn.dataset.justSwiped = ''; }, 250);
+
     if (cx < -55) {
+      closeAllSwipes(w);
       inn.style.transform = 'translateX(-124px)';
       w.classList.add('swiped');
     } else {
       inn.style.transform = 'translateX(0)';
       w.classList.remove('swiped');
     }
-    cx = 0;
   });
 }
 
 function initSwipeHandlers() {
   document.addEventListener('click', e => {
     if (!e.target.closest('.list-item-wrapper')) {
-      document.querySelectorAll('.list-item-wrapper.swiped').forEach(w => {
-        w.classList.remove('swiped');
-        const i = w.querySelector('.list-item-inner');
-        if (i) i.style.transform = 'translateX(0)';
-      });
+      closeAllSwipes();
     }
   });
 }
@@ -4179,7 +4152,7 @@ function initPullToRefresh() {
   });
 }
 
-/* ============ TEMPLATES & SETTINGS & EXPORT ============ */
+/* ============ TEMPLATES, SETTINGS & EXPORT ============ */
 function renderTemplates() {
   const l = document.getElementById('templates-list');
   if (!l) return;
@@ -5286,7 +5259,8 @@ function rebuildCharts() {
   renderAll();
 }
 
-window.onload = initAuth;
+// Запуск сразу после разбора DOM без ожидания window.onload
+initAuth();
 </script>
 </body>
 </html>
