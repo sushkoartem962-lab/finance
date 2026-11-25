@@ -5228,17 +5228,21 @@ async function fetchLiveRates(notify = false) {
     if (!f.ok || !c.ok) throw new Error('Network error');
     const fd = await f.json();
     const cd = await c.json();
+   const protectedFiat = new Set(['USD', 'EUR', 'RUB', 'USDT']);
+    if (Array.isArray(cd)) {
+      cd.forEach(i => {
+        if (i.symbol && i.symbol.endsWith('USDT')) {
+          const sym = i.symbol.replace('USDT', '');
+          if (!protectedFiat.has(sym)) {
+            state.rates[sym] = parseFloat(i.price);
+          }
+        }
+      });
+    }
     if (fd?.rates?.RUB) state.rates.USD = fd.rates.RUB;
     state.rates.EUR = fd?.rates?.EUR ? (state.rates.USD / fd.rates.EUR) : state.rates.USD * 1.1;
     state.rates.RUB = 1;
     state.rates.USDT = 1;
-    if (Array.isArray(cd)) {
-      cd.forEach(i => {
-        if (i.symbol && i.symbol.endsWith('USDT')) {
-          state.rates[i.symbol.replace('USDT', '')] = parseFloat(i.price);
-        }
-      });
-    }
     if (st) st.innerHTML = `<span class="live-status"><span class="status-dot"></span>1$ = ${state.rates.USD.toFixed(1)} ₽ • 1€ = ${state.rates.EUR.toFixed(1)} ₽</span>`;
     renderDashboard();
     renderAccounts();
