@@ -147,14 +147,21 @@ body.privacy-mode .sensitive-val {
 #pin-lock-screen {
   position: fixed;
   inset: 0;
+  height: 100vh;
+  height: 100dvh;
   z-index: 90000;
   background: var(--bg);
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: calc(var(--safe-top) + 24px) 24px calc(var(--safe-bottom) + 24px);
+  padding: calc(var(--safe-top) + 16px) 24px calc(var(--safe-bottom) + 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: manipulation;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 #pin-lock-screen.active {
   display: flex;
@@ -162,13 +169,13 @@ body.privacy-mode .sensitive-val {
 }
 .pin-header {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 22px;
 }
 .pin-logo {
-  width: 56px;
-  height: 56px;
+  width: 54px;
+  height: 54px;
   border-radius: 16px;
-  margin: 0 auto 14px;
+  margin: 0 auto 12px;
   background: linear-gradient(135deg, #34C759, #007AFF);
   display: flex;
   align-items: center;
@@ -191,10 +198,10 @@ body.privacy-mode .sensitive-val {
 .pin-dots {
   display: flex;
   gap: 18px;
-  margin-bottom: 36px;
+  margin-bottom: 30px;
 }
 .pin-dots.shake {
-  animation: pinShake 0.36s ease;
+  animation: pinShake 0.34s ease;
 }
 @keyframes pinShake {
   0%, 100% { transform: translateX(0); }
@@ -207,7 +214,7 @@ body.privacy-mode .sensitive-val {
   border-radius: 50%;
   border: 1.8px solid var(--text-3);
   background: transparent;
-  transition: transform 0.14s ease, background-color 0.14s ease, border-color 0.14s ease;
+  transition: transform 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
 }
 .pin-dot.filled {
   background: var(--text);
@@ -221,18 +228,18 @@ body.privacy-mode .sensitive-val {
 .pin-keypad {
   display: grid;
   grid-template-columns: repeat(3, 76px);
-  gap: 16px 22px;
+  gap: 14px 22px;
   justify-content: center;
+  touch-action: manipulation;
 }
 .pin-key {
   width: 76px;
   height: 76px;
   border-radius: 50%;
-  border: none;
   background: var(--surface);
   color: var(--text);
-  font-size: 28px;
-  font-weight: 500;
+  font-size: 29px;
+  font-weight: 400;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -240,10 +247,17 @@ body.privacy-mode .sensitive-val {
   font-family: inherit;
   box-shadow: var(--shadow-sm);
   border: 0.5px solid var(--border);
-  transition: transform 0.12s ease, background-color 0.12s ease;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: background-color 0.1s ease;
 }
+.pin-key svg {
+  pointer-events: none;
+}
+.pin-key.pressed,
 .pin-key:active {
-  transform: scale(0.92);
   background: var(--fill-strong);
 }
 .pin-key.ghost {
@@ -254,8 +268,15 @@ body.privacy-mode .sensitive-val {
   font-weight: 600;
   color: var(--blue);
 }
+.pin-key.ghost.pressed,
 .pin-key.ghost:active {
   background: var(--fill);
+}
+@media (max-height: 680px) {
+  .pin-header { margin-bottom: 14px; }
+  .pin-dots { margin-bottom: 20px; }
+  .pin-keypad { grid-template-columns: repeat(3, 68px); gap: 10px 18px; }
+  .pin-key { width: 68px; height: 68px; font-size: 26px; }
 }
 
 /* DYNAMIC ISLAND TOAST */
@@ -1733,19 +1754,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     <div class="pin-dot"></div>
     <div class="pin-dot"></div>
   </div>
-  <div class="pin-keypad">
-    <button type="button" class="pin-key" onclick="pinPress('1')">1</button>
-    <button type="button" class="pin-key" onclick="pinPress('2')">2</button>
-    <button type="button" class="pin-key" onclick="pinPress('3')">3</button>
-    <button type="button" class="pin-key" onclick="pinPress('4')">4</button>
-    <button type="button" class="pin-key" onclick="pinPress('5')">5</button>
-    <button type="button" class="pin-key" onclick="pinPress('6')">6</button>
-    <button type="button" class="pin-key" onclick="pinPress('7')">7</button>
-    <button type="button" class="pin-key" onclick="pinPress('8')">8</button>
-    <button type="button" class="pin-key" onclick="pinPress('9')">9</button>
-    <button type="button" class="pin-key ghost" id="pin-cancel-btn" onclick="cancelPinSetup()" style="visibility:hidden">Отмена</button>
-    <button type="button" class="pin-key" onclick="pinPress('0')">0</button>
-    <button type="button" class="pin-key ghost" onclick="pinBackspace()" aria-label="Стереть">
+<div class="pin-keypad" id="pin-keypad">
+    <button type="button" class="pin-key" data-digit="1">1</button>
+    <button type="button" class="pin-key" data-digit="2">2</button>
+    <button type="button" class="pin-key" data-digit="3">3</button>
+    <button type="button" class="pin-key" data-digit="4">4</button>
+    <button type="button" class="pin-key" data-digit="5">5</button>
+    <button type="button" class="pin-key" data-digit="6">6</button>
+    <button type="button" class="pin-key" data-digit="7">7</button>
+    <button type="button" class="pin-key" data-digit="8">8</button>
+    <button type="button" class="pin-key" data-digit="9">9</button>
+    <button type="button" class="pin-key ghost" id="pin-cancel-btn" data-action="cancel" style="visibility:hidden">Отмена</button>
+    <button type="button" class="pin-key" data-digit="0">0</button>
+    <button type="button" class="pin-key ghost" data-action="backspace" aria-label="Стереть">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
     </button>
   </div>
@@ -2578,9 +2599,10 @@ function updateCurrencyPills() {
 /* ============ PIN LOCK ENGINE ============ */
 const PIN_STORAGE_KEY = 'fintracker_pin_hash_v1';
 let pinMode = null; // 'unlock' | 'setup_1' | 'setup_2' | 'disable_verify' | 'change_verify' | 'change_1' | 'change_2'
-let pinBuffer = '';
-let pinTempFirst = '';
 let lastHiddenAt = 0;
+let pinErrorTimer = null;
+let pinCompleteTimer = null;
+let pinKeypadReady = false;
 
 function hashPin(pin) {
   let h = 2166136261;
@@ -2608,7 +2630,51 @@ function syncPinUI() {
   if (chRow) chRow.style.display = enabled ? 'flex' : 'none';
 }
 
+function initPinKeypad() {
+  if (pinKeypadReady) return;
+  const keypad = document.getElementById('pin-keypad');
+  if (!keypad) return;
+  pinKeypadReady = true;
+
+  let lastTouchTs = 0;
+
+  const triggerKey = btn => {
+    if (!btn) return;
+    btn.classList.add('pressed');
+    setTimeout(() => btn.classList.remove('pressed'), 120);
+
+    const digit = btn.dataset.digit;
+    const action = btn.dataset.action;
+    if (digit !== undefined) pinPress(digit);
+    else if (action === 'backspace') pinBackspace();
+    else if (action === 'cancel') cancelPinSetup();
+  };
+
+  // Мгновенный отклик на палец (0 мс, без зума и потери тапов при быстром вводе)
+  keypad.addEventListener('touchstart', e => {
+    const btn = e.target.closest('.pin-key');
+    if (!btn) return;
+    e.preventDefault();
+    lastTouchTs = Date.now();
+    triggerKey(btn);
+  }, { passive: false });
+
+  // Поддержка мыши на ПК без двойного срабатывания после touchstart
+  keypad.addEventListener('mousedown', e => {
+    if (Date.now() - lastTouchTs < 600) return;
+    const btn = e.target.closest('.pin-key');
+    if (!btn) return;
+    e.preventDefault();
+    triggerKey(btn);
+  });
+}
+
 function openPinScreen(mode, title, subtitle, canCancel = false) {
+  initPinKeypad();
+  clearTimeout(pinErrorTimer);
+  clearTimeout(pinCompleteTimer);
+  pinErrorTimer = null;
+  pinCompleteTimer = null;
   pinMode = mode;
   pinBuffer = '';
   document.getElementById('pin-screen-title').textContent = title;
@@ -2616,14 +2682,24 @@ function openPinScreen(mode, title, subtitle, canCancel = false) {
   const cancelBtn = document.getElementById('pin-cancel-btn');
   if (cancelBtn) cancelBtn.style.visibility = canCancel ? 'visible' : 'hidden';
   renderPinDots();
+  document.documentElement.classList.add('modal-open');
+  document.body.classList.add('modal-open');
   document.getElementById('pin-lock-screen').classList.add('active');
 }
 
 function closePinScreen() {
+  clearTimeout(pinErrorTimer);
+  clearTimeout(pinCompleteTimer);
+  pinErrorTimer = null;
+  pinCompleteTimer = null;
   pinMode = null;
   pinBuffer = '';
   pinTempFirst = '';
   document.getElementById('pin-lock-screen').classList.remove('active');
+  if (!document.getElementById('app-modal')?.classList.contains('active')) {
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open');
+  }
 }
 
 function lockWithPin() {
@@ -2667,27 +2743,45 @@ function pinShakeError(msg) {
   dotsWrap.classList.remove('shake');
   void dotsWrap.offsetWidth;
   dotsWrap.classList.add('shake');
-  setTimeout(() => {
+  clearTimeout(pinErrorTimer);
+  pinErrorTimer = setTimeout(() => {
+    pinErrorTimer = null;
     pinBuffer = '';
     renderPinDots(false);
-  }, 420);
+  }, 380);
 }
 
 function pinPress(digit) {
-  if (!pinMode || pinBuffer.length >= 4) return;
+  if (!pinMode) return;
+  // Если пользователь начал вводить новый PIN во время анимации ошибки — сразу принимаем цифру
+  if (pinErrorTimer) {
+    clearTimeout(pinErrorTimer);
+    pinErrorTimer = null;
+    pinBuffer = '';
+  }
+  if (pinBuffer.length >= 4) return;
   pinBuffer += String(digit);
   haptic(8);
-  renderPinDots();
+  renderPinDots(false);
   if (pinBuffer.length === 4) {
-    setTimeout(handlePinComplete, 110);
+    clearTimeout(pinCompleteTimer);
+    pinCompleteTimer = setTimeout(handlePinComplete, 90);
   }
 }
 
 function pinBackspace() {
-  if (!pinMode || !pinBuffer.length) return;
+  if (!pinMode) return;
+  if (pinErrorTimer) {
+    clearTimeout(pinErrorTimer);
+    pinErrorTimer = null;
+    pinBuffer = '';
+    renderPinDots(false);
+    return;
+  }
+  if (!pinBuffer.length) return;
   pinBuffer = pinBuffer.slice(0, -1);
   haptic(6);
-  renderPinDots();
+  renderPinDots(false);
 }
 
 function handlePinComplete() {
