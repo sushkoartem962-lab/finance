@@ -752,7 +752,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .list-item-amount.expense { color: var(--text); }
 .list-item-amount.transfer { color: var(--indigo); }
 
-/* SWIPE ROWS (FIXED Z-INDEX) */
+/* SWIPE ROWS */
 .list-item-wrapper {
   position: relative;
   overflow: hidden;
@@ -963,7 +963,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .fab:active { transform: scale(0.9); }
 .fab svg { width: 26px; height: 26px; stroke-width: 2.5; }
 
-/* iOS BOTTOM SHEET MODAL (FIXED HEIGHT & SAFE AREA) */
+/* iOS BOTTOM SHEET MODAL */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1998,7 +1998,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
       </div>
     </div>
 
-    <div style="text-align:center;padding:18px 0 24px;color:var(--text-3);font-size:12px">FinTracker v4.1 • Designed for clarity</div>
+    <div style="text-align:center;padding:18px 0 24px;color:var(--text-3);font-size:12px">FinTracker v4.2 • Designed for clarity</div>
   </div>
 </div>
 
@@ -2136,13 +2136,17 @@ const getDefaultState = () => ({
   settings: { theme: 'auto', privacy: false }
 });
 
+// Оперативные кэши (не пишутся в Firebase и localStorage, чтобы не раздувать базу)
+let liveRatesCache = {};
+let historyRatesCache = {};
+
 function normalizeState(raw) {
   const def = getDefaultState();
   const s = raw && typeof raw === 'object' ? raw : {};
   return {
     ...def,
     ...s,
-    rates: { ...def.rates, ...(s.rates || {}) },
+    rates: { ...def.rates, ...(s.rates || {}), ...liveRatesCache },
     categories: {
       expense: Array.isArray(s.categories?.expense) ? s.categories.expense : def.categories.expense,
       income: Array.isArray(s.categories?.income) ? s.categories.income : def.categories.income
@@ -2154,9 +2158,36 @@ function normalizeState(raw) {
     templates: Array.isArray(s.templates) ? s.templates : [],
     goals: Array.isArray(s.goals) ? s.goals : [],
     recurring: Array.isArray(s.recurring) ? s.recurring : [],
-    historyRates: s.historyRates && typeof s.historyRates === 'object' ? s.historyRates : {},
+    historyRates: Object.keys(historyRatesCache).length ? historyRatesCache : (s.historyRates && typeof s.historyRates === 'object' ? s.historyRates : {}),
     settings: { ...def.settings, ...(s.settings || {}) }
   };
+}
+
+// Очищаем state перед сохранением: оставляем только нужные курсы и убираем массив свечей historyRates
+function getSlimStateForStorage(s) {
+  const c = JSON.parse(JSON.stringify(s));
+  delete c.historyRates;
+
+  const neededCoins = new Set(['USD', 'EUR', 'RUB', 'USDT']);
+  (c.accounts || []).forEach(a => {
+    if (a.type === 'crypto_wallet') {
+      (a.tokens || []).forEach(t => { if (t.coin) neededCoins.add(t.coin); });
+    }
+  });
+  (c.transactions || []).forEach(t => {
+    if (t.accountDetails?.coin) neededCoins.add(t.accountDetails.coin);
+    if (t.transferDetails?.unitFrom) neededCoins.add(t.transferDetails.unitFrom);
+    if (t.transferDetails?.unitTo) neededCoins.add(t.transferDetails.unitTo);
+  });
+
+  const slimRates = {};
+  neededCoins.forEach(k => {
+    if (c.rates && typeof c.rates[k] === 'number' && isFinite(c.rates[k])) {
+      slimRates[k] = c.rates[k];
+    }
+  });
+  c.rates = slimRates;
+  return c;
 }
 
 let state = getDefaultState();
@@ -2183,12 +2214,12 @@ const DB = {
     if (db && currentUser) db.ref(`users/${currentUser.uid}/financeState`).off();
   },
   async save(s) {
-    const c = JSON.parse(JSON.stringify(s));
-    try { localStorage.setItem('financeState_v3', JSON.stringify(c)); } catch (e) {}
+    const slim = getSlimStateForStorage(s);
+    try { localStorage.setItem('financeState_v3', JSON.stringify(slim)); } catch (e) {}
     renderAll();
     if (!db || !currentUser) return;
     try {
-      await db.ref(`users/${currentUser.uid}/financeState`).set(c);
+      await db.ref(`users/${currentUser.uid}/financeState`).set(slim);
     } catch (e) {
       console.error(e);
       showToast('Ошибка синхронизации с облаком', 'error');
@@ -2308,7 +2339,6 @@ function initAuth() {
   applyPrivacyMode();
   setupAppOnce();
 
-  // Мгновенный рендер интерфейса из кэша без заставки и ожидания Firebase
   if (!auth || wasAuthed || cachedRaw) {
     showAppUI();
     renderAll();
@@ -2333,8 +2363,8 @@ function initAuth() {
       db.ref(`users/${currentUser.uid}/financeState`).on('value', s => {
         if (s.exists()) {
           const v = s.val();
-          try { localStorage.setItem('financeState_v3', JSON.stringify(v)); } catch (e) {}
           state = normalizeState(v);
+          try { localStorage.setItem('financeState_v3', JSON.stringify(getSlimStateForStorage(state))); } catch (e) {}
           applyTheme();
           applyPrivacyMode();
           renderAll();
@@ -2802,7 +2832,6 @@ function saveTransactionFromModal() {
   const am = parseNum(document.getElementById('tx-amount').value);
   const n = document.getElementById('tx-note').value.trim();
 
-  // Вся валидация выполняется строго ДО изменения балансов
   if (isNaN(am) || am === 0) { showToast('Укажите корректную сумму', 'warning'); return false; }
   if (t === 'transfer' && am <= 0) { showToast('Сумма перевода должна быть больше 0', 'warning'); return false; }
 
@@ -3637,7 +3666,7 @@ function deleteGoal(id) {
   });
 }
 
-/* ============ ПОДПИСКИ И РЕГУЛЯРНЫЕ ПЛАТЕЖИ ============ */
+/* ============ ПОДПИСКИ И РЕГУЛЯРНЫЕ ПЛАТЕЖИ (FIXED FX CONVERSION) ============ */
 function renderRecurring() {
   const list = document.getElementById('recurring-list');
   const badge = document.getElementById('recurring-total-badge');
@@ -3722,6 +3751,36 @@ function showRecurringModal() {
   });
 }
 
+function calcRecurringDebit(rubAmount, accKey) {
+  const info = getAccountUnitInfo(accKey);
+  if (info.unit === 'RUB') {
+    return { ok: true, amount: rubAmount, unit: 'RUB', symbol: '₽', rubRate: 1 };
+  }
+  if (!(info.rubRate > 0)) {
+    return { ok: false, unit: info.unit };
+  }
+  const decimals = info.type === 'crypto' && info.unit !== 'USDT' && info.unit !== 'USDC' ? 6 : 2;
+  const converted = Number((rubAmount / info.rubRate).toFixed(decimals));
+  return { ok: true, amount: converted, unit: info.unit, symbol: info.symbol, rubRate: info.rubRate };
+}
+
+function updateRecurringPayPreview(rubAmount) {
+  const sel = document.getElementById('rec-pay-acc');
+  const prev = document.getElementById('rec-pay-preview');
+  if (!sel || !prev) return;
+  const calc = calcRecurringDebit(rubAmount, sel.value);
+  if (!calc.ok) {
+    prev.textContent = `Нет курса для конвертации в ${calc.unit}`;
+    prev.style.color = 'var(--danger)';
+  } else if (calc.unit === 'RUB') {
+    prev.textContent = `Спишется: ${fmt(calc.amount)} ₽`;
+    prev.style.color = 'var(--text-3)';
+  } else {
+    prev.textContent = `Конвертация: спишется ${calc.amount} ${calc.symbol} (1 ${calc.unit} ≈ ${calc.rubRate.toFixed(2)} ₽)`;
+    prev.style.color = 'var(--blue)';
+  }
+}
+
 function payRecurring(id) {
   const r = (state.recurring || []).find(x => x.id === id);
   if (!r) return;
@@ -3729,29 +3788,47 @@ function payRecurring(id) {
   const curMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   if (!state.accounts.length) { showToast('Сначала создайте счёт', 'warning'); return; }
 
-  const tbank = state.accounts.find(a => a.type === 'fiat' && isTBank(a));
+  const rubTbank = state.accounts.find(a => a.type === 'fiat' && (a.currency || 'RUB') === 'RUB' && isTBank(a));
+  const anyRub = state.accounts.find(a => a.type === 'fiat' && (a.currency || 'RUB') === 'RUB');
   const fallbackFiat = state.accounts.find(a => a.type === 'fiat');
-  const defAcc = tbank || fallbackFiat;
+  const defAcc = rubTbank || anyRub || fallbackFiat;
   const defKey = defAcc ? `fiat_${defAcc.id}` : '';
 
   showModal({
     title: `Оплатить «${r.name}»?`,
     message: `Будет создан расход ${fmt(r.amount)} ₽ в категории «${escapeHTML(r.category)}».`,
-    body: `<div class="input-group"><label class="input-label">Списать со счёта</label><select class="select" id="rec-pay-acc"></select></div>`,
+    body: `
+      <div class="input-group">
+        <label class="input-label">Списать со счёта</label>
+        <select class="select" id="rec-pay-acc"></select>
+        <div class="calc-preview" id="rec-pay-preview" style="margin-top:4px"></div>
+      </div>
+    `,
     submitText: 'Оплатить',
     onSubmit: () => {
       const av = document.getElementById('rec-pay-acc').value;
       if (!av || !validateAccountRate(av)) return false;
-      const i = modifyAccountBalance(av, -r.amount);
+      const calc = calcRecurringDebit(r.amount, av);
+      if (!calc.ok || !(calc.amount > 0)) {
+        showToast(`Нет курса для списания в ${calc.unit}`, 'error');
+        return false;
+      }
+      const i = modifyAccountBalance(av, -calc.amount);
       if (!i) return false;
       state.transactions.push({
         id: Date.now(),
         type: 'expense',
         category: r.category || state.categories.expense[0] || 'Подписки',
-        amount: r.amount,
+        amount: calc.amount,
         date: getLocalDate(),
         note: r.name,
-        accountDetails: { type: i.accType, accId: i.accId, tokenId: i.tokenId, amount: r.amount, coin: i.coin || i.currency || 'RUB' }
+        accountDetails: {
+          type: i.accType,
+          accId: i.accId,
+          tokenId: i.tokenId,
+          amount: calc.amount,
+          coin: i.coin || i.currency || 'RUB'
+        }
       });
       r.lastPaidMonth = curMonth;
       DB.save(state);
@@ -3761,6 +3838,8 @@ function payRecurring(id) {
   const sel = document.getElementById('rec-pay-acc');
   populateAccountSelect(sel, true);
   if (defKey && sel.querySelector(`option[value="${defKey}"]`)) sel.value = defKey;
+  sel.addEventListener('change', () => updateRecurringPayPreview(r.amount));
+  updateRecurringPayPreview(r.amount);
 }
 
 function deleteRecurring(id) {
@@ -3913,7 +3992,7 @@ function removeBudgetByIndex(idx) {
   }
 }
 
-/* ============ HISTORY & FIXED SWIPES ============ */
+/* ============ HISTORY & SWIPES ============ */
 function setHistoryTypeFilter(type, btn) {
   historyTypeFilter = type;
   document.querySelectorAll('#history-type-seg .segmented-btn').forEach(b => b.classList.remove('active'));
@@ -4256,7 +4335,7 @@ function renderSettings() {
 }
 
 function exportData() {
-  const b = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const b = new Blob([JSON.stringify(getSlimStateForStorage(state), null, 2)], { type: 'application/json' });
   const u = URL.createObjectURL(b);
   const a = document.createElement('a');
   a.href = u;
@@ -4338,7 +4417,7 @@ function importData(e) {
   e.target.value = '';
 }
 
-/* ============ ANALYTICS ENGINE ============ */
+/* ============ ANALYTICS ENGINE (SAFE PERIOD LABEL) ============ */
 function switchAnalyticsSection(sec, btn) {
   currentAnalyticsSection = sec;
   document.querySelectorAll('.analytics-nav-btn').forEach(b => b.classList.remove('active'));
@@ -4352,12 +4431,15 @@ function setAnalyticsPeriod(p) {
   if (p === 'custom') { showCustomPeriodModal(); return; }
   analyticsPeriod = p;
   document.querySelectorAll('#analytics-period-seg .segmented-btn').forEach(b => b.classList.toggle('active', b.dataset.period === p));
-  document.getElementById('analytics-period-label').textContent = {
-    current_month: 'Этот месяц',
-    last_month: 'Прошлый месяц',
-    current_year: 'Этот год',
-    all: 'Всё время'
-  }[p] || p;
+  const periodLbl = document.getElementById('analytics-period-label');
+  if (periodLbl) {
+    periodLbl.textContent = {
+      current_month: 'Этот месяц',
+      last_month: 'Прошлый месяц',
+      current_year: 'Этот год',
+      all: 'Всё время'
+    }[p] || p;
+  }
   initAnalytics();
 }
 
@@ -4378,8 +4460,10 @@ function showCustomPeriodModal() {
       analyticsCustomEnd = e;
       analyticsPeriod = 'custom';
       document.querySelectorAll('#analytics-period-seg .segmented-btn').forEach(b => b.classList.toggle('active', b.dataset.period === 'custom'));
-      document.getElementById('analytics-period-label').textContent = `${s} — ${e}`;
+      const periodLbl = document.getElementById('analytics-period-label');
+      if (periodLbl) periodLbl.textContent = `${s} — ${e}`;
       initAnalytics();
+      showToast(`Период: ${s} — ${e}`, 'info');
     }
   });
 }
@@ -5068,7 +5152,7 @@ function updateDeepCharts() {
 
 function updateAnalyticsCharts() { updateDeepCharts(); }
 
-/* ============ TIMELINE & RATES ENGINE ============ */
+/* ============ TIMELINE & RATES ENGINE (SLIM STORAGE) ============ */
 function getTimeline(period = 'current_month') {
   const date = new Date(), labels = [], prefixes = [];
   if (period === 'current_month' || period === 'last_month') {
@@ -5209,7 +5293,7 @@ async function fetchCryptoHistory() {
   state.accounts.forEach(a => {
     if (a.type === 'crypto_wallet') (a.tokens || []).forEach(t => coins.add(t.coin));
   });
-  state.historyRates = {};
+  historyRatesCache = {};
   const start = new Date(new Date().getFullYear(), 0, 1).getTime();
   await Promise.all([...coins].filter(c => c !== 'USDT').map(async coin => {
     try {
@@ -5217,15 +5301,16 @@ async function fetchCryptoHistory() {
       if (!res.ok) return;
       const data = await res.json();
       if (!Array.isArray(data)) return;
-      state.historyRates[coin] = {};
+      historyRatesCache[coin] = {};
       data.forEach(c => {
         const d = new Date(c[0]);
-        state.historyRates[coin][getLocalDate(d)] = parseFloat(c[4]);
+        historyRatesCache[coin][getLocalDate(d)] = parseFloat(c[4]);
       });
     } catch (e) {
       console.error('History err', coin);
     }
   }));
+  state.historyRates = historyRatesCache;
   if (document.getElementById('tab-analytics').classList.contains('active')) {
     renderAnalyticsSection(currentAnalyticsSection);
   }
@@ -5242,21 +5327,31 @@ async function fetchLiveRates(notify = false) {
     if (!f.ok || !c.ok) throw new Error('Network error');
     const fd = await f.json();
     const cd = await c.json();
-   const protectedFiat = new Set(['USD', 'EUR', 'RUB', 'USDT']);
+
+    const freshRates = {};
+    const protectedFiat = new Set(['USD', 'EUR', 'RUB', 'USDT']);
     if (Array.isArray(cd)) {
       cd.forEach(i => {
         if (i.symbol && i.symbol.endsWith('USDT')) {
           const sym = i.symbol.replace('USDT', '');
           if (!protectedFiat.has(sym)) {
-            state.rates[sym] = parseFloat(i.price);
+            freshRates[sym] = parseFloat(i.price);
           }
         }
       });
     }
-    if (fd?.rates?.RUB) state.rates.USD = fd.rates.RUB;
-    state.rates.EUR = fd?.rates?.EUR ? (state.rates.USD / fd.rates.EUR) : state.rates.USD * 1.1;
-    state.rates.RUB = 1;
-    state.rates.USDT = 1;
+    const usdRate = fd?.rates?.RUB || state.rates.USD || 95;
+    freshRates.USD = usdRate;
+    freshRates.EUR = fd?.rates?.EUR ? (usdRate / fd.rates.EUR) : usdRate * 1.1;
+    freshRates.RUB = 1;
+    freshRates.USDT = 1;
+
+    liveRatesCache = freshRates;
+    state.rates = { ...state.rates, ...liveRatesCache };
+
+    // Обновляем локальный кэш только компактным набором нужных курсов
+    try { localStorage.setItem('financeState_v3', JSON.stringify(getSlimStateForStorage(state))); } catch (e) {}
+
     if (st) st.innerHTML = `<span class="live-status"><span class="status-dot"></span>1$ = ${state.rates.USD.toFixed(1)} ₽ • 1€ = ${state.rates.EUR.toFixed(1)} ₽</span>`;
     renderDashboard();
     renderAccounts();
